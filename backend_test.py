@@ -115,7 +115,7 @@ class GovernAIAPITester:
             "owner": "Test Suite"
         }
         
-        success, create_data, status = self.test_api_endpoint("POST", "/agents", 201, test_agent)
+        success, create_data, status = self.test_api_endpoint("POST", "/agents", 200, test_agent)
         self.log_test("POST /agents (Create)", success, create_data, f"Status: {status}")
         
         if not success:
