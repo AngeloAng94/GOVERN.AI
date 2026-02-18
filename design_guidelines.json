@@ -1,0 +1,172 @@
+{
+  "identity": {
+    "name": "GOVERN.AI",
+    "mission": "The Sovereign Control Plane for Enterprise AI",
+    "tone": "Authoritative, Secure, European, Precision-Engineered, Sovereign",
+    "keywords": ["Compliance", "Traceability", "Sovereignty", "Audit", "Control"],
+    "visual_archetype": "The Digital Fortress"
+  },
+  "typography": {
+    "font_family": {
+      "headings": "Space Grotesk, sans-serif",
+      "body": "Inter, sans-serif",
+      "code": "JetBrains Mono, monospace"
+    },
+    "scale": {
+      "h1": "text-5xl md:text-7xl font-bold tracking-tight leading-[1.1]",
+      "h2": "text-3xl md:text-5xl font-semibold tracking-tight",
+      "h3": "text-2xl md:text-3xl font-medium tracking-tight",
+      "body_lg": "text-lg md:text-xl leading-relaxed text-slate-300",
+      "body_base": "text-base leading-relaxed text-slate-400",
+      "caption": "text-xs font-mono uppercase tracking-widest text-slate-500",
+      "code": "font-mono text-sm text-blue-400 bg-slate-900/50 px-1 py-0.5 rounded"
+    },
+    "installation_instructions": "Add Space Grotesk and JetBrains Mono via Google Fonts in index.html or import in CSS."
+  },
+  "colors": {
+    "theme": "dark",
+    "palette": {
+      "background": {
+        "default": "#020617",
+        "surface": "#0F172A",
+        "surface_hover": "#1E293B",
+        "overlay": "rgba(2, 6, 23, 0.8)"
+      },
+      "primary": {
+        "default": "#3B82F6",
+        "glow": "0 0 20px rgba(59, 130, 246, 0.5)",
+        "foreground": "#FFFFFF"
+      },
+      "secondary": {
+        "default": "#F59E0B",
+        "foreground": "#000000"
+      },
+      "status": {
+        "success": "#10B981",
+        "warning": "#F59E0B",
+        "error": "#EF4444",
+        "info": "#3B82F6"
+      },
+      "border": {
+        "default": "#1E293B",
+        "active": "#3B82F6"
+      },
+      "text": {
+        "primary": "#F8FAFC",
+        "secondary": "#94A3B8",
+        "muted": "#64748B"
+      }
+    },
+    "gradients": {
+      "hero_glow": "radial-gradient(circle at center, rgba(59, 130, 246, 0.15) 0%, rgba(2, 6, 23, 0) 70%)",
+      "card_surface": "linear-gradient(180deg, rgba(15, 23, 42, 0.6) 0%, rgba(15, 23, 42, 0.4) 100%)",
+      "border_glow": "linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.5), transparent)"
+    }
+  },
+  "layout_strategies": {
+    "landing_page": {
+      "grid_mode": "Mode A (Tetris Grid)",
+      "spacing": "Relaxed (gap-8 to gap-16)",
+      "container": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+      "features": {
+        "bento_grid": true,
+        "alignment": "Asymmetrical",
+        "card_style": "Glassmorphism with 'Tracing Beam' borders"
+      }
+    },
+    "dashboard": {
+      "grid_mode": "Mode B (High Density)",
+      "spacing": "Compact (gap-4)",
+      "container": "w-full h-screen flex overflow-hidden",
+      "sidebar": "w-64 flex-shrink-0 border-r border-slate-800 bg-slate-950",
+      "main_content": "flex-1 overflow-y-auto bg-slate-950 p-6"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.4)] transition-all duration-300 rounded-sm font-medium px-6 py-2.5",
+      "secondary": "bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-slate-600 transition-all duration-300 rounded-sm font-medium px-6 py-2.5",
+      "ghost": "text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all duration-200 rounded-sm px-4 py-2"
+    },
+    "cards": {
+      "base": "bg-slate-900/40 backdrop-blur-md border border-slate-800 rounded-sm p-6 hover:border-slate-700 transition-colors duration-300",
+      "interactive": "group relative overflow-hidden bg-slate-900/40 border border-slate-800 hover:border-blue-500/50 transition-all duration-500 rounded-sm p-6 cursor-pointer"
+    },
+    "inputs": {
+      "base": "bg-slate-950 border border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-sm px-4 py-2.5 text-slate-200 placeholder-slate-600 transition-all duration-200 w-full"
+    },
+    "status_badge": {
+      "base": "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border",
+      "variants": {
+        "success": "bg-emerald-950/30 text-emerald-400 border-emerald-900/50",
+        "warning": "bg-amber-950/30 text-amber-400 border-amber-900/50",
+        "error": "bg-red-950/30 text-red-400 border-red-900/50",
+        "neutral": "bg-slate-800/50 text-slate-400 border-slate-700"
+      }
+    }
+  },
+  "visual_enhancers": {
+    "glassmorphism": {
+      "style": "Crystal",
+      "css_classes": "bg-slate-900/60 backdrop-blur-xl border border-white/10 shadow-xl"
+    },
+    "gradients": {
+      "text_gradient": "bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400",
+      "border_beam": "absolute inset-0 rounded-sm pointer-events-none border border-transparent [mask-clip:padding-box,border-box] [mask-composite:intersect] [mask-image:linear-gradient(transparent,transparent),linear-gradient(#000,#000)] after:absolute after:inset-[-2px] after:aspect-square after:w-[200%] after:animate-border-beam after:bg-gradient-to-l after:from-[transparent] after:via-blue-500 after:to-[transparent]"
+    },
+    "texture": {
+      "grid": "bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]",
+      "dots": "bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px]"
+    }
+  },
+  "motion": {
+    "philosophy": "Precision and Feedback. No bouncy springs. Smooth, linear or ease-out transitions.",
+    "transitions": {
+      "default": "transition-all duration-300 ease-out",
+      "slow": "transition-all duration-700 ease-out",
+      "hover": "transform duration-200 ease-out hover:-translate-y-1"
+    }
+  },
+  "image_urls": {
+    "hero_background": "https://images.unsplash.com/photo-1771013304380-dfaf9f928de6?q=85&w=1920&auto=format&fit=crop",
+    "feature_security": "https://images.unsplash.com/photo-1763058673652-e13a543bc461?q=85&w=800&auto=format&fit=crop",
+    "client_logos": [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Google_2015_logo.svg/2560px-Google_2015_logo.svg.png",
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/IBM_logo.svg/2560px-IBM_logo.svg.png",
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Microsoft_logo_%282012%29.svg/2560px-Microsoft_logo_%282012%29.svg.png"
+    ],
+    "team": [
+      "https://images.unsplash.com/photo-1770271359908-a0e5e2214f8e?q=85&w=400&auto=format&fit=crop",
+      "https://images.pexels.com/photos/10657877/pexels-photo-10657877.jpeg?auto=compress&cs=tinysrgb&w=400",
+      "https://images.unsplash.com/photo-1684732167885-6ffaacf0e3c1?q=85&w=400&auto=format&fit=crop"
+    ]
+  },
+  "accessibility": {
+    "contrast_check": "Ensure all text on dark backgrounds is at least Slate-400. Avoid Slate-600 or darker for essential text.",
+    "focus_states": "All interactive elements must have a visible focus ring (ring-2 ring-blue-500 ring-offset-2 ring-offset-slate-950).",
+    "reduced_motion": "Respect 'prefers-reduced-motion' by disabling heavy animations."
+  },
+  "instructions_to_main_agent": [
+    "IMPERATIVE: Use 'Space Grotesk' for all headings. Import it.",
+    "IMPERATIVE: The dashboard must use a Sidebar Layout, not a top-nav layout.",
+    "IMPERATIVE: All cards in the dashboard should use the 'High Density' grid rules.",
+    "IMPERATIVE: Use 'Lucide-React' for icons. Shield, Lock, Activity, Server, Users, FileText.",
+    "IMPERATIVE: The 'Sovereign' feel comes from the color palette (Slate 950 + Blue 500) and sharp borders. Avoid too much rounding.",
+    "IMPERATIVE: Implement the 'Bilingual' toggle in the sidebar or top bar (IT/EN).",
+    "IMPERATIVE: All data visualizations (charts) must be accessible and use the defined palette.",
+    "IMPERATIVE: For the 'Audit Trail', use a dense table layout with monospace font for logs."
+  ],
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "You tend to converge toward generic, 'on distribution' outputs. Avoid this.",
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients.",
+    "Create depth through layered design elements with z-index hierarchy.",
+    "Use glass-morphism effects with backdrop filters (12-24px blur).",
+    "You MUST NOT apply universal transition. Eg: `transition: all`.",
+    "Every interaction needs micro-animations - hover states, transitions, entrance animations.",
+    "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.",
+    "Prioritize using pre-existing components from src/components/ui when applicable.",
+    "Components MUST use named exports (export const ComponentName = ...).",
+    "Pages MUST use default exports (export default function PageName() {...}).",
+    "Use `sonner` for toasts."
+  ]
+}
