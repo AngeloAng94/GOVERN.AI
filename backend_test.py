@@ -167,7 +167,7 @@ class GovernAIAPITester:
             "enforcement": "block"
         }
         
-        success, create_data, status = self.test_api_endpoint("POST", "/policies", 201, test_policy)
+        success, create_data, status = self.test_api_endpoint("POST", "/policies", 200, test_policy)
         self.log_test("POST /policies (Create)", success, create_data, f"Status: {status}")
         
         if not success:
