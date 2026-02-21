@@ -1,7 +1,10 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Shield, Activity, FileText, Link2, AlertTriangle, MessageSquare, Building2, Landmark, Heart, Zap, Phone, ChevronRight, Globe } from "lucide-react";
+import { Activity, FileText, Link2, AlertTriangle, MessageSquare, Building2, Landmark, Heart, Zap, Phone, ChevronRight, Globe, Shield } from "lucide-react";
+
+const GOVERN_LOGO = "https://customer-assets.emergentagent.com/job_audit-first-ai/artifacts/5sbc8sgs_GOVERN%20AI.png";
+const ANTHERA_LOGO = "https://customer-assets.emergentagent.com/job_audit-first-ai/artifacts/stbit48o_ANTHERA.png";
 import { Button } from "@/components/ui/button";
 
 const features = [
