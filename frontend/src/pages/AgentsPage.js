@@ -197,7 +197,7 @@ export default function AgentsPage() {
                 <Select value={form.status} onValueChange={v => setForm({...form, status: v})}>
                   <SelectTrigger className="bg-slate-950 border-slate-800 text-slate-200 rounded-sm" data-testid="agent-status-select"><SelectValue /></SelectTrigger>
                   <SelectContent className="bg-slate-900 border-slate-800">
-                    {["active", "paused", "inactive"].map(s => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
+                    {["active", "suspended", "inactive"].map(s => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
