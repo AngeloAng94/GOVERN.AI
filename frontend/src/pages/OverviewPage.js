@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Bot, FileText, Activity, ShieldCheck, AlertTriangle, Ban, ArrowUpRight } from "lucide-react";
+import { Bot, FileText, Activity, ShieldCheck, AlertTriangle, ArrowUpRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import axios from "axios";
