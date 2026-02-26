@@ -1,17 +1,17 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Query
-from fastapi.responses import StreamingResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
+from contextlib import asynccontextmanager
+from enum import Enum
 import os
+import re
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
 import uuid
 from datetime import datetime, timezone
-import asyncio
-import json
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -24,12 +24,53 @@ db = client[os.environ['DB_NAME']]
 # LLM setup
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
-app = FastAPI()
-api_router = APIRouter(prefix="/api")
-
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+# ============ ENUMS (Fix 1.5) ============
+
+class RiskLevel(str, Enum):
+    low = "low"
+    medium = "medium"
+    high = "high"
+    critical = "critical"
+
+class AgentStatus(str, Enum):
+    active = "active"
+    inactive = "inactive"
+    suspended = "suspended"
+
+class PolicySeverity(str, Enum):
+    low = "low"
+    medium = "medium"
+    high = "high"
+    critical = "critical"
+
+class PolicyEnforcement(str, Enum):
+    block = "block"
+    log = "log"
+    throttle = "throttle"
+    auto = "auto"
+
+class RuleType(str, Enum):
+    restriction = "restriction"
+    approval = "approval"
+    rate_limit = "rate_limit"
+    logging = "logging"
+    retention = "retention"
+
+class AuditOutcome(str, Enum):
+    allowed = "allowed"
+    blocked = "blocked"
+    logged = "logged"
+    escalated = "escalated"
+
+class DataClassification(str, Enum):
+    public = "public"
+    internal = "internal"
+    confidential = "confidential"
+    restricted = "restricted"
 
 # ============ MODELS ============
 
@@ -37,11 +78,11 @@ class AgentCreate(BaseModel):
     name: str
     description: str
     model_type: str = "GPT-5.2"
-    risk_level: str = "medium"
-    status: str = "active"
+    risk_level: RiskLevel = RiskLevel.medium
+    status: AgentStatus = AgentStatus.active
     allowed_actions: List[str] = []
     restricted_domains: List[str] = []
-    data_classification: str = "internal"
+    data_classification: DataClassification = DataClassification.internal
     owner: str = ""
 
 class Agent(BaseModel):
@@ -50,11 +91,11 @@ class Agent(BaseModel):
     name: str
     description: str
     model_type: str = "GPT-5.2"
-    risk_level: str = "medium"
-    status: str = "active"
+    risk_level: RiskLevel = RiskLevel.medium
+    status: AgentStatus = AgentStatus.active
     allowed_actions: List[str] = []
     restricted_domains: List[str] = []
-    data_classification: str = "internal"
+    data_classification: DataClassification = DataClassification.internal
     owner: str = ""
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
@@ -65,12 +106,12 @@ class PolicyCreate(BaseModel):
     name: str
     description: str
     agent_id: Optional[str] = None
-    rule_type: str = "restriction"
+    rule_type: RuleType = RuleType.restriction
     conditions: List[str] = []
     actions: List[str] = []
-    severity: str = "medium"
+    severity: PolicySeverity = PolicySeverity.medium
     regulation: str = "GDPR"
-    enforcement: str = "block"
+    enforcement: PolicyEnforcement = PolicyEnforcement.block
 
 class Policy(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -78,12 +119,12 @@ class Policy(BaseModel):
     name: str
     description: str
     agent_id: Optional[str] = None
-    rule_type: str = "restriction"
+    rule_type: RuleType = RuleType.restriction
     conditions: List[str] = []
     actions: List[str] = []
-    severity: str = "medium"
+    severity: PolicySeverity = PolicySeverity.medium
     regulation: str = "GDPR"
-    enforcement: str = "block"
+    enforcement: PolicyEnforcement = PolicyEnforcement.block
     status: str = "active"
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
@@ -97,11 +138,11 @@ class AuditLog(BaseModel):
     agent_name: str = ""
     action: str = ""
     resource: str = ""
-    outcome: str = "allowed"
+    outcome: AuditOutcome = AuditOutcome.allowed
     policy_id: Optional[str] = None
     policy_name: str = ""
     details: str = ""
-    risk_level: str = "low"
+    risk_level: RiskLevel = RiskLevel.low
     ip_address: str = ""
     user: str = "system"
 
@@ -126,6 +167,47 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     message: str
     session_id: str = "default"
+
+# ============ INDEX CREATION (Fix 1.1) ============
+
+async def create_indexes():
+    # agents
+    await db.agents.create_index("id", unique=True, background=True)
+    logger.info("Created index: agents.id (unique)")
+    await db.agents.create_index("status", background=True)
+    logger.info("Created index: agents.status")
+    await db.agents.create_index("risk_level", background=True)
+    logger.info("Created index: agents.risk_level")
+
+    # policies
+    await db.policies.create_index("id", unique=True, background=True)
+    logger.info("Created index: policies.id (unique)")
+    await db.policies.create_index("regulation", background=True)
+    logger.info("Created index: policies.regulation")
+    await db.policies.create_index("agent_id", background=True)
+    logger.info("Created index: policies.agent_id")
+
+    # audit_logs
+    await db.audit_logs.create_index("id", unique=True, background=True)
+    logger.info("Created index: audit_logs.id (unique)")
+    await db.audit_logs.create_index([("timestamp", -1)], background=True)
+    logger.info("Created index: audit_logs.timestamp (desc)")
+    await db.audit_logs.create_index("outcome", background=True)
+    logger.info("Created index: audit_logs.outcome")
+    await db.audit_logs.create_index("risk_level", background=True)
+    logger.info("Created index: audit_logs.risk_level")
+    await db.audit_logs.create_index("agent_name", background=True)
+    logger.info("Created index: audit_logs.agent_name")
+
+    # compliance_standards
+    await db.compliance_standards.create_index("id", unique=True, background=True)
+    logger.info("Created index: compliance_standards.id (unique)")
+    await db.compliance_standards.create_index("code", unique=True, background=True)
+    logger.info("Created index: compliance_standards.code (unique)")
+
+    # chat_messages (compound)
+    await db.chat_messages.create_index([("session_id", 1), ("timestamp", 1)], background=True)
+    logger.info("Created index: chat_messages.session_id+timestamp (compound)")
 
 # ============ SEED DATA ============
 
@@ -178,10 +260,10 @@ async def seed_sample_data():
     agent_count = await db.agents.count_documents({})
     if agent_count == 0:
         agents = [
-            AgentCreate(name="Customer Service Bot", description="Handles customer inquiries via chat", model_type="GPT-5.2", risk_level="medium", status="active", allowed_actions=["read_faq", "create_ticket", "escalate"], restricted_domains=["financial_data", "medical_records"], data_classification="public", owner="Operations Team"),
-            AgentCreate(name="Document Analyzer", description="Analyzes legal and compliance documents", model_type="Claude-Sonnet", risk_level="high", status="active", allowed_actions=["read_document", "extract_data", "generate_summary"], restricted_domains=["external_sharing"], data_classification="confidential", owner="Legal Dept"),
-            AgentCreate(name="Risk Assessment Engine", description="Evaluates financial risk profiles", model_type="GPT-5.2", risk_level="critical", status="paused", allowed_actions=["read_portfolio", "calculate_risk", "generate_report"], restricted_domains=["trading", "external_api"], data_classification="restricted", owner="Risk Management"),
-            AgentCreate(name="HR Onboarding Assistant", description="Guides new employees through onboarding", model_type="Gemini-3", risk_level="low", status="active", allowed_actions=["send_email", "create_account", "schedule_meeting"], restricted_domains=["salary_data", "performance_reviews"], data_classification="internal", owner="HR Department"),
+            AgentCreate(name="Customer Service Bot", description="Handles customer inquiries via chat", model_type="GPT-5.2", risk_level=RiskLevel.medium, status=AgentStatus.active, allowed_actions=["read_faq", "create_ticket", "escalate"], restricted_domains=["financial_data", "medical_records"], data_classification=DataClassification.public, owner="Operations Team"),
+            AgentCreate(name="Document Analyzer", description="Analyzes legal and compliance documents", model_type="Claude-Sonnet", risk_level=RiskLevel.high, status=AgentStatus.active, allowed_actions=["read_document", "extract_data", "generate_summary"], restricted_domains=["external_sharing"], data_classification=DataClassification.confidential, owner="Legal Dept"),
+            AgentCreate(name="Risk Assessment Engine", description="Evaluates financial risk profiles", model_type="GPT-5.2", risk_level=RiskLevel.critical, status=AgentStatus.suspended, allowed_actions=["read_portfolio", "calculate_risk", "generate_report"], restricted_domains=["trading", "external_api"], data_classification=DataClassification.restricted, owner="Risk Management"),
+            AgentCreate(name="HR Onboarding Assistant", description="Guides new employees through onboarding", model_type="Gemini-3", risk_level=RiskLevel.low, status=AgentStatus.active, allowed_actions=["send_email", "create_account", "schedule_meeting"], restricted_domains=["salary_data", "performance_reviews"], data_classification=DataClassification.internal, owner="HR Department"),
         ]
         for a in agents:
             agent_obj = Agent(**a.model_dump())
@@ -189,11 +271,11 @@ async def seed_sample_data():
         
         # Seed some policies
         policies = [
-            PolicyCreate(name="PII Data Access Control", description="Restricts access to personally identifiable information", rule_type="restriction", conditions=["data_contains_pii", "agent_risk_level_high"], actions=["block_access", "log_attempt", "notify_dpo"], severity="critical", regulation="GDPR", enforcement="block"),
-            PolicyCreate(name="Model Output Logging", description="All AI model outputs must be logged for audit purposes", rule_type="logging", conditions=["any_model_output"], actions=["log_output", "store_trace"], severity="medium", regulation="EU-AI-ACT", enforcement="log"),
-            PolicyCreate(name="External API Rate Limit", description="Limits external API calls to prevent data exfiltration", rule_type="rate_limit", conditions=["external_api_call"], actions=["rate_limit_100_per_hour", "alert_on_exceed"], severity="high", regulation="ISO-27001", enforcement="throttle"),
-            PolicyCreate(name="Human-in-the-Loop for Critical Decisions", description="Requires human approval for high-impact decisions", rule_type="approval", conditions=["decision_impact_high", "financial_threshold_exceeded"], actions=["pause_execution", "request_approval", "notify_supervisor"], severity="critical", regulation="EU-AI-ACT", enforcement="block"),
-            PolicyCreate(name="Data Retention Policy", description="Automatic deletion of processed data after 90 days", rule_type="retention", conditions=["data_age_90_days"], actions=["schedule_deletion", "anonymize_logs"], severity="medium", regulation="GDPR", enforcement="auto"),
+            PolicyCreate(name="PII Data Access Control", description="Restricts access to personally identifiable information", rule_type=RuleType.restriction, conditions=["data_contains_pii", "agent_risk_level_high"], actions=["block_access", "log_attempt", "notify_dpo"], severity=PolicySeverity.critical, regulation="GDPR", enforcement=PolicyEnforcement.block),
+            PolicyCreate(name="Model Output Logging", description="All AI model outputs must be logged for audit purposes", rule_type=RuleType.logging, conditions=["any_model_output"], actions=["log_output", "store_trace"], severity=PolicySeverity.medium, regulation="EU-AI-ACT", enforcement=PolicyEnforcement.log),
+            PolicyCreate(name="External API Rate Limit", description="Limits external API calls to prevent data exfiltration", rule_type=RuleType.rate_limit, conditions=["external_api_call"], actions=["rate_limit_100_per_hour", "alert_on_exceed"], severity=PolicySeverity.high, regulation="ISO-27001", enforcement=PolicyEnforcement.throttle),
+            PolicyCreate(name="Human-in-the-Loop for Critical Decisions", description="Requires human approval for high-impact decisions", rule_type=RuleType.approval, conditions=["decision_impact_high", "financial_threshold_exceeded"], actions=["pause_execution", "request_approval", "notify_supervisor"], severity=PolicySeverity.critical, regulation="EU-AI-ACT", enforcement=PolicyEnforcement.block),
+            PolicyCreate(name="Data Retention Policy", description="Automatic deletion of processed data after 90 days", rule_type=RuleType.retention, conditions=["data_age_90_days"], actions=["schedule_deletion", "anonymize_logs"], severity=PolicySeverity.medium, regulation="GDPR", enforcement=PolicyEnforcement.auto),
         ]
         for p in policies:
             policy_obj = Policy(**p.model_dump())
@@ -202,10 +284,11 @@ async def seed_sample_data():
         # Seed audit logs
         import random
         actions_list = ["data_access", "model_inference", "api_call", "policy_check", "document_scan", "user_query", "report_generation", "data_export"]
-        outcomes = ["allowed", "blocked", "logged", "escalated"]
+        outcomes = [AuditOutcome.allowed, AuditOutcome.blocked, AuditOutcome.logged, AuditOutcome.escalated]
         resources = ["/data/customers", "/models/gpt5", "/api/external/crm", "/documents/legal", "/reports/quarterly", "/data/transactions"]
         agent_names = ["Customer Service Bot", "Document Analyzer", "Risk Assessment Engine", "HR Onboarding Assistant"]
         users = ["m.rossi@company.it", "g.bianchi@company.it", "l.ferrari@company.it", "system", "a.romano@company.it"]
+        risk_levels = [RiskLevel.low, RiskLevel.medium, RiskLevel.high, RiskLevel.critical]
 
         for i in range(25):
             log = AuditLog(
@@ -214,17 +297,29 @@ async def seed_sample_data():
                 resource=random.choice(resources),
                 outcome=random.choice(outcomes),
                 details=f"Automated audit event #{i+1}",
-                risk_level=random.choice(["low", "medium", "high", "critical"]),
+                risk_level=random.choice(risk_levels),
                 ip_address=f"10.0.{random.randint(1,5)}.{random.randint(1,254)}",
                 user=random.choice(users)
             )
             await db.audit_logs.insert_one(log.model_dump())
         logger.info("Seeded sample agents, policies, and audit logs")
 
-@app.on_event("startup")
-async def startup():
+# ============ LIFESPAN (Fix 1.8) ============
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    await create_indexes()
     await seed_compliance_standards()
     await seed_sample_data()
+    logger.info("GOVERN.AI startup complete")
+    yield
+    # Shutdown
+    client.close()
+    logger.info("GOVERN.AI shutdown complete")
+
+app = FastAPI(lifespan=lifespan)
+api_router = APIRouter(prefix="/api")
 
 # ============ DASHBOARD ============
 
@@ -282,8 +377,7 @@ async def create_agent(data: AgentCreate):
     agent = Agent(**data.model_dump())
     doc = agent.model_dump()
     await db.agents.insert_one(doc)
-    # Audit log
-    log = AuditLog(agent_name=agent.name, action="agent_created", resource=f"/agents/{agent.id}", outcome="allowed", details=f"Agent '{agent.name}' created", user="admin")
+    log = AuditLog(agent_name=agent.name, action="agent_created", resource=f"/agents/{agent.id}", outcome=AuditOutcome.allowed, details=f"Agent '{agent.name}' created", user="admin")
     await db.audit_logs.insert_one(log.model_dump())
     result = await db.agents.find_one({"id": agent.id}, {"_id": 0})
     return result
@@ -296,7 +390,7 @@ async def update_agent(agent_id: str, data: AgentCreate):
     update_data = data.model_dump()
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
     await db.agents.update_one({"id": agent_id}, {"$set": update_data})
-    log = AuditLog(agent_name=data.name, action="agent_updated", resource=f"/agents/{agent_id}", outcome="allowed", details=f"Agent '{data.name}' updated", user="admin")
+    log = AuditLog(agent_name=data.name, action="agent_updated", resource=f"/agents/{agent_id}", outcome=AuditOutcome.allowed, details=f"Agent '{data.name}' updated", user="admin")
     await db.audit_logs.insert_one(log.model_dump())
     result = await db.agents.find_one({"id": agent_id}, {"_id": 0})
     return result
@@ -307,7 +401,7 @@ async def delete_agent(agent_id: str):
     if not existing:
         raise HTTPException(status_code=404, detail="Agent not found")
     await db.agents.delete_one({"id": agent_id})
-    log = AuditLog(agent_name=existing.get("name", ""), action="agent_deleted", resource=f"/agents/{agent_id}", outcome="allowed", details=f"Agent '{existing.get('name', '')}' deleted", user="admin")
+    log = AuditLog(agent_name=existing.get("name", ""), action="agent_deleted", resource=f"/agents/{agent_id}", outcome=AuditOutcome.allowed, details=f"Agent '{existing.get('name', '')}' deleted", user="admin")
     await db.audit_logs.insert_one(log.model_dump())
     return {"status": "deleted", "id": agent_id}
 
@@ -328,7 +422,7 @@ async def create_policy(data: PolicyCreate):
     policy = Policy(**data.model_dump())
     doc = policy.model_dump()
     await db.policies.insert_one(doc)
-    log = AuditLog(policy_name=policy.name, action="policy_created", resource=f"/policies/{policy.id}", outcome="allowed", details=f"Policy '{policy.name}' created", user="admin")
+    log = AuditLog(policy_name=policy.name, action="policy_created", resource=f"/policies/{policy.id}", outcome=AuditOutcome.allowed, details=f"Policy '{policy.name}' created", user="admin")
     await db.audit_logs.insert_one(log.model_dump())
     result = await db.policies.find_one({"id": policy.id}, {"_id": 0})
     return result
@@ -341,7 +435,7 @@ async def update_policy(policy_id: str, data: PolicyCreate):
     update_data = data.model_dump()
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
     await db.policies.update_one({"id": policy_id}, {"$set": update_data})
-    log = AuditLog(policy_name=data.name, action="policy_updated", resource=f"/policies/{policy_id}", outcome="allowed", details=f"Policy '{data.name}' updated", user="admin")
+    log = AuditLog(policy_name=data.name, action="policy_updated", resource=f"/policies/{policy_id}", outcome=AuditOutcome.allowed, details=f"Policy '{data.name}' updated", user="admin")
     await db.audit_logs.insert_one(log.model_dump())
     result = await db.policies.find_one({"id": policy_id}, {"_id": 0})
     return result
@@ -352,7 +446,7 @@ async def delete_policy(policy_id: str):
     if not existing:
         raise HTTPException(status_code=404, detail="Policy not found")
     await db.policies.delete_one({"id": policy_id})
-    log = AuditLog(policy_name=existing.get("name", ""), action="policy_deleted", resource=f"/policies/{policy_id}", outcome="allowed", details=f"Policy '{existing.get('name', '')}' deleted", user="admin")
+    log = AuditLog(policy_name=existing.get("name", ""), action="policy_deleted", resource=f"/policies/{policy_id}", outcome=AuditOutcome.allowed, details=f"Policy '{existing.get('name', '')}' deleted", user="admin")
     await db.audit_logs.insert_one(log.model_dump())
     return {"status": "deleted", "id": policy_id}
 
@@ -375,11 +469,13 @@ async def list_audit_logs(
     if action:
         query["action"] = action
     if search:
+        # Fix 1.2: sanitize regex to prevent ReDoS
+        safe_search = re.escape(search)
         query["$or"] = [
-            {"agent_name": {"$regex": search, "$options": "i"}},
-            {"details": {"$regex": search, "$options": "i"}},
-            {"user": {"$regex": search, "$options": "i"}},
-            {"resource": {"$regex": search, "$options": "i"}},
+            {"agent_name": {"$regex": safe_search, "$options": "i"}},
+            {"details": {"$regex": safe_search, "$options": "i"}},
+            {"user": {"$regex": safe_search, "$options": "i"}},
+            {"resource": {"$regex": safe_search, "$options": "i"}},
         ]
     total = await db.audit_logs.count_documents(query)
     logs = await db.audit_logs.find(query, {"_id": 0}).sort("timestamp", -1).skip(skip).limit(limit).to_list(limit)
@@ -404,7 +500,7 @@ async def update_compliance(standard_id: str, data: dict):
     result = await db.compliance_standards.find_one({"id": standard_id}, {"_id": 0})
     return result
 
-# ============ AI CHAT ============
+# ============ AI CHAT (Fix 1.4 — history passed to LLM) ============
 
 @api_router.post("/chat")
 async def chat_compliance(req: ChatRequest):
@@ -423,41 +519,53 @@ async def chat_compliance(req: ChatRequest):
 
 Respond in the same language as the user's message (Italian or English). Be precise, reference specific articles/requirements when possible, and provide actionable guidance. Format responses with clear structure using markdown."""
 
-    chat = LlmChat(
-        api_key=api_key,
-        session_id=f"govern_ai_{req.session_id}",
-        system_message=system_msg
-    )
-    chat.with_model("openai", "gpt-5.2")
-
-    # Get chat history for context
+    # Fix 1.4: Build initial_messages from DB history for conversation memory
     history = await db.chat_messages.find(
         {"session_id": req.session_id}, {"_id": 0}
     ).sort("timestamp", 1).to_list(20)
+
+    initial_messages = [{"role": "system", "content": system_msg}]
+    for msg in history:
+        if msg["role"] == "user":
+            initial_messages.append({"role": "user", "content": [{"type": "text", "text": msg["content"]}]})
+        elif msg["role"] == "assistant":
+            initial_messages.append({"role": "assistant", "content": msg["content"]})
+
+    chat = LlmChat(
+        api_key=api_key,
+        session_id=f"govern_ai_{req.session_id}",
+        system_message=system_msg,
+        initial_messages=initial_messages
+    )
+    chat.with_model("openai", "gpt-5.2")
+
+    # Save user message BEFORE calling LLM
+    now = datetime.now(timezone.utc).isoformat()
+    await db.chat_messages.insert_one({
+        "id": str(uuid.uuid4()), "session_id": req.session_id,
+        "role": "user", "content": req.message, "timestamp": now
+    })
 
     user_message = UserMessage(text=req.message)
 
     try:
         response = await chat.send_message(user_message)
     except Exception as e:
-        logger.error(f"LLM error: {e}")
-        raise HTTPException(status_code=500, detail=f"AI service error: {str(e)}")
+        # Fix 1.9: Log full error internally, return generic message to client
+        logger.error(f"LLM error for session {req.session_id}: {e}")
+        raise HTTPException(status_code=500, detail="AI service temporarily unavailable. Please try again.")
 
-    # Store messages
-    now = datetime.now(timezone.utc).isoformat()
+    # Save assistant response AFTER LLM call
+    now_resp = datetime.now(timezone.utc).isoformat()
     await db.chat_messages.insert_one({
         "id": str(uuid.uuid4()), "session_id": req.session_id,
-        "role": "user", "content": req.message, "timestamp": now
-    })
-    await db.chat_messages.insert_one({
-        "id": str(uuid.uuid4()), "session_id": req.session_id,
-        "role": "assistant", "content": response, "timestamp": now
+        "role": "assistant", "content": response, "timestamp": now_resp
     })
 
     # Audit log for AI interaction
     log = AuditLog(
         action="ai_chat_query", resource="/chat/compliance",
-        outcome="allowed", details=f"Compliance query: {req.message[:100]}",
+        outcome=AuditOutcome.allowed, details=f"Compliance query: {req.message[:100]}",
         user="admin", agent_name="GOVERN.AI Assistant"
     )
     await db.audit_logs.insert_one(log.model_dump())
@@ -478,14 +586,17 @@ async def root():
 # Include router
 app.include_router(api_router)
 
+# Fix 1.3: CORS with allowed origins from env (fallback to wildcard for dev)
+allowed_origins_str = os.environ.get('ALLOWED_ORIGINS', '')
+if allowed_origins_str:
+    cors_origins = [origin.strip() for origin in allowed_origins_str.split(',') if origin.strip()]
+else:
+    cors_origins = os.environ.get('CORS_ORIGINS', '*').split(',')
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_origins=cors_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    client.close()
