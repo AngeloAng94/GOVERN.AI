@@ -30,13 +30,22 @@ export default function AuditPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [outcome, setOutcome] = useState("all");
   const [risk, setRisk] = useState("all");
+
+  // Fix 1.6: Debounce search input (300ms)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   const fetchLogs = useCallback(() => {
     setLoading(true);
     const params = new URLSearchParams();
-    if (search) params.append("search", search);
+    if (debouncedSearch) params.append("search", debouncedSearch);
     if (outcome !== "all") params.append("outcome", outcome);
     if (risk !== "all") params.append("risk_level", risk);
     params.append("limit", "50");
@@ -48,7 +57,7 @@ export default function AuditPage() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [search, outcome, risk]);
+  }, [debouncedSearch, outcome, risk]);
 
   useEffect(() => { fetchLogs(); }, [fetchLogs]);
 
