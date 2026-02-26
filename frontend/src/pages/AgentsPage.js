@@ -22,7 +22,7 @@ const riskBadge = {
 
 const statusBadge = {
   active: "bg-emerald-950/30 text-emerald-400 border-emerald-900/50",
-  paused: "bg-amber-950/30 text-amber-400 border-amber-900/50",
+  suspended: "bg-amber-950/30 text-amber-400 border-amber-900/50",
   inactive: "bg-slate-800/50 text-slate-400 border-slate-700",
 };
 
