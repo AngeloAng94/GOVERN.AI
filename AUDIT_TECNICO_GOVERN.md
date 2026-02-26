@@ -1,6 +1,6 @@
 # AUDIT TECNICO — GOVERN.AI
-**Data**: 18 Febbraio 2026  
-**Versione codebase**: MVP v1.0 (commit iniziale)  
+**Data**: 26 Febbraio 2026 (aggiornato post Step 1)  
+**Versione codebase**: MVP v1.1 (Step 1 completato)  
 **Autore**: Audit automatico  
 
 ---
