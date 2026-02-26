@@ -425,16 +425,22 @@ Risultato: la chat LLM non ha contesto delle conversazioni precedenti, ogni mess
 - Design system coerente: dark mode, Space Grotesk headings, JetBrains Mono code, glassmorphism
 - Suite test API completa (25/25 passati)
 - data-testid su tutti gli elementi interattivi
+- **[Step 1 — 26/02/2026] Indici MongoDB** su tutte le collection (id unique + campi filtro) — TD4 risolto
+- **[Step 1 — 26/02/2026] Sanitizzazione regex** nella search audit con re.escape() — TD3/V4 risolto
+- **[Step 1 — 26/02/2026] CORS restrittivo** da ALLOWED_ORIGINS env (fallback wildcard solo dev) — TD2/V2 risolto
+- **[Step 1 — 26/02/2026] Chat history passata al LLM** via initial_messages — TD6 risolto
+- **[Step 1 — 26/02/2026] Enum Pydantic** per risk_level, status, severity, enforcement, rule_type, outcome, data_classification — TD7 risolto
+- **[Step 1 — 26/02/2026] Debounce search** audit trail (300ms) — TD11 risolto
+- **[Step 1 — 26/02/2026] Import inutilizzati rimossi** (StreamingResponse, asyncio, json, Ban, Filter, X) — TD14/TD15 risolto
+- **[Step 1 — 26/02/2026] Migrazione lifespan** da on_event a asynccontextmanager — TD8 risolto
+- **[Step 1 — 26/02/2026] Errori LLM mascherati** (messaggio generico al client, log completo interno) — TD16/V6 risolto
+
+**Step 1 completato il 26 Febbraio 2026** — 9 fix critici e quick wins applicati con successo.
 
 ### Da completare 🔄
 
 - **Autenticazione e RBAC** — sistema completamente aperto (P0)
-- **Indici MongoDB** — nessun indice custom, performance a rischio (P0)
-- **Sanitizzazione input regex** — vulnerabilita ReDoS (P0)
-- **CORS restrittivo** — attualmente wildcard `*` (P0)
-- **Contesto chat LLM** — history letta ma non passata (P1)
 - **Rate limiting** — nessuna protezione contro abuso API (P1)
-- **Enum validation** — campi accettano valori arbitrari (P1)
 - **Refactoring backend** — monolite da splittare (P1)
 - **Refactoring frontend** — duplicazione CRUD da eliminare (P1)
 - **Streaming chat** — risposta LLM non in streaming (P2)
