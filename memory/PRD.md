@@ -1,69 +1,151 @@
 # GOVERN.AI - PRD (Product Requirements Document)
 
-## Problem Statement
-Build GOVERN.AI — The compliance-first AI control plane for enterprises. A platform that governs AI agents, workflows and models before compliance, security and audit become a problem. UVP: "Sovereign control plane" for AI agents in highly regulated sectors, combining agent governance with deep European regulatory compliance integration.
+## Company Context (dal Business Plan 2026-2029 v2.0)
+- **Azienda**: ANTHERA Systems — Software house italiana, "Empowering Intelligent Systems"
+- **Founder**: Angelo Anglani — Founder & Lead Engineer
+- **Prodotto**: GOVERN.AI — "The Sovereign AI Control Plane for Regulated Enterprises"
+- **Missione**: Trasformare la compliance normativa da freno burocratico ad abilitatore di innovazione
+- **Secondo prodotto ANTHERA**: PowerLeave (gestione ferie/permessi, stesso stack)
 
-## Architecture
-- **Frontend**: React + Tailwind CSS + Shadcn/UI (port 3000)
-- **Backend**: FastAPI + MongoDB (port 8001)
-- **AI Integration**: OpenAI GPT-5.2 via Emergent LLM key
-- **Database**: MongoDB (collections: agents, policies, audit_logs, compliance_standards, chat_messages)
+## Market Context
+- **TAM**: $5.78B entro 2029 (MarketsandMarkets, CAGR 45.3%)
+- **SAM** (EU settori regolamentati): ~$1.7B entro 2029
+- **SOM** (3 anni, IT/FR/DE): ~€17M ARR
+- **Catalizzatore critico**: EU AI Act in vigore 2 agosto 2026 — sanzioni fino a €35M o 7% fatturato globale
+- **Convergenza normativa**: AI Act + DORA + NIS2 creano matrice di requisiti unica
+
+## Revenue Model (SaaS B2B Tiered)
+| Piano | Target | Agenti | Prezzo/anno | Caratteristiche |
+|---|---|---|---|---|
+| Pro | Team/PMI | ≤10 | €12,000 | Registry, Policy base, Audit, 2 standard |
+| Business | Medie imprese | ≤50 | €48,000 | + RBAC, Dashboard avanzate, 6 standard, AI Assistant, Export |
+| Enterprise | Grandi aziende/PA | Illimitati | €100,000+ | + SLA, Connettori SIEM/IAM/ServiceNow, Multi-tenant |
+
+- **ACV medio**: €48,000 | **LTV/CAC**: 12.8x | **Gross Margin**: 85% | **Churn**: 5%/anno
+- **Target**: Break-even Q2 2027, ARR €3.6M fine 2028 (75 clienti)
+- **Seed round**: €1.5M (40% sviluppo, 35% sales/marketing, 15% GRC, 10% riserva)
+
+## Segmenti Target con ACV
+| Segmento | Dimensione | Driver | ACV |
+|---|---|---|---|
+| Banche & Finanza | Fatturato >€1B | AI Act + DORA + NIS2 | €80-120K |
+| Assicurazioni | Fatturato >€500M | AI Act + GDPR + DORA | €60-100K |
+| Pubblica Amministrazione | Enti centrali/regionali | AI Act + GDPR + trasparenza | €40-80K |
+| Sanita | Ospedali e ASL | AI Act + GDPR + ISO 27001 | €30-60K |
+| Energia & Utility | Fatturato >€500M | NIS2 + AI Act | €50-80K |
 
 ## User Personas
-- **CTO/CISO**: Needs overview of AI agent landscape and risk posture
-- **DPO (Data Protection Officer)**: Monitors GDPR compliance and data governance
-- **Compliance Officer**: Tracks regulatory standards (AI Act, ISO, DORA, NIS2)
-- **IT Administrator**: Manages agent lifecycle and policy enforcement
+- **CTO/CISO**: Panoramica landscape agenti AI e postura di rischio
+- **DPO**: Conformita GDPR e governance dei dati
+- **Compliance Officer**: Tracciamento standard regolatori (AI Act, ISO, DORA, NIS2)
+- **IT Administrator**: Ciclo di vita agenti e enforcement policy
 
-## Core Requirements
-- Landing page with UVP, features showcase, target sectors
-- Dashboard with sidebar navigation
-- AI Agents Registry (CRUD) with risk classification
-- Policy Engine (CRUD) with regulation mapping
-- Audit Trail with search/filter/dense table view
-- Compliance Monitor for 6 EU/ISO standards
-- AI-powered Compliance Assistant (GPT-5.2)
-- Bilingual support (EN/IT)
-- Dark mode enterprise aesthetic
+## Architecture (Current — MVP v1.1)
+- **Frontend**: React 19 + Tailwind 3.4 + Shadcn/UI (port 3000)
+- **Backend**: FastAPI 0.110 + Pydantic V2 (port 8001)
+- **Database**: MongoDB + Motor async (15 indici, 5 collections)
+- **LLM**: OpenAI GPT-5.2 via Emergent LLM key
+- **Process Manager**: Supervisord
+- **Tipo**: Monolite a due tier
 
-## What's Been Implemented (Feb 18, 2026)
-- [x] Full landing page (hero, features bento grid, clients, CTA, footer)
-- [x] Dashboard with sidebar (Overview, Agents, Policies, Audit, Compliance, Assistant)
-- [x] KPI dashboard with real-time data from MongoDB
-- [x] AI Agents CRUD (create, read, update, delete) with risk/status management
-- [x] Policy Engine CRUD with regulation, severity, enforcement mapping
-- [x] Audit Trail with searchable/filterable dense table (25 seeded events)
-- [x] Compliance Monitor for 6 standards (AI Act, GDPR, ISO 27001, ISO 42001, DORA, NIS2)
-- [x] AI Compliance Assistant with GPT-5.2 (real LLM integration)
-- [x] Bilingual toggle (EN/IT)
-- [x] Every action creates audit log entry
-- [x] Seed data for demo (4 agents, 5 policies, 25 audit logs, 6 compliance standards)
+## 6 Moduli Funzionali
+1. **Agent Registry**: Catalogazione agenti con profilo completo (risk level, status, azioni, domini ristretti)
+2. **Policy Engine**: 5 tipi (restriction, approval, rate_limit, logging, retention) × 6 normative × 4 enforcement
+3. **Audit Trail**: Tracciabilita immutabile con search sanitizzata e filtri
+4. **Compliance Dashboard**: 6 standard EU (AI Act, GDPR, ISO 27001, ISO 42001, DORA, NIS2)
+5. **AI Compliance Assistant**: GPT-5.2 con memoria conversazionale
+6. **Interfaccia bilingue**: IT/EN nativa
 
-## Prioritized Backlog
+## What's Been Implemented
 
-### P0 (Next Phase)
-- Authentication system (JWT or Google Auth)
-- Role-based access control (Admin, DPO, Auditor, Viewer)
-- Real-time agent monitoring (websocket)
+### MVP v1.0 (18 Feb 2026)
+- [x] Landing page completa (hero, features bento, clients, CTA, footer)
+- [x] Dashboard con sidebar e navigazione 6 sezioni
+- [x] KPI dashboard con dati real-time da MongoDB
+- [x] CRUD Agents con risk/status management
+- [x] CRUD Policies con mapping 6 normative
+- [x] Audit Trail con ricerca/filtri
+- [x] Compliance Monitor per 6 standard
+- [x] AI Compliance Assistant GPT-5.2 (reale)
+- [x] Toggle bilingue EN/IT
+- [x] Auto audit log per ogni operazione CRUD
+- [x] Seed data demo (4 agenti, 5 policy, 25 log, 6 standard)
+- [x] Test suite 25/25 passati
 
-### P1
-- Dashboard data visualizations (charts, trends over time)
-- Policy conflict detection engine
-- Automated compliance scoring algorithm
-- Export audit reports (PDF/CSV)
-- Agent activity timeline
+### Step 1 Fixes (26 Feb 2026) — v1.1
+- [x] 15 indici MongoDB (5 unique, 10 filtro)
+- [x] Sanitizzazione regex (re.escape)
+- [x] CORS restrittivo (ALLOWED_ORIGINS da env)
+- [x] Chat history passata al LLM (initial_messages)
+- [x] 7 Enum Pydantic tipizzati
+- [x] Debounce search 300ms
+- [x] Import inutilizzati rimossi
+- [x] Migrazione lifespan (asynccontextmanager)
+- [x] Errori LLM mascherati
 
-### P2
-- Integration connectors (IAM, SIEM, ServiceNow, CMDB)
-- AI-powered risk auto-classification
-- Custom compliance framework builder
-- Multi-tenant support
-- API key management for external agent registration
-- Notification system (email alerts on policy violations)
+## Roadmap Tecnica (dal Business Plan)
+
+### Phase 1 — Foundation (Q2 2026, 3 mesi)
+- [ ] JWT + RBAC (Admin, DPO, Auditor, Viewer)
+- [ ] Split backend monolite → moduli (models/, routes/, services/)
+- [ ] Rate limiting (slowapi) su endpoint critici
+- [ ] WebSocket monitoraggio real-time
+- [ ] Header di sicurezza (CSP, X-Frame-Options, HSTS)
+
+### Phase 2 — Intelligence (Q3-Q4 2026, 6 mesi)
+- [ ] Dashboard visualizzazioni avanzate (Recharts — gia installato)
+- [ ] Motore rilevamento conflitti policy
+- [ ] Algoritmo scoring automatico compliance
+- [ ] Export report PDF/CSV
+- [ ] Timeline attivita agenti
+- [ ] Streaming SSE per chat LLM
+
+### Phase 3 — Integration (Q1-Q2 2027, 6 mesi)
+- [ ] Connettori SIEM (Splunk, ELK)
+- [ ] Connettori IAM (Okta, Azure AD)
+- [ ] Connettore ServiceNow/CMDB
+- [ ] Multi-tenant
+- [ ] API key management per registrazione agenti esterna
+- [ ] Sistema notifiche (email alerts su violazioni policy)
+- [ ] Custom compliance framework builder
+
+### Evoluzione Architetturale Target (Enterprise)
+| Componente | MVP v1.1 | Target Enterprise |
+|---|---|---|
+| Policy Engine | CRUD MongoDB | OPA/Rego |
+| Intercettazione | API manuale | Envoy Proxy / Istio |
+| Identita Agenti | UUID stringhe | SPIFFE/SPIRE |
+| Audit Trail | MongoDB standard | Immutable Ledger (QLDB/Hyperledger) |
+| Scalabilita | Monolite Supervisord | Microservizi Kubernetes |
+| Autenticazione | Assente | JWT + RBAC + SSO (Okta/Azure AD) |
+
+### Certificazioni Pianificate
+| Certificazione | Target | Costo stimato |
+|---|---|---|
+| ISO 27001 | Q3 2026 | €30-50K |
+| ISO 42001 | Q4 2026 | €20-40K |
+| SOC2 Type II | Q1 2027 | €40-60K |
+| EU AI Act Compliance Seal | Q2 2027 | TBD |
+
+## Competitive Landscape
+| Competitor | Sede | Funding | Focus | Agent Governance |
+|---|---|---|---|---|
+| Credo AI | US | $39.3M | Risk mgmt, model cards | Parziale |
+| Holistic AI | UK/US | $5M | Bias auditing, etica | No |
+| IBM Watsonx.gov | US | Corporate | Model lifecycle | No |
+| OneTrust | US | $920M+ | Privacy, consent | No |
+| Airia | US | N/D | Agent constraints | Si |
+| Enkrypt AI | US | N/D | AI security, policy LLM | Si |
+| **GOVERN.AI** | **Italia** | **Pre-seed** | **Agent governance + compliance EU** | **Si (6 standard)** |
+
+## Dipendenze Strategiche gia presenti
+- PyJWT 2.11.0 + bcrypt 4.1.3 → pronti per autenticazione
+- Stripe 14.3.0 → pronto per billing
+- websockets 15.0.1 → pronto per real-time monitoring
+- Recharts 3.6.0 → pronto per dashboard avanzate
 
 ## Next Tasks
-1. Add authentication + RBAC
-2. Enhanced dashboard charts (recharts)
-3. PDF/CSV export for audit trail and compliance reports
-4. Policy conflict detection
-5. Real-time agent status monitoring
+1. Phase 1 Foundation: JWT + RBAC (P0)
+2. Phase 1 Foundation: Split monolite backend
+3. Phase 1 Foundation: Rate limiting + security headers
+4. Loghi ANTHERA + GOVERN.AI (richiesta utente — in sospeso)
