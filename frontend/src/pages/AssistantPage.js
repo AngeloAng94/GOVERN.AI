@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Shield, Send, Bot, User, Loader2 } from "lucide-react";
+import { Shield, Send, User, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import axios from "axios";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -42,17 +44,23 @@ export default function AssistantPage() {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   };
 
-  const renderContent = (content) => {
-    const lines = content.split("\n");
-    return lines.map((line, i) => {
-      if (line.startsWith("### ")) return <h3 key={i} className="font-['Space_Grotesk'] text-base font-semibold text-white mt-3 mb-1">{line.slice(4)}</h3>;
-      if (line.startsWith("## ")) return <h2 key={i} className="font-['Space_Grotesk'] text-lg font-semibold text-white mt-3 mb-1">{line.slice(3)}</h2>;
-      if (line.startsWith("# ")) return <h1 key={i} className="font-['Space_Grotesk'] text-xl font-bold text-white mt-3 mb-1">{line.slice(2)}</h1>;
-      if (line.startsWith("- ")) return <li key={i} className="text-sm text-slate-300 ml-4 list-disc">{line.slice(2)}</li>;
-      if (line.startsWith("**") && line.endsWith("**")) return <p key={i} className="text-sm font-semibold text-white">{line.slice(2, -2)}</p>;
-      if (line.trim() === "") return <br key={i} />;
-      return <p key={i} className="text-sm text-slate-300 leading-relaxed">{line}</p>;
-    });
+  const mdComponents = {
+    code: ({inline, children, ...props}) => (
+      inline
+        ? <code className="bg-slate-800 text-blue-400 px-1 py-0.5 rounded text-sm font-mono" {...props}>{children}</code>
+        : <pre className="bg-slate-900 border border-slate-700 rounded-sm p-4 overflow-x-auto my-2"><code className="text-blue-400 text-sm font-mono" {...props}>{children}</code></pre>
+    ),
+    p: ({children}) => <p className="mb-2 last:mb-0 text-sm text-slate-300 leading-relaxed">{children}</p>,
+    ul: ({children}) => <ul className="list-disc list-inside mb-2 space-y-1 text-sm text-slate-300">{children}</ul>,
+    ol: ({children}) => <ol className="list-decimal list-inside mb-2 space-y-1 text-sm text-slate-300">{children}</ol>,
+    strong: ({children}) => <strong className="font-semibold text-white">{children}</strong>,
+    h1: ({children}) => <h1 className="font-['Space_Grotesk'] text-xl font-bold text-white mt-3 mb-1">{children}</h1>,
+    h2: ({children}) => <h2 className="font-['Space_Grotesk'] text-lg font-semibold text-white mt-3 mb-1">{children}</h2>,
+    h3: ({children}) => <h3 className="font-['Space_Grotesk'] text-base font-semibold text-white mt-3 mb-1">{children}</h3>,
+    a: ({href, children}) => <a href={href} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">{children}</a>,
+    table: ({children}) => <div className="overflow-x-auto my-2"><table className="min-w-full border border-slate-700 text-sm">{children}</table></div>,
+    th: ({children}) => <th className="border border-slate-700 bg-slate-800 px-3 py-2 text-left font-medium text-slate-300">{children}</th>,
+    td: ({children}) => <td className="border border-slate-700 px-3 py-2 text-slate-300">{children}</td>,
   };
 
   const charCount = input.length;
@@ -110,7 +118,7 @@ export default function AssistantPage() {
                 </div>
               )}
               <div className={`max-w-[75%] rounded-sm p-4 ${msg.role === "user" ? "bg-blue-600/20 border border-blue-500/30" : "bg-slate-800/50 border border-slate-700"}`}>
-                {msg.role === "user" ? <p className="text-sm text-slate-200">{msg.content}</p> : <div>{renderContent(msg.content)}</div>}
+                {msg.role === "user" ? <p className="text-sm text-slate-200">{msg.content}</p> : <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>{msg.content}</ReactMarkdown>}
               </div>
               {msg.role === "user" && (
                 <div className="w-8 h-8 rounded-sm bg-slate-700 flex items-center justify-center shrink-0"><User className="w-4 h-4 text-slate-300" /></div>
