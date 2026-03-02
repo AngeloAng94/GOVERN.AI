@@ -434,13 +434,16 @@ Risultato: la chat LLM non ha contesto delle conversazioni precedenti, ogni mess
 - **[Step 1 — 26/02/2026] Import inutilizzati rimossi** (StreamingResponse, asyncio, json, Ban, Filter, X) — TD14/TD15 risolto
 - **[Step 1 — 26/02/2026] Migrazione lifespan** da on_event a asynccontextmanager — TD8 risolto
 - **[Step 1 — 26/02/2026] Errori LLM mascherati** (messaggio generico al client, log completo interno) — TD16/V6 risolto
+- **[Step 2A — 02/03/2026] Autenticazione JWT + RBAC** — 4 ruoli (admin>dpo>auditor>viewer), bcrypt, HS256, scadenza 8h — TD1/V1 risolto
+- **[Step 2A — 02/03/2026] ARIA AI Assistant verticale** — system prompt rigido, rifiuta domande off-topic, validazione 5-2000 chars — Fix A2 completato
+- **[Step 2A — 02/03/2026] Rate limiting** — slowapi su tutti gli endpoint (chat 10/min, login 5/min, CRUD 30/min) — TD9/V5 risolto
+
+**Step 2A completato il 02 Marzo 2026** — Auth JWT + ARIA + Rate Limiting applicati. Test 100% passati.
 
 **Step 1 completato il 26 Febbraio 2026** — 9 fix critici e quick wins applicati con successo.
 
 ### Da completare 🔄
 
-- **Autenticazione e RBAC** — sistema completamente aperto (P0)
-- **Rate limiting** — nessuna protezione contro abuso API (P1)
 - **Refactoring backend** — monolite da splittare (P1)
 - **Refactoring frontend** — duplicazione CRUD da eliminare (P1)
 - **Streaming chat** — risposta LLM non in streaming (P2)
