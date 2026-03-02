@@ -41,7 +41,7 @@ const translations = {
     sidebar_policies: "Policies",
     sidebar_audit: "Audit Trail",
     sidebar_compliance: "Compliance",
-    sidebar_assistant: "AI Assistant",
+    sidebar_assistant: "ARIA",
     // Overview
     overview_title: "Control Plane Overview",
     total_agents: "Total Agents",
@@ -143,7 +143,7 @@ const translations = {
     sidebar_policies: "Policy",
     sidebar_audit: "Traccia Audit",
     sidebar_compliance: "Compliance",
-    sidebar_assistant: "Assistente AI",
+    sidebar_assistant: "ARIA",
     overview_title: "Panoramica del Control Plane",
     total_agents: "Agenti Totali",
     active_agents: "Attivi",

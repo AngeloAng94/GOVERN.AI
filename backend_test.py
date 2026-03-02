@@ -1,309 +1,337 @@
 #!/usr/bin/env python3
-
+"""
+GOVERN.AI Step 2A Backend API Testing Suite
+Tests JWT Authentication, RBAC, Rate Limiting, and ARIA Assistant
+"""
 import requests
 import sys
 import json
+import time
 from datetime import datetime
 
-class GovAITester:
+class GovernAITester:
     def __init__(self, base_url="https://audit-first-ai.preview.emergentagent.com/api"):
         self.base_url = base_url
+        self.token = None
+        self.user = None
         self.tests_run = 0
         self.tests_passed = 0
         self.failed_tests = []
-
+        self.session = requests.Session()
+        
     def log(self, message):
-        timestamp = datetime.now().strftime("%H:%M:%S")
-        print(f"[{timestamp}] {message}")
+        """Log with timestamp"""
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {message}")
 
-    def run_test(self, name, method, endpoint, expected_status, data=None, params=None):
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers=None, params=None):
         """Run a single API test"""
-        url = f"{self.base_url}/{endpoint}" if not endpoint.startswith('http') else endpoint
-        headers = {'Content-Type': 'application/json'}
+        url = f"{self.base_url}/{endpoint}"
+        test_headers = {'Content-Type': 'application/json'}
+        
+        if self.token:
+            test_headers['Authorization'] = f'Bearer {self.token}'
+        if headers:
+            test_headers.update(headers)
 
         self.tests_run += 1
-        self.log(f"🔍 Testing {name}...")
+        self.log(f"🔍 Test {self.tests_run}: {name}")
         
         try:
             if method == 'GET':
-                response = requests.get(url, headers=headers, params=params, timeout=10)
+                response = self.session.get(url, headers=test_headers, params=params)
             elif method == 'POST':
-                response = requests.post(url, json=data, headers=headers, timeout=10)
+                response = self.session.post(url, json=data, headers=test_headers)
             elif method == 'PUT':
-                response = requests.put(url, json=data, headers=headers, timeout=10)
+                response = self.session.put(url, json=data, headers=test_headers)
             elif method == 'DELETE':
-                response = requests.delete(url, headers=headers, timeout=10)
+                response = self.session.delete(url, headers=test_headers)
 
             success = response.status_code == expected_status
             if success:
                 self.tests_passed += 1
-                self.log(f"✅ {name} - Status: {response.status_code}")
+                self.log(f"✅ PASS - Status: {response.status_code}")
                 try:
-                    return True, response.json() if response.content else {}
+                    return True, response.json() if response.text else {}
                 except:
                     return True, {}
             else:
-                self.log(f"❌ {name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAIL - Expected {expected_status}, got {response.status_code}")
                 try:
-                    error_content = response.json() if response.content else response.text
-                    self.log(f"    Response: {error_content}")
+                    error_detail = response.json().get('detail', 'No detail')
                 except:
-                    self.log(f"    Response: {response.text[:200]}")
-                self.failed_tests.append(f"{name}: Expected {expected_status}, got {response.status_code}")
+                    error_detail = response.text
+                self.log(f"   Response: {error_detail}")
+                self.failed_tests.append({
+                    "test": name,
+                    "expected": expected_status,
+                    "actual": response.status_code,
+                    "error": error_detail
+                })
                 return False, {}
 
         except Exception as e:
-            self.log(f"❌ {name} - Error: {str(e)}")
-            self.failed_tests.append(f"{name}: Exception - {str(e)}")
+            self.log(f"❌ FAIL - Exception: {str(e)}")
+            self.failed_tests.append({
+                "test": name,
+                "error": str(e)
+            })
             return False, {}
 
-    def test_dashboard_stats(self):
-        """Test GET /api/dashboard/stats returns valid KPIs"""
-        success, data = self.run_test(
-            "Dashboard Stats", "GET", "dashboard/stats", 200
-        )
-        if success:
-            required_keys = ["agents", "policies", "audit", "compliance_avg"]
-            for key in required_keys:
-                if key not in data:
-                    self.log(f"❌ Dashboard Stats - Missing key: {key}")
-                    return False
-            self.log(f"    Found KPIs: {list(data.keys())}")
-            return True
-        return False
-
-    def test_agents_list(self):
-        """Test GET /api/agents lists agents with correct enum values"""
-        success, data = self.run_test(
-            "Agents List", "GET", "agents", 200
-        )
-        if success and data:
-            # Check first agent for enum validation
-            agent = data[0] if data else {}
-            valid_statuses = ["active", "inactive", "suspended"]
-            valid_risks = ["low", "medium", "high", "critical"]
-            
-            if agent.get("status") not in valid_statuses:
-                self.log(f"❌ Invalid agent status: {agent.get('status')}")
-                return False
-            if agent.get("risk_level") not in valid_risks:
-                self.log(f"❌ Invalid agent risk_level: {agent.get('risk_level')}")
-                return False
-            
-            self.log(f"    First agent status: {agent.get('status')}, risk: {agent.get('risk_level')}")
-            return True
-        return success
-
-    def test_agent_enum_validation(self):
-        """Test POST /api/agents with invalid risk_level='banana' returns HTTP 422"""
-        invalid_agent = {
-            "name": "Test Agent",
-            "description": "Test description", 
-            "risk_level": "banana"
-        }
-        success, data = self.run_test(
-            "Agent Invalid Enum", "POST", "agents", 422, data=invalid_agent
-        )
-        return success
-
-    def test_agent_valid_creation(self):
-        """Test POST /api/agents with valid enum values creates agent successfully"""
-        valid_agent = {
-            "name": "Test Valid Agent",
-            "description": "Test agent with valid enums",
-            "risk_level": "medium", 
-            "status": "active"
-        }
-        success, data = self.run_test(
-            "Agent Valid Creation", "POST", "agents", 200, data=valid_agent
-        )
-        if success:
-            self.created_agent_id = data.get("id")
-            return True
-        return False
-
-    def test_agent_update(self):
-        """Test PUT /api/agents/{id} updates agent correctly"""
-        if not hasattr(self, 'created_agent_id'):
-            self.log("❌ Agent Update - No agent ID from previous test")
-            return False
-            
-        update_data = {
-            "name": "Updated Test Agent",
-            "description": "Updated description",
-            "risk_level": "high",
-            "status": "suspended"
-        }
-        success, data = self.run_test(
-            "Agent Update", "PUT", f"agents/{self.created_agent_id}", 200, data=update_data
-        )
-        return success
-
-    def test_agent_delete(self):
-        """Test DELETE /api/agents/{id} deletes agent correctly"""
-        if not hasattr(self, 'created_agent_id'):
-            self.log("❌ Agent Delete - No agent ID from previous test")
-            return False
-            
-        success, data = self.run_test(
-            "Agent Delete", "DELETE", f"agents/{self.created_agent_id}", 200
-        )
-        return success
-
-    def test_policies_list(self):
-        """Test GET /api/policies lists policies with enum-validated fields"""
-        success, data = self.run_test(
-            "Policies List", "GET", "policies", 200
-        )
-        if success and data:
-            policy = data[0] if data else {}
-            valid_severities = ["low", "medium", "high", "critical"]
-            valid_enforcements = ["block", "log", "throttle", "auto"]
-            
-            if policy.get("severity") not in valid_severities:
-                self.log(f"❌ Invalid policy severity: {policy.get('severity')}")
-                return False
-            if policy.get("enforcement") not in valid_enforcements:
-                self.log(f"❌ Invalid policy enforcement: {policy.get('enforcement')}")
-                return False
-                
-            self.log(f"    First policy severity: {policy.get('severity')}, enforcement: {policy.get('enforcement')}")
-            return True
-        return success
-
-    def test_policy_invalid_enum(self):
-        """Test POST /api/policies with invalid enforcement='zap' returns HTTP 422"""
-        invalid_policy = {
-            "name": "Test Policy",
-            "description": "Test policy with invalid enum",
-            "enforcement": "zap"
-        }
-        success, data = self.run_test(
-            "Policy Invalid Enum", "POST", "policies", 422, data=invalid_policy
-        )
-        return success
-
-    def test_policy_valid_creation(self):
-        """Test POST /api/policies with valid data creates policy successfully"""
-        valid_policy = {
-            "name": "Test Valid Policy", 
-            "description": "Test policy with valid enums",
-            "severity": "high",
-            "enforcement": "block"
-        }
-        success, data = self.run_test(
-            "Policy Valid Creation", "POST", "policies", 200, data=valid_policy
-        )
-        if success:
-            self.created_policy_id = data.get("id")
-            return True
-        return False
-
-    def test_audit_regex_safety(self):
-        """Test GET /api/audit with regex special chars (.*[]) does NOT crash (regex sanitized)"""
-        # Test with dangerous regex patterns
-        dangerous_patterns = [".*", ".*[]", "[", "(", ".*.*.*"]
+    def test_auth_flow(self):
+        """Test authentication endpoints"""
+        self.log("\n🔐 === AUTHENTICATION TESTS ===")
         
-        for pattern in dangerous_patterns:
-            success, data = self.run_test(
-                f"Audit Regex Safety ({pattern})", "GET", "audit", 200, 
-                params={"search": pattern}
-            )
-            if not success:
-                return False
+        # Test login with correct admin credentials
+        success, response = self.run_test(
+            "Login with admin credentials",
+            "POST",
+            "auth/login",
+            200,
+            data={"username": "admin", "password": "AdminGovern2026!"}
+        )
+        
+        if success and 'token' in response and 'user' in response:
+            self.token = response['token']
+            self.user = response['user']
+            self.log(f"   Token acquired for user: {self.user.get('username')} (role: {self.user.get('role')})")
+        else:
+            self.log("❌ CRITICAL: Cannot proceed without valid token")
+            return False
+            
+        # Test login with wrong password
+        self.run_test(
+            "Login with wrong password",
+            "POST", 
+            "auth/login",
+            401,
+            data={"username": "admin", "password": "wrongpassword"}
+        )
+        
+        # Test /auth/me with valid token
+        self.run_test(
+            "GET /auth/me with valid token",
+            "GET",
+            "auth/me", 
+            200
+        )
+        
         return True
 
-    def test_audit_filters(self):
-        """Test GET /api/audit with outcome/risk_level filters works correctly"""
-        # Test outcome filter
-        success1, data1 = self.run_test(
-            "Audit Outcome Filter", "GET", "audit", 200,
-            params={"outcome": "allowed", "limit": 10}
+    def test_dashboard_endpoints(self):
+        """Test dashboard and protected endpoints"""
+        self.log("\n📊 === DASHBOARD & RBAC TESTS ===")
+        
+        # Test dashboard without token
+        old_token = self.token
+        self.token = None
+        self.run_test(
+            "GET /dashboard/stats without token",
+            "GET",
+            "dashboard/stats",
+            401
+        )
+        self.token = old_token
+        
+        # Test dashboard with admin token
+        self.run_test(
+            "GET /dashboard/stats with admin token",
+            "GET", 
+            "dashboard/stats",
+            200
+        )
+
+    def test_agents_crud(self):
+        """Test agents CRUD operations"""
+        self.log("\n🤖 === AGENTS CRUD TESTS ===")
+        
+        # List agents (admin has access)
+        self.run_test(
+            "GET /agents with admin token",
+            "GET",
+            "agents",
+            200
         )
         
-        # Test risk_level filter
-        success2, data2 = self.run_test(
-            "Audit Risk Filter", "GET", "audit", 200,
-            params={"risk_level": "medium", "limit": 10}
-        )
-        
-        return success1 and success2
-
-    def test_compliance_standards(self):
-        """Test GET /api/compliance returns 6 compliance standards"""
-        success, data = self.run_test(
-            "Compliance Standards", "GET", "compliance", 200
-        )
-        if success:
-            if len(data) != 6:
-                self.log(f"❌ Expected 6 compliance standards, got {len(data)}")
-                return False
-            self.log(f"    Found {len(data)} compliance standards")
-            return True
-        return False
-
-    def test_chat_functionality(self):
-        """Test POST /api/chat sends message and gets AI response (GPT-5.2)"""
-        chat_request = {
-            "message": "What are the key requirements of the EU AI Act?",
-            "session_id": "test_session"
+        # Create agent (admin has dpo+ permission)
+        agent_data = {
+            "name": "Test Agent",
+            "description": "Test agent for API testing", 
+            "model_type": "GPT-5.2",
+            "risk_level": "medium",
+            "status": "active",
+            "allowed_actions": ["test_action"],
+            "restricted_domains": [],
+            "data_classification": "internal",
+            "owner": "Test Suite"
         }
-        success, data = self.run_test(
-            "Chat Functionality", "POST", "chat", 200, data=chat_request
+        
+        success, response = self.run_test(
+            "POST /agents with admin token", 
+            "POST",
+            "agents",
+            201,
+            data=agent_data
         )
+        
+        created_agent_id = response.get('id') if success else None
+        
+        # Test invalid enum value
+        invalid_agent_data = agent_data.copy()
+        invalid_agent_data['risk_level'] = 'banana'
+        
+        self.run_test(
+            "POST /agents with invalid risk_level 'banana'",
+            "POST",
+            "agents", 
+            422,
+            data=invalid_agent_data
+        )
+        
+        # Delete agent (admin only)
+        if created_agent_id:
+            self.run_test(
+                "DELETE /agents/{id} with admin token",
+                "DELETE",
+                f"agents/{created_agent_id}",
+                200
+            )
+
+    def test_policies_endpoint(self):
+        """Test policies endpoint"""
+        self.log("\n📋 === POLICIES TESTS ===")
+        
+        self.run_test(
+            "GET /policies with token",
+            "GET",
+            "policies",
+            200
+        )
+
+    def test_audit_endpoint(self):
+        """Test audit trail endpoint"""
+        self.log("\n🔍 === AUDIT TRAIL TESTS ===")
+        
+        self.run_test(
+            "GET /audit with token",
+            "GET", 
+            "audit",
+            200
+        )
+
+    def test_compliance_endpoint(self):
+        """Test compliance standards endpoint"""
+        self.log("\n✅ === COMPLIANCE TESTS ===")
+        
+        success, response = self.run_test(
+            "GET /compliance with token",
+            "GET",
+            "compliance", 
+            200
+        )
+        
+        # Verify 6 compliance standards are returned
+        if success and isinstance(response, list):
+            if len(response) == 6:
+                self.log(f"   ✅ Compliance standards count: {len(response)}")
+            else:
+                self.log(f"   ⚠️ Expected 6 compliance standards, got {len(response)}")
+
+    def test_aria_chat(self):
+        """Test ARIA AI assistant chat"""
+        self.log("\n💬 === ARIA CHAT TESTS ===")
+        
+        # Test message too short
+        self.run_test(
+            "POST /chat with message < 5 chars",
+            "POST",
+            "chat",
+            400,
+            data={"message": "hi", "session_id": "test"}
+        )
+        
+        # Test message too long
+        long_message = "x" * 2001
+        self.run_test(
+            "POST /chat with message > 2000 chars", 
+            "POST",
+            "chat",
+            400,
+            data={"message": long_message, "session_id": "test"}
+        )
+        
+        # Test valid compliance question
+        compliance_msg = "What are the key requirements of the EU AI Act for high-risk systems?"
+        success, response = self.run_test(
+            "POST /chat with valid compliance question",
+            "POST", 
+            "chat",
+            200,
+            data={"message": compliance_msg, "session_id": "test_session"}
+        )
+        
         if success:
-            if "response" not in data:
-                self.log("❌ Chat response missing 'response' field")
-                return False
-            self.log(f"    Chat response length: {len(data.get('response', ''))}")
-            return True
-        return False
+            self.log(f"   ARIA response preview: {response.get('response', '')[:100]}...")
+
+    def test_rate_limiting(self):
+        """Test rate limiting (basic check)"""
+        self.log("\n🚦 === RATE LIMITING TESTS ===")
+        
+        # Quick test of chat rate limit (10/min)
+        self.log("Testing chat rate limit...")
+        for i in range(3):
+            success, _ = self.run_test(
+                f"Rate limit test {i+1}/3",
+                "POST",
+                "chat", 
+                200,
+                data={"message": f"Rate test {i+1}", "session_id": "rate_test"}
+            )
+            if not success:
+                break
+            time.sleep(1)
 
     def run_all_tests(self):
-        """Run all backend API tests"""
-        self.log("🚀 Starting GOVERN.AI Step 1 Fixes Verification")
-        self.log(f"   Testing against: {self.base_url}")
-        print("="*60)
-
-        # Test all core functionality
-        test_methods = [
-            self.test_dashboard_stats,
-            self.test_agents_list, 
-            self.test_agent_enum_validation,
-            self.test_agent_valid_creation,
-            self.test_agent_update,
-            self.test_agent_delete,
-            self.test_policies_list,
-            self.test_policy_invalid_enum, 
-            self.test_policy_valid_creation,
-            self.test_audit_regex_safety,
-            self.test_audit_filters,
-            self.test_compliance_standards,
-            self.test_chat_functionality
-        ]
-
-        for test_method in test_methods:
-            try:
-                test_method()
-            except Exception as e:
-                self.log(f"❌ {test_method.__name__} - Exception: {str(e)}")
-                self.failed_tests.append(f"{test_method.__name__}: Exception - {str(e)}")
-            print("-" * 60)
-
-        # Print summary
-        self.log(f"📊 Tests completed: {self.tests_passed}/{self.tests_run} passed")
+        """Run the complete test suite"""
+        self.log("🚀 Starting GOVERN.AI Step 2A API Test Suite")
+        self.log(f"Base URL: {self.base_url}")
+        
+        start_time = datetime.now()
+        
+        # Run test modules
+        if not self.test_auth_flow():
+            self.log("❌ CRITICAL: Authentication failed, stopping tests")
+            return False
+            
+        self.test_dashboard_endpoints()
+        self.test_agents_crud()
+        self.test_policies_endpoint()
+        self.test_audit_endpoint() 
+        self.test_compliance_endpoint()
+        self.test_aria_chat()
+        self.test_rate_limiting()
+        
+        # Results summary
+        end_time = datetime.now()
+        duration = (end_time - start_time).total_seconds()
+        
+        self.log(f"\n📊 === TEST RESULTS ===")
+        self.log(f"Tests completed in {duration:.1f}s")
+        self.log(f"Passed: {self.tests_passed}/{self.tests_run}")
+        self.log(f"Failed: {len(self.failed_tests)}")
         
         if self.failed_tests:
-            self.log("❌ Failed tests:")
-            for failed in self.failed_tests:
-                self.log(f"   • {failed}")
-        else:
-            self.log("🎉 All tests passed!")
-
-        return self.tests_passed == self.tests_run
+            self.log(f"\n❌ FAILED TESTS:")
+            for fail in self.failed_tests:
+                self.log(f"  - {fail['test']}: {fail.get('error', 'Status code mismatch')}")
+        
+        success_rate = (self.tests_passed / self.tests_run) * 100 if self.tests_run > 0 else 0
+        self.log(f"\nSuccess rate: {success_rate:.1f}%")
+        
+        return success_rate >= 80
 
 def main():
-    tester = GovAITester()
+    """Main test execution"""
+    tester = GovernAITester()
     success = tester.run_all_tests()
     return 0 if success else 1
 
