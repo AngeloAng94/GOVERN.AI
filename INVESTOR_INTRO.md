@@ -92,38 +92,55 @@ Additional revenue streams:
 
 ## The Ask
 
-We are raising a **Pre-Seed / Seed round** to:
+We are currently exploring early-stage funding conversations to:
 
-1. **Expand the product** — build integrations, enhance policy engine
+1. **Expand the product** — build enterprise integrations, enhance policy engine
 2. **Hire initial team** — 2-3 engineers, 1 compliance domain expert
 3. **Pilot with design partners** — 3-5 enterprises in banking/PA
 4. **Go-to-market in Italy/EU** — first-mover advantage on AI Act compliance
+
+Open to discussing the right structure and partnership.
 
 ---
 
 ## About the Founder
 
-[Il tuo nome] is building GOVERN.AI with a vision to become the standard for AI governance in regulated industries.
+**Angelo Anglani** is building GOVERN.AI with a vision to become the standard for AI governance in regulated industries.
 
-**Background:**
-- [Aggiungi qui: esperienza rilevante, background tecnico/business]
-- [Eventuali exit precedenti, ruoli in aziende rilevanti]
-- [Competenze specifiche: AI, compliance, enterprise software]
+### Background
 
-**Why me:**
-- Deep understanding of both AI technology and regulatory landscape
-- Network in [settore target]
-- Obsessed with solving the AI governance problem before it becomes a crisis
+| Area | Experience |
+|------|------------|
+| **Cloud & Infrastructure** | Managed 18,000+ AWS VMs for Italy's largest public administration, delivering €3M+ annual cost optimization and 99.9% SLA uptime |
+| **Enterprise Consulting** | BIP xTech, Deloitte Risk Advisory — led €10M+ digital transformation programs |
+| **IT Risk & Compliance** | IT Audit, cybersecurity advisory, zero compliance violations track record |
+| **Financial Communications** | Master in Investor Relations (Euronext Academy / Borsa Italiana) |
+
+### Education
+
+- **Master in Data & Cloud Engineering** — Politecnico di Milano (2023-2025)
+- **Master in Investor Relations** — Euronext Academy, Borsa Italiana (2025)
+- **M.Sc. Industrial Management** — LIUC Università Cattaneo
+- **AWS Cloud Practitioner** certified
+- **HPC & Quantum Computing** — CINECA
+
+### Why Angelo for GOVERN.AI
+
+- **Rare combination**: Deep technical expertise (Cloud, Data, DevOps) + financial/investor communication skills
+- **Enterprise DNA**: Years of consulting for large organizations (PA, luxury brands, logistics) — understands enterprise sales cycles and compliance requirements
+- **Compliance native**: IT Audit background at Deloitte, understands risk frameworks from the inside
+- **Builder mindset**: From Business Analyst to Strategic Advisor, consistently delivered complex IT projects with measurable ROI
 
 ---
 
 ## Contact
 
-**[Il tuo nome]**  
+**Angelo Anglani**  
 Founder, GOVERN.AI  
-[Email]  
-[LinkedIn]  
-[Phone]
+
+📧 angelo.anglani94@gmail.com  
+📱 +39 342 754 8655  
+🔗 [linkedin.com/in/angelo-anglani](https://linkedin.com/in/angelo-anglani)
 
 ---
 
