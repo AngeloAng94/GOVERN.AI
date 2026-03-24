@@ -10,7 +10,7 @@ import time
 from datetime import datetime
 
 class GovernAITester:
-    def __init__(self, base_url="https://audit-nexus-4.preview.emergentagent.com/api"):
+    def __init__(self, base_url="https://agent-control-panel-7.preview.emergentagent.com/api"):
         self.base_url = base_url
         self.token = None
         self.user = None

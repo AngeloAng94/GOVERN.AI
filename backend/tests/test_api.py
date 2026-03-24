@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-API_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://audit-nexus-4.preview.emergentagent.com')
+API_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://agent-control-panel-7.preview.emergentagent.com')
 BASE = f"{API_URL}/api"
 
 # Test credentials
