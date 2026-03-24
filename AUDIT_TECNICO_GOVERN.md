@@ -1,6 +1,6 @@
 # AUDIT TECNICO — GOVERN.AI
-**Data**: 02 Marzo 2026 (aggiornato post Step 2B)  
-**Versione codebase**: MVP v1.3 (Step 2B completato)  
+**Data**: 24 Marzo 2026 (aggiornato post Step C1)  
+**Versione codebase**: MVP v1.4 (Step C1 completato)  
 **Autore**: Audit automatico  
 
 ---
@@ -456,6 +456,10 @@ Risultato: la chat LLM non ha contesto delle conversazioni precedenti, ogni mess
 - **[Step 2B — 02/03/2026] Traduzioni JSON esterne** — Spostate in `locales/en.json` e `locales/it.json`, `LanguageContext.js` ora importa file JSON — TD12/B4 risolto
 - **[Step 2B — 02/03/2026] react-markdown** — Sostituito renderer custom in AssistantPage con libreria professionale — TD13/B5 risolto
 - **[Step 2B — 02/03/2026] Test backend aggiornati** — `backend/tests/test_api.py` con 22 test pytest, token caching per rate limiting — Test suite funzionante
+- **[Step C1 — 24/03/2026] Dashboard Charts** — 3 grafici recharts aggiunti: PieChart Risk Distribution, BarChart Audit Outcomes, Horizontal BarChart Compliance Progress — TD dashboard charts risolto
+- **[Step C1 — 24/03/2026] Enterprise Seed Data** — 12 agenti AI bancari, 15 policy enterprise, 150+ audit log con 5 incident cluster realistici — Demo-ready data
+
+**Step C1 completato il 24 Marzo 2026** — Dashboard charts + enterprise seed data. 22/22 test passati.
 
 **Step 2B completato il 02 Marzo 2026** — Refactoring backend + frontend + sicurezza + test. 22/22 test passati.
 
@@ -469,7 +473,6 @@ Risultato: la chat LLM non ha contesto delle conversazioni precedenti, ogni mess
 - **CI/CD pipeline** — assente (P2)
 - **Dockerfile** — assente (P2)
 - **Test unitari frontend** — assenti (P2)
-- **Dashboard charts** — recharts installato ma non usato (P2)
 - **Export PDF/CSV** — non implementato (P2)
 - **Connettori enterprise** (IAM, SIEM, ServiceNow) — non implementati (P2)
 - **Multi-tenancy** — non implementato (P2)

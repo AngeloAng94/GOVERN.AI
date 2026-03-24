@@ -40,13 +40,14 @@
 - **Compliance Officer**: Tracciamento standard regolatori (AI Act, ISO, DORA, NIS2)
 - **IT Administrator**: Ciclo di vita agenti e enforcement policy
 
-## Architecture (Current — MVP v1.1)
-- **Frontend**: React 19 + Tailwind 3.4 + Shadcn/UI (port 3000)
-- **Backend**: FastAPI 0.110 + Pydantic V2 (port 8001)
-- **Database**: MongoDB + Motor async (15 indici, 5 collections)
-- **LLM**: OpenAI GPT-5.2 via Emergent LLM key
+## Architecture (Current — MVP v1.4)
+- **Frontend**: React 19 + Tailwind 3.4 + Shadcn/UI + Recharts (port 3000)
+- **Backend**: FastAPI 0.110 + Pydantic V2 + modular routes (port 8001)
+- **Database**: MongoDB + Motor async (15 indici, 6 collections)
+- **LLM**: OpenAI GPT-5.2 via Emergent LLM key (ARIA assistant)
+- **Auth**: JWT + RBAC (4 ruoli: admin, dpo, auditor, viewer)
 - **Process Manager**: Supervisord
-- **Tipo**: Monolite a due tier
+- **Tipo**: Architettura modulare a due tier
 
 ## 6 Moduli Funzionali
 1. **Agent Registry**: Catalogazione agenti con profilo completo (risk level, status, azioni, domini ristretti)
@@ -83,17 +84,35 @@
 - [x] Migrazione lifespan (asynccontextmanager)
 - [x] Errori LLM mascherati
 
+### Step 2A (02 Mar 2026) — v1.2
+- [x] Autenticazione JWT completa + RBAC (4 ruoli)
+- [x] ARIA AI Assistant verticale con system prompt restrittivo
+- [x] Rate limiting su tutti gli endpoint (slowapi)
+
+### Step 2B (02 Mar 2026) — v1.3
+- [x] Backend modulare: models.py, database.py, seed.py, 7 file route
+- [x] Header di sicurezza (X-Frame-Options, CSP, etc.)
+- [x] Componente CRUD generico (CrudPage.js)
+- [x] Traduzioni JSON esterne (locales/)
+- [x] react-markdown per chat ARIA
+- [x] Test backend aggiornati (22/22)
+
+### Step C1 (24 Mar 2026) — v1.4
+- [x] Dashboard Charts con Recharts (3 grafici: PieChart risk, BarChart audit, BarChart compliance)
+- [x] Enterprise Seed Data (12 agenti, 15 policy, 150+ audit log, 5 incident cluster)
+- [x] Compliance progress realistici (GDPR 78%, EU AI Act 45%, ISO 27001 92%, etc.)
+
 ## Roadmap Tecnica (dal Business Plan)
 
 ### Phase 1 — Foundation (Q2 2026, 3 mesi)
-- [ ] JWT + RBAC (Admin, DPO, Auditor, Viewer)
-- [ ] Split backend monolite → moduli (models/, routes/, services/)
-- [ ] Rate limiting (slowapi) su endpoint critici
+- [x] JWT + RBAC (Admin, DPO, Auditor, Viewer) ✅ Step 2A
+- [x] Split backend monolite → moduli (models/, routes/, services/) ✅ Step 2B
+- [x] Rate limiting (slowapi) su endpoint critici ✅ Step 2A
+- [x] Header di sicurezza (CSP, X-Frame-Options, HSTS) ✅ Step 2B
 - [ ] WebSocket monitoraggio real-time
-- [ ] Header di sicurezza (CSP, X-Frame-Options, HSTS)
 
 ### Phase 2 — Intelligence (Q3-Q4 2026, 6 mesi)
-- [ ] Dashboard visualizzazioni avanzate (Recharts — gia installato)
+- [x] Dashboard visualizzazioni avanzate (Recharts) ✅ Step C1
 - [ ] Motore rilevamento conflitti policy
 - [ ] Algoritmo scoring automatico compliance
 - [ ] Export report PDF/CSV

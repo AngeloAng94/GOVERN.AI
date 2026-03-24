@@ -1,9 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Bot, FileText, Activity, ShieldCheck, AlertTriangle, ArrowUpRight } from "lucide-react";
+import { Bot, FileText, Activity, ShieldCheck, AlertTriangle, ArrowUpRight, PieChart as PieChartIcon, BarChart3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import axios from "axios";
+import {
+  PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid
+} from "recharts";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -21,17 +25,92 @@ const riskColors = {
   critical: "text-red-400",
 };
 
+// Chart colors
+const RISK_CHART_COLORS = {
+  critical: "#ef4444",
+  high: "#f97316",
+  medium: "#eab308",
+  low: "#22c55e",
+};
+
+const AUDIT_CHART_COLORS = {
+  allowed: "#22c55e",
+  blocked: "#ef4444",
+  escalated: "#f97316",
+};
+
+// Custom tooltip for charts
+const CustomTooltip = ({ active, payload, label, suffix = "" }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-slate-800 border border-slate-700 rounded-sm px-3 py-2 shadow-lg">
+        <p className="text-slate-300 text-sm">
+          {payload[0].name || label}: <span className="font-semibold">{payload[0].value}{suffix}</span>
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
+// Get bar color based on progress value
+const getBarColor = (value) => {
+  if (value >= 80) return "#22c55e";
+  if (value >= 50) return "#eab308";
+  return "#ef4444";
+};
+
 export default function OverviewPage() {
   const { t } = useLanguage();
   const [stats, setStats] = useState(null);
+  const [compliance, setCompliance] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get(`${API}/dashboard/stats`)
-      .then(res => setStats(res.data))
+    Promise.all([
+      axios.get(`${API}/dashboard/stats`),
+      axios.get(`${API}/compliance`)
+    ])
+      .then(([statsRes, complianceRes]) => {
+        setStats(statsRes.data);
+        setCompliance(complianceRes.data);
+      })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
+
+  // Prepare chart data
+  const riskChartData = useMemo(() => {
+    if (!stats?.risk_distribution) return [];
+    return Object.entries(stats.risk_distribution).map(([name, value]) => ({
+      name: name.charAt(0).toUpperCase() + name.slice(1),
+      value,
+      color: RISK_CHART_COLORS[name] || "#64748b"
+    }));
+  }, [stats]);
+
+  const auditChartData = useMemo(() => {
+    if (!stats?.recent_audit) return [];
+    const counts = { allowed: 0, blocked: 0, escalated: 0 };
+    stats.recent_audit.forEach(log => {
+      if (counts[log.outcome] !== undefined) {
+        counts[log.outcome]++;
+      }
+    });
+    return Object.entries(counts).map(([name, value]) => ({
+      name: name.charAt(0).toUpperCase() + name.slice(1),
+      value,
+      color: AUDIT_CHART_COLORS[name] || "#64748b"
+    }));
+  }, [stats]);
+
+  const complianceChartData = useMemo(() => {
+    return compliance.map(std => ({
+      name: std.code,
+      progress: std.progress,
+      fullName: std.name
+    }));
+  }, [compliance]);
 
   if (loading) {
     return (
@@ -76,6 +155,153 @@ export default function OverviewPage() {
         ))}
       </div>
 
+      {/* Charts Row 1: Risk Distribution + Audit Outcomes */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4" data-testid="charts-row-1">
+        {/* Risk Distribution PieChart */}
+        <Card className="bg-slate-900/40 backdrop-blur-md border-slate-800 rounded-sm" data-testid="chart-risk-distribution">
+          <CardHeader className="pb-2">
+            <CardTitle className="font-['Space_Grotesk'] text-base font-semibold text-white flex items-center gap-2">
+              <PieChartIcon className="w-4 h-4 text-amber-400" />
+              {t("chart_risk_title")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div style={{ height: 280 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={riskChartData}
+                    cx="50%"
+                    cy="45%"
+                    innerRadius={50}
+                    outerRadius={90}
+                    paddingAngle={2}
+                    dataKey="value"
+                    nameKey="name"
+                    isAnimationActive={true}
+                  >
+                    {riskChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip suffix=" agents" />} />
+                  <Legend
+                    verticalAlign="bottom"
+                    height={36}
+                    formatter={(value) => <span className="text-slate-400 text-xs">{value}</span>}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Audit Outcomes BarChart */}
+        <Card className="bg-slate-900/40 backdrop-blur-md border-slate-800 rounded-sm" data-testid="chart-audit-outcomes">
+          <CardHeader className="pb-2">
+            <CardTitle className="font-['Space_Grotesk'] text-base font-semibold text-white flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-emerald-400" />
+              {t("chart_audit_title")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div style={{ height: 280 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={auditChartData} margin={{ top: 20, right: 20, left: 0, bottom: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fill: '#94a3b8', fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fill: '#94a3b8', fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                    allowDecimals={false}
+                  />
+                  <Tooltip content={<CustomTooltip suffix=" events" />} />
+                  <Bar dataKey="value" radius={[4, 4, 0, 0]} isAnimationActive={true}>
+                    {auditChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Chart Row 2: Compliance Progress */}
+      <Card className="bg-slate-900/40 backdrop-blur-md border-slate-800 rounded-sm" data-testid="chart-compliance-progress">
+        <CardHeader className="pb-2">
+          <CardTitle className="font-['Space_Grotesk'] text-base font-semibold text-white flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-violet-400" />
+            {t("chart_compliance_title")}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div style={{ height: 320 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={complianceChartData}
+                layout="vertical"
+                margin={{ top: 10, right: 60, left: 10, bottom: 10 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" horizontal={false} />
+                <XAxis
+                  type="number"
+                  domain={[0, 100]}
+                  tick={{ fill: '#94a3b8', fontSize: 11 }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(value) => `${value}%`}
+                />
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  tick={{ fill: '#94a3b8', fontSize: 11 }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={80}
+                />
+                <Tooltip
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0].payload;
+                      return (
+                        <div className="bg-slate-800 border border-slate-700 rounded-sm px-3 py-2 shadow-lg">
+                          <p className="text-slate-200 text-sm font-semibold">{data.fullName}</p>
+                          <p className="text-slate-400 text-xs mt-1">Progress: <span className="text-white">{data.progress}%</span></p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Bar
+                  dataKey="progress"
+                  radius={[0, 4, 4, 0]}
+                  isAnimationActive={true}
+                  label={{
+                    position: 'right',
+                    fill: '#94a3b8',
+                    fontSize: 11,
+                    formatter: (value) => `${value}%`
+                  }}
+                >
+                  {complianceChartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={getBarColor(entry.progress)} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Recent Activity */}
         <Card className="lg:col-span-2 bg-slate-900/40 backdrop-blur-md border-slate-800 rounded-sm" data-testid="recent-activity">
@@ -87,7 +313,7 @@ export default function OverviewPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {stats.recent_audit.map((log, i) => (
+              {stats.recent_audit.slice(0, 8).map((log, i) => (
                 <div key={i} className="flex items-center justify-between py-2 border-b border-slate-800/60 last:border-0">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className={`w-1.5 h-1.5 rounded-full ${
@@ -108,7 +334,7 @@ export default function OverviewPage() {
           </CardContent>
         </Card>
 
-        {/* Risk Distribution */}
+        {/* Risk Distribution (existing) */}
         <Card className="bg-slate-900/40 backdrop-blur-md border-slate-800 rounded-sm" data-testid="risk-distribution">
           <CardHeader className="pb-3">
             <CardTitle className="font-['Space_Grotesk'] text-base font-semibold text-white flex items-center gap-2">
