@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GOVERN.AI — Technical Presentation</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --bg-primary: #020617;
+    --bg-secondary: #0f172a;
+    --bg-card: #1e293b;
+    --bg-accent: #1e3a5f;
+    --text-white: #f8fafc;
+    --text-light: #e2e8f0;
+    --text-muted: #94a3b8;
+    --text-dim: #64748b;
+    --green: #22c55e;
+    --yellow: #eab308;
+    --orange: #f97316;
+    --red: #ef4444;
+    --blue: #3b82f6;
+    --cyan: #06b6d4;
+    --purple: #a855f7;
+    --border: #1e293b;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    scroll-snap-type: y mandatory;
+    overflow-y: scroll;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-white);
+    line-height: 1.6;
+  }
+
+  /* NAV */
+  .nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(2, 6, 23, 0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    height: 56px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-logo { font-weight: 800; font-size: 1.1rem; letter-spacing: -0.5px; }
+  .nav-logo span { color: var(--blue); }
+  .nav-links { display: flex; gap: 0.25rem; }
+  .nav-links a {
+    color: var(--text-muted); text-decoration: none; font-size: 0.75rem;
+    padding: 0.35rem 0.7rem; border-radius: 6px; transition: all 0.2s;
+    font-weight: 500;
+  }
+  .nav-links a:hover, .nav-links a.active { color: var(--text-white); background: var(--bg-card); }
+  .nav-counter { color: var(--text-dim); font-size: 0.75rem; font-variant-numeric: tabular-nums; }
+
+  /* SLIDES */
+  .slide {
+    min-height: 100vh; scroll-snap-align: start;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 80px 2rem 2rem;
+    max-width: 1200px; margin: 0 auto;
+    opacity: 0; transform: translateY(30px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .slide.visible { opacity: 1; transform: translateY(0); }
+
+  /* TYPOGRAPHY */
+  .slide-label {
+    font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 2px; color: var(--blue); margin-bottom: 0.75rem;
+  }
+  h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800; letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 1.25rem; }
+  h2 { font-size: clamp(1.5rem, 3vw, 2.25rem); font-weight: 700; letter-spacing: -0.75px; line-height: 1.2; margin-bottom: 1rem; }
+  h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; }
+  .subtitle { font-size: clamp(1rem, 2vw, 1.25rem); color: var(--text-muted); max-width: 700px; line-height: 1.7; }
+
+  /* GRID */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 2rem; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin-top: 2rem; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-top: 2rem; }
+
+  @media (max-width: 768px) {
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    .nav-links { display: none; }
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--bg-secondary); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.5rem;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .card:hover { transform: translateY(-2px); border-color: var(--bg-accent); }
+  .card-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; margin-bottom: 1rem;
+  }
+  .card p { color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; }
+
+  /* BADGES */
+  .badge {
+    display: inline-block; padding: 0.2rem 0.6rem; border-radius: 6px;
+    font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .badge-green { background: rgba(34,197,94,0.15); color: var(--green); }
+  .badge-blue { background: rgba(59,130,246,0.15); color: var(--blue); }
+  .badge-yellow { background: rgba(234,179,8,0.15); color: var(--yellow); }
+  .badge-red { background: rgba(239,68,68,0.15); color: var(--red); }
+  .badge-purple { background: rgba(168,85,247,0.15); color: var(--purple); }
+  .badge-cyan { background: rgba(6,182,212,0.15); color: var(--cyan); }
+
+  /* CODE */
+  .code-block {
+    background: var(--bg-secondary); border: 1px solid var(--border);
+    border-radius: 10px; padding: 1.25rem; margin-top: 1rem;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.8rem;
+    color: var(--text-light); overflow-x: auto; line-height: 1.8;
+  }
+  .code-block .kw { color: var(--purple); }
+  .code-block .fn { color: var(--blue); }
+  .code-block .str { color: var(--green); }
+  .code-block .cm { color: var(--text-dim); }
+  .code-block .num { color: var(--orange); }
+
+  /* ARCHITECTURE DIAGRAM */
+  .arch-diagram {
+    background: var(--bg-secondary); border: 1px solid var(--border);
+    border-radius: 12px; padding: 2rem; margin-top: 2rem;
+    display: flex; flex-direction: column; align-items: center; gap: 1rem;
+  }
+  .arch-layer {
+    display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;
+    width: 100%; padding: 1rem;
+    border: 1px solid var(--border); border-radius: 10px;
+    position: relative;
+  }
+  .arch-layer::before {
+    content: attr(data-label);
+    position: absolute; top: -10px; left: 16px;
+    background: var(--bg-secondary); padding: 0 8px;
+    font-size: 0.65rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 1.5px; color: var(--text-dim);
+  }
+  .arch-box {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 0.6rem 1rem;
+    font-size: 0.8rem; font-weight: 500;
+    text-align: center; min-width: 110px;
+  }
+  .arch-arrow {
+    color: var(--text-dim); font-size: 1.5rem; text-align: center;
+  }
+
+  /* TABLES */
+  .data-table {
+    width: 100%; border-collapse: collapse; margin-top: 1.5rem;
+    font-size: 0.85rem;
+  }
+  .data-table th {
+    background: var(--bg-accent); color: var(--text-white);
+    padding: 0.75rem 1rem; text-align: left; font-weight: 600;
+    font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .data-table td {
+    padding: 0.65rem 1rem; border-bottom: 1px solid var(--border);
+    color: var(--text-light);
+  }
+  .data-table tr:hover td { background: rgba(30,58,95,0.3); }
+
+  /* PROGRESS BAR */
+  .progress-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.75rem; }
+  .progress-label { width: 100px; font-size: 0.8rem; font-weight: 600; }
+  .progress-bar {
+    flex: 1; height: 8px; background: var(--bg-card); border-radius: 4px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; border-radius: 4px; transition: width 1s ease;
+  }
+  .progress-value { width: 45px; text-align: right; font-size: 0.8rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  /* FLOW */
+  .flow-step {
+    display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1.5rem;
+  }
+  .flow-num {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.85rem; flex-shrink: 0;
+    background: var(--bg-accent); color: var(--blue);
+  }
+  .flow-content h3 { font-size: 0.95rem; margin-bottom: 0.25rem; }
+  .flow-content p { color: var(--text-muted); font-size: 0.85rem; }
+
+  /* STAT */
+  .stat-big { font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; line-height: 1; }
+  .stat-label { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem; }
+
+  /* HIGHLIGHT */
+  .highlight { color: var(--blue); }
+  .highlight-green { color: var(--green); }
+  .highlight-red { color: var(--red); }
+  .highlight-yellow { color: var(--yellow); }
+
+  /* DIVIDER */
+  .divider { height: 1px; background: var(--border); margin: 2rem 0; }
+
+  /* PERSONA */
+  .persona-card {
+    background: var(--bg-secondary); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.5rem; text-align: center;
+  }
+  .persona-avatar {
+    width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 1rem;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem;
+  }
+
+  /* FOOTER */
+  .footer-slide {
+    text-align: center;
+  }
+  .footer-slide h1 { margin-bottom: 0.5rem; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-logo">GOVERN<span>.AI</span></div>
+  <div class="nav-links">
+    <a href="#intro" class="active">Intro</a>
+    <a href="#problema">Problema</a>
+    <a href="#soluzione">Soluzione</a>
+    <a href="#architettura">Architettura</a>
+    <a href="#dati">Dati</a>
+    <a href="#flussi">Flussi</a>
+    <a href="#sicurezza">Sicurezza</a>
+    <a href="#moduli">Moduli</a>
+    <a href="#compliance">Compliance</a>
+    <a href="#deployment">Deploy</a>
+    <a href="#roadmap">Roadmap</a>
+  </div>
+  <div class="nav-counter" id="slideCounter">1 / 12</div>
+</nav>
+
+<!-- SLIDE 1: INTRO -->
+<section class="slide" id="intro">
+  <div class="slide-label">ANTHERA Systems presenta</div>
+  <h1>GOVERN<span class="highlight">.AI</span></h1>
+  <p class="subtitle">The Sovereign Control Plane for Enterprise AI</p>
+  <p class="subtitle" style="margin-top: 1rem; font-size: 0.95rem;">
+    Piattaforma SaaS per la governance, il monitoraggio e la compliance degli agenti AI nelle organizzazioni enterprise, 
+    allineata a EU AI Act, GDPR, DORA, NIS2, ISO 27001 e ISO 42001.
+  </p>
+  <div style="margin-top: 2.5rem; display: flex; gap: 1.5rem; flex-wrap: wrap;">
+    <div><div class="stat-big highlight">6</div><div class="stat-label">Standard Normativi</div></div>
+    <div><div class="stat-big highlight-green">4</div><div class="stat-label">Ruoli RBAC</div></div>
+    <div><div class="stat-big highlight-yellow">22</div><div class="stat-label">Test Automatizzati</div></div>
+    <div><div class="stat-big" style="color: var(--cyan);">v1.7</div><div class="stat-label">Versione MVP</div></div>
+  </div>
+</section>
+
+<!-- SLIDE 2: IL PROBLEMA -->
+<section class="slide" id="problema">
+  <div class="slide-label">Il Contesto</div>
+  <h2>Il problema che risolviamo</h2>
+  <p class="subtitle">Le aziende stanno adottando agenti AI a ritmo accelerato, ma mancano gli strumenti per governarli.</p>
+  <div class="grid-2" style="margin-top: 2rem;">
+    <div class="card">
+      <div class="card-icon" style="background: rgba(239,68,68,0.15); color: var(--red);">&#x26A0;</div>
+      <h3>Mancanza di Visibilita</h3>
+      <p>Le organizzazioni non hanno modo di sapere cosa fanno i loro agenti AI, quali dati accedono e quali decisioni prendono autonomamente.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background: rgba(234,179,8,0.15); color: var(--yellow);">&#x2696;</div>
+      <h3>Rischio Normativo</h3>
+      <p>EU AI Act (sanzioni fino a 35M), GDPR, DORA e NIS2 richiedono tracciabilita completa. La non-conformita non e un'opzione.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background: rgba(249,115,22,0.15); color: var(--orange);">&#x1F6AB;</div>
+      <h3>Assenza di Controllo</h3>
+      <p>Nessun meccanismo per definire policy di governance, limitare azioni o richiedere approvazioni umane per operazioni ad alto rischio.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background: rgba(168,85,247,0.15); color: var(--purple);">&#x1F4CB;</div>
+      <h3>Audit Impossibile</h3>
+      <p>Senza log strutturati e immutabili, dimostrare la conformita ai regolatori diventa un processo manuale, costoso e inaffidabile.</p>
+    </div>
+  </div>
+  <div style="margin-top: 2rem; padding: 1rem 1.5rem; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 10px;">
+    <p style="color: var(--red); font-weight: 600; font-size: 0.9rem;">EU AI Act in vigore dal 2 agosto 2026 &mdash; Sanzioni fino a &euro;35M o 7% del fatturato globale</p>
+  </div>
+</section>
+
+<!-- SLIDE 3: LA SOLUZIONE -->
+<section class="slide" id="soluzione">
+  <div class="slide-label">La Risposta</div>
+  <h2>GOVERN.AI &mdash; La Soluzione</h2>
+  <p class="subtitle">Un unico control plane che si posiziona tra i tuoi agenti AI e le normative europee.</p>
+  <div class="grid-3" style="margin-top: 2rem;">
+    <div class="card">
+      <div class="card-icon" style="background: rgba(59,130,246,0.15); color: var(--blue);">&#x1F4D6;</div>
+      <h3>Agent Registry</h3>
+      <p>Registro centralizzato di tutti gli agenti AI con profilo completo: risk level, modello, azioni consentite, domini ristretti.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background: rgba(168,85,247,0.15); color: var(--purple);">&#x2699;</div>
+      <h3>Policy Engine</h3>
+      <p>Motore di regole per definire cosa possono e non possono fare gli agenti. 5 tipi di enforcement per 6 normative.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background: rgba(34,197,94,0.15); color: var(--green);">&#x1F50D;</div>
+      <h3>Audit Trail</h3>
+      <p>Traccia immutabile di ogni azione AI. Ricerca, filtri avanzati, export PDF/CSV per auditor e regolatori.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background: rgba(6,182,212,0.15); color: var(--cyan);">&#x1F4CA;</div>
+      <h3>Compliance Dashboard</h3>
+      <p>Monitoraggio real-time dello stato di conformita per 6 standard EU con progress tracking e assessment scheduling.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background: rgba(234,179,8,0.15); color: var(--yellow);">&#x1F916;</div>
+      <h3>ARIA AI Assistant</h3>
+      <p>Consulente AI esperto di normative EU. Risponde a domande su AI Act, GDPR, DORA, NIS2. Powered by GPT-5.2.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background: rgba(249,115,22,0.15); color: var(--orange);">&#x1F4E4;</div>
+      <h3>Export & Reporting</h3>
+      <p>Report professionali in PDF e CSV, pronti per i regolatori. Executive summary automatico con statistiche aggregate.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 4: ARCHITETTURA -->
+<section class="slide" id="architettura">
+  <div class="slide-label">Architettura Tecnica</div>
+  <h2>Stack Tecnologico</h2>
+  <div class="arch-diagram">
+    <div class="arch-layer" data-label="Frontend (Port 3000)">
+      <div class="arch-box" style="border-color: var(--blue);">React 19</div>
+      <div class="arch-box">Tailwind CSS</div>
+      <div class="arch-box">Shadcn/UI</div>
+      <div class="arch-box">Recharts</div>
+      <div class="arch-box">Axios + JWT</div>
+      <div class="arch-box">React Router 6</div>
+    </div>
+    <div class="arch-arrow">&darr; HTTPS / REST API &darr;</div>
+    <div class="arch-layer" data-label="Backend (Port 8001)">
+      <div class="arch-box" style="border-color: var(--green);">FastAPI 0.110</div>
+      <div class="arch-box">Pydantic V2</div>
+      <div class="arch-box">JWT + RBAC</div>
+      <div class="arch-box">SlowAPI</div>
+      <div class="arch-box">ReportLab</div>
+      <div class="arch-box">7 Router Modulari</div>
+    </div>
+    <div class="arch-arrow">&darr; Async (Motor) &darr;</div>
+    <div style="display: flex; gap: 2rem; width: 100%; justify-content: center;">
+      <div class="arch-layer" data-label="Database" style="flex: 1; max-width: 400px;">
+        <div class="arch-box" style="border-color: var(--green);">MongoDB 7.0</div>
+        <div class="arch-box">6 Collections</div>
+        <div class="arch-box">15 Indici</div>
+      </div>
+      <div class="arch-layer" data-label="AI Service" style="flex: 1; max-width: 400px;">
+        <div class="arch-box" style="border-color: var(--yellow);">GPT-5.2</div>
+        <div class="arch-box">Emergent LLM</div>
+        <div class="arch-box">ARIA Prompt</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 5: MODELLO DATI -->
+<section class="slide" id="dati">
+  <div class="slide-label">Data Model</div>
+  <h2>6 Collections MongoDB</h2>
+  <p class="subtitle">Document store flessibile con indici ottimizzati per query complesse e filtri real-time.</p>
+  <div class="grid-3" style="margin-top: 1.5rem;">
+    <div class="card">
+      <h3 style="color: var(--blue);">users</h3>
+      <div class="code-block" style="font-size: 0.72rem; padding: 0.8rem;">
+        id, username, email<br>
+        password_hash <span class="cm">(bcrypt)</span><br>
+        role: <span class="str">admin|dpo|auditor|viewer</span><br>
+        full_name, created_at
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="color: var(--green);">agents</h3>
+      <div class="code-block" style="font-size: 0.72rem; padding: 0.8rem;">
+        id, name, description<br>
+        model_type, risk_level, status<br>
+        allowed_actions[] <span class="cm">(whitelist)</span><br>
+        restricted_domains[] <span class="cm">(blacklist)</span><br>
+        data_classification, owner
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="color: var(--purple);">policies</h3>
+      <div class="code-block" style="font-size: 0.72rem; padding: 0.8rem;">
+        id, name, description<br>
+        rule_type: <span class="str">restriction|logging<br>|rate_limit|approval|retention</span><br>
+        regulation: <span class="str">6 standard EU</span><br>
+        severity, enforcement
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="color: var(--orange);">audit_logs</h3>
+      <div class="code-block" style="font-size: 0.72rem; padding: 0.8rem;">
+        id, timestamp, agent_name<br>
+        action, resource<br>
+        outcome: <span class="str">allowed|blocked<br>|escalated|logged</span><br>
+        risk_level, policy_applied<br>
+        user, ip_address
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="color: var(--cyan);">compliance_standards</h3>
+      <div class="code-block" style="font-size: 0.72rem; padding: 0.8rem;">
+        id, name, code<br>
+        status, progress (%)<br>
+        requirements_total<br>
+        requirements_met<br>
+        last_assessment, next_review
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="color: var(--yellow);">chat_messages</h3>
+      <div class="code-block" style="font-size: 0.72rem; padding: 0.8rem;">
+        session_id <span class="cm">(conversazione)</span><br>
+        role: <span class="str">user|assistant</span><br>
+        content <span class="cm">(markdown)</span><br>
+        timestamp
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 6: FLUSSI APPLICATIVI -->
+<section class="slide" id="flussi">
+  <div class="slide-label">Application Flows</div>
+  <h2>Flussi Applicativi Principali</h2>
+  <div class="grid-2">
+    <div>
+      <h3 style="color: var(--blue); margin-bottom: 1rem;">Autenticazione JWT</h3>
+      <div class="flow-step">
+        <div class="flow-num">1</div>
+        <div class="flow-content">
+          <h3>Login Request</h3>
+          <p>POST /api/auth/login con username + password</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">2</div>
+        <div class="flow-content">
+          <h3>Verifica Credenziali</h3>
+          <p>Lookup utente in DB + verifica bcrypt hash</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">3</div>
+        <div class="flow-content">
+          <h3>Token JWT (HS256)</h3>
+          <p>Genera token con sub, role, exp (8h). Log audit "login"</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">4</div>
+        <div class="flow-content">
+          <h3>Axios Interceptor</h3>
+          <p>Token salvato in localStorage. Header "Authorization: Bearer" automatico</p>
+        </div>
+      </div>
+    </div>
+    <div>
+      <h3 style="color: var(--green); margin-bottom: 1rem;">CRUD con Audit Automatico</h3>
+      <div class="flow-step">
+        <div class="flow-num">1</div>
+        <div class="flow-content">
+          <h3>Richiesta API</h3>
+          <p>Client invia richiesta (es. POST /api/agents)</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">2</div>
+        <div class="flow-content">
+          <h3>Validazione</h3>
+          <p>JWT check (ruolo) + Pydantic model validation</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">3</div>
+        <div class="flow-content">
+          <h3>Operazione DB</h3>
+          <p>Insert/Update/Delete su MongoDB (Motor async)</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">4</div>
+        <div class="flow-content">
+          <h3>Audit Log Automatico</h3>
+          <p>Ogni operazione CRUD genera un audit_log con agent, action, user, outcome</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 7: SICUREZZA -->
+<section class="slide" id="sicurezza">
+  <div class="slide-label">Security</div>
+  <h2>Sistema di Sicurezza Multi-Layer</h2>
+  <div class="grid-2">
+    <div>
+      <h3 style="margin-bottom: 1rem;">RBAC &mdash; 4 Ruoli Gerarchici</h3>
+      <table class="data-table">
+        <thead><tr><th>Ruolo</th><th>Livello</th><th>Permessi</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge badge-red">Admin</span></td><td>4</td><td>Read, Write, Delete, Admin</td></tr>
+          <tr><td><span class="badge badge-yellow">DPO</span></td><td>3</td><td>Read, Write, Export</td></tr>
+          <tr><td><span class="badge badge-blue">Auditor</span></td><td>2</td><td>Read, Export</td></tr>
+          <tr><td><span class="badge badge-green">Viewer</span></td><td>1</td><td>Read only</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <h3 style="margin-bottom: 1rem;">Rate Limiting per Endpoint</h3>
+      <table class="data-table">
+        <thead><tr><th>Endpoint</th><th>Limite</th><th>Motivazione</th></tr></thead>
+        <tbody>
+          <tr><td>/api/auth/login</td><td><span class="badge badge-red">5/min</span></td><td>Anti brute-force</td></tr>
+          <tr><td>/api/chat</td><td><span class="badge badge-yellow">10/min</span></td><td>Costi LLM</td></tr>
+          <tr><td>/api/*/export/pdf</td><td><span class="badge badge-yellow">5/min</span></td><td>CPU intensive</td></tr>
+          <tr><td>Altri endpoint</td><td><span class="badge badge-green">30-60/min</span></td><td>Uso normale</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div style="margin-top: 2rem;">
+    <h3 style="margin-bottom: 1rem;">Security Headers Attivi</h3>
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+      <span class="badge badge-cyan">X-Content-Type-Options: nosniff</span>
+      <span class="badge badge-cyan">X-Frame-Options: DENY</span>
+      <span class="badge badge-cyan">X-XSS-Protection: 1; mode=block</span>
+      <span class="badge badge-cyan">Referrer-Policy: strict-origin</span>
+      <span class="badge badge-cyan">Permissions-Policy: camera=(), mic=()</span>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 8: MODULI -->
+<section class="slide" id="moduli">
+  <div class="slide-label">Core Modules</div>
+  <h2>I 6 Moduli Funzionali</h2>
+  <div class="grid-2">
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="color: var(--blue); margin: 0;">1. Agent Registry</h3>
+        <span class="badge badge-blue">CRUD</span>
+      </div>
+      <p>Censimento completo degli agenti AI. Profilo con: modello, risk level (low/medium/high/critical), stato operativo, azioni consentite (whitelist), domini ristretti (blacklist), classificazione dati.</p>
+      <p style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-dim);">Use case: Il DPO verifica quanti agenti ad alto rischio sono in produzione per la reportistica EU AI Act.</p>
+    </div>
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="color: var(--purple); margin: 0;">2. Policy Engine</h3>
+        <span class="badge badge-purple">RULES</span>
+      </div>
+      <p>5 tipi di regole: restriction, logging, rate_limit, approval, retention. Ogni policy e mappata su una normativa (GDPR, AI Act, DORA, ISO 27001, ISO 42001, NIS2). 4 livelli di enforcement: block, log, throttle, auto.</p>
+      <p style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-dim);">Use case: Bloccare decisioni automatiche di credito senza approvazione umana (AI Act Art. 14).</p>
+    </div>
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="color: var(--green); margin: 0;">3. Audit Trail</h3>
+        <span class="badge badge-green">TRACKING</span>
+      </div>
+      <p>Log immutabile di ogni azione AI: timestamp, agente, azione, risorsa, esito (allowed/blocked/escalated), risk level, policy applicata, utente, IP. Ricerca, filtri, export PDF/CSV.</p>
+      <p style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-dim);">Use case: Esportare eventi "blocked" dell'ultimo trimestre per ispezione Garante Privacy.</p>
+    </div>
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="color: var(--cyan); margin: 0;">4. Compliance Dashboard</h3>
+        <span class="badge badge-cyan">MONITOR</span>
+      </div>
+      <p>Monitoraggio real-time di 6 standard: EU AI Act, GDPR, ISO 27001, ISO 42001, DORA, NIS2. Progress %, requisiti soddisfatti, stato, date assessment e revisione. Grafici Recharts.</p>
+      <p style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-dim);">Use case: Verificare lo stato di avanzamento GDPR prima dell'audit annuale.</p>
+    </div>
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="color: var(--yellow); margin: 0;">5. ARIA AI Assistant</h3>
+        <span class="badge badge-yellow">AI</span>
+      </div>
+      <p>Consulente AI powered by GPT-5.2 specializzato in normative EU. Mantiene contesto conversazionale (session_id), risponde in IT/EN, formattazione Markdown. Rate limited a 10 query/min.</p>
+      <p style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-dim);">Use case: Chiedere ad ARIA come classificare un agente di credit scoring secondo l'AI Act.</p>
+    </div>
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="color: var(--orange); margin: 0;">6. Export & Reporting</h3>
+        <span class="badge badge-orange" style="background: rgba(249,115,22,0.15); color: var(--orange);">EXPORT</span>
+      </div>
+      <p>Report PDF branded con header GOVERN.AI, executive summary e tabelle colorate. CSV con UTF-8 BOM per compatibilita Excel. Supporto filtri su export. RBAC su endpoint export.</p>
+      <p style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-dim);">Use case: Generare report audit PDF per il board di un istituto bancario.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 9: COMPLIANCE -->
+<section class="slide" id="compliance">
+  <div class="slide-label">Compliance Framework</div>
+  <h2>6 Standard Normativi Monitorati</h2>
+  <p class="subtitle">Progress tracking realistico basato su scenario enterprise bancario.</p>
+  <div style="margin-top: 2rem; max-width: 700px;">
+    <div class="progress-row">
+      <div class="progress-label">ISO 27001</div>
+      <div class="progress-bar"><div class="progress-fill" style="width: 0%; background: var(--green);" data-target="92"></div></div>
+      <div class="progress-value highlight-green">92%</div>
+    </div>
+    <div class="progress-row">
+      <div class="progress-label">GDPR</div>
+      <div class="progress-bar"><div class="progress-fill" style="width: 0%; background: var(--green);" data-target="78"></div></div>
+      <div class="progress-value highlight-green">78%</div>
+    </div>
+    <div class="progress-row">
+      <div class="progress-label">DORA</div>
+      <div class="progress-bar"><div class="progress-fill" style="width: 0%; background: var(--yellow);" data-target="68"></div></div>
+      <div class="progress-value highlight-yellow">68%</div>
+    </div>
+    <div class="progress-row">
+      <div class="progress-label">NIS2</div>
+      <div class="progress-bar"><div class="progress-fill" style="width: 0%; background: var(--yellow);" data-target="55"></div></div>
+      <div class="progress-value highlight-yellow">55%</div>
+    </div>
+    <div class="progress-row">
+      <div class="progress-label">EU AI Act</div>
+      <div class="progress-bar"><div class="progress-fill" style="width: 0%; background: var(--red);" data-target="45"></div></div>
+      <div class="progress-value highlight-red">45%</div>
+    </div>
+    <div class="progress-row">
+      <div class="progress-label">ISO 42001</div>
+      <div class="progress-bar"><div class="progress-fill" style="width: 0%; background: var(--red);" data-target="35"></div></div>
+      <div class="progress-value highlight-red">35%</div>
+    </div>
+  </div>
+  <div style="margin-top: 2rem;">
+    <table class="data-table" style="max-width: 800px;">
+      <thead><tr><th>Standard</th><th>Tipo</th><th>Focus</th><th>Sanzioni</th></tr></thead>
+      <tbody>
+        <tr><td>EU AI Act</td><td><span class="badge badge-red">Regolamento</span></td><td>Classificazione rischio AI</td><td>Fino a 35M / 7%</td></tr>
+        <tr><td>GDPR</td><td><span class="badge badge-blue">Regolamento</span></td><td>Protezione dati personali</td><td>Fino a 20M / 4%</td></tr>
+        <tr><td>DORA</td><td><span class="badge badge-purple">Regolamento</span></td><td>Resilienza digitale finanza</td><td>Sanzioni settoriali</td></tr>
+        <tr><td>NIS2</td><td><span class="badge badge-cyan">Direttiva</span></td><td>Cybersecurity infrastrutture</td><td>Fino a 10M / 2%</td></tr>
+        <tr><td>ISO 27001</td><td><span class="badge badge-green">Standard</span></td><td>Sicurezza informazioni</td><td>Perdita certificazione</td></tr>
+        <tr><td>ISO 42001</td><td><span class="badge badge-yellow">Standard</span></td><td>Gestione sistemi AI</td><td>Perdita certificazione</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- SLIDE 10: DEPLOYMENT -->
+<section class="slide" id="deployment">
+  <div class="slide-label">DevOps</div>
+  <h2>Deployment Containerizzato</h2>
+  <p class="subtitle">L'intero stack e definito in Docker Compose, pronto per il deploy in qualsiasi ambiente.</p>
+  <div class="grid-2" style="margin-top: 2rem;">
+    <div>
+      <div class="code-block">
+        <span class="cm"># Setup completo in 3 comandi</span><br><br>
+        <span class="fn">git clone</span> <span class="str">https://github.com/.../GOVERN.AI</span><br>
+        <span class="fn">cp</span> .env.example backend/.env<br>
+        <span class="fn">docker-compose up</span> --build<br><br>
+        <span class="cm"># Accessibile su http://localhost:3000</span>
+      </div>
+      <div style="margin-top: 1.5rem;">
+        <h3 style="margin-bottom: 0.75rem;">3 Container Orchestrati</h3>
+        <div class="flow-step">
+          <div class="flow-num" style="background: rgba(34,197,94,0.15); color: var(--green);">DB</div>
+          <div class="flow-content">
+            <h3>MongoDB 7.0</h3>
+            <p>Port 27017 &mdash; Document store persistente con volume</p>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-num" style="background: rgba(59,130,246,0.15); color: var(--blue);">BE</div>
+          <div class="flow-content">
+            <h3>FastAPI + Uvicorn</h3>
+            <p>Port 8001 &mdash; Python 3.11-slim, auto-seed database</p>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-num" style="background: rgba(6,182,212,0.15); color: var(--cyan);">FE</div>
+          <div class="flow-content">
+            <h3>React + Nginx</h3>
+            <p>Port 3000 &mdash; Multi-stage build, SPA routing + API proxy</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="arch-diagram" style="margin-top: 0;">
+      <div style="text-align: center; font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px;">Docker Compose Network</div>
+      <div class="arch-layer" data-label="Frontend Container">
+        <div class="arch-box" style="border-color: var(--cyan);">Nginx</div>
+        <div class="arch-box">React Build</div>
+        <div class="arch-box">:3000</div>
+      </div>
+      <div class="arch-arrow">&darr; /api/* proxy &darr;</div>
+      <div class="arch-layer" data-label="Backend Container">
+        <div class="arch-box" style="border-color: var(--blue);">FastAPI</div>
+        <div class="arch-box">Uvicorn</div>
+        <div class="arch-box">:8001</div>
+      </div>
+      <div class="arch-arrow">&darr; Motor async &darr;</div>
+      <div class="arch-layer" data-label="Database Container">
+        <div class="arch-box" style="border-color: var(--green);">MongoDB 7</div>
+        <div class="arch-box">:27017</div>
+        <div class="arch-box">Volume</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 11: ROADMAP -->
+<section class="slide" id="roadmap">
+  <div class="slide-label">Roadmap</div>
+  <h2>Evoluzione del Prodotto</h2>
+  <div class="grid-3" style="margin-top: 2rem;">
+    <div>
+      <h3 style="color: var(--green); margin-bottom: 1rem;">Completato (v1.7)</h3>
+      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <div class="card" style="padding: 0.75rem 1rem;"><p style="color: var(--text-light); font-size: 0.85rem;">Core Platform completa</p></div>
+        <div class="card" style="padding: 0.75rem 1rem;"><p style="color: var(--text-light); font-size: 0.85rem;">JWT + RBAC (4 ruoli)</p></div>
+        <div class="card" style="padding: 0.75rem 1rem;"><p style="color: var(--text-light); font-size: 0.85rem;">ARIA AI Assistant (GPT-5.2)</p></div>
+        <div class="card" style="padding: 0.75rem 1rem;"><p style="color: var(--text-light); font-size: 0.85rem;">Export PDF/CSV</p></div>
+        <div class="card" style="padding: 0.75rem 1rem;"><p style="color: var(--text-light); font-size: 0.85rem;">Dashboard con grafici</p></div>
+        <div class="card" style="padding: 0.75rem 1rem;"><p style="color: var(--text-light); font-size: 0.85rem;">Mobile responsive</p></div>
+        <div class="card" style="padding: 0.75rem 1rem;"><p style="color: var(--text-light); font-size: 0.85rem;">Docker deployment</p></div>
+        <div class="card" style="padding: 0.75rem 1rem;"><p style="color: var(--text-light); font-size: 0.85rem;">Documentazione completa</p></div>
+      </div>
+    </div>
+    <div>
+      <h3 style="color: var(--yellow); margin-bottom: 1rem;">Prossimi Sviluppi</h3>
+      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <div class="card" style="padding: 0.75rem 1rem; border-color: var(--yellow);"><p style="color: var(--text-light); font-size: 0.85rem;">CI/CD GitHub Actions</p></div>
+        <div class="card" style="padding: 0.75rem 1rem; border-color: var(--yellow);"><p style="color: var(--text-light); font-size: 0.85rem;">Streaming Chat (SSE)</p></div>
+        <div class="card" style="padding: 0.75rem 1rem;"><p style="color: var(--text-light); font-size: 0.85rem;">Policy Conflict Detection</p></div>
+        <div class="card" style="padding: 0.75rem 1rem;"><p style="color: var(--text-light); font-size: 0.85rem;">Scoring automatico compliance</p></div>
+      </div>
+    </div>
+    <div>
+      <h3 style="color: var(--blue); margin-bottom: 1rem;">Vision Enterprise</h3>
+      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <div class="card" style="padding: 0.75rem 1rem;"><p style="color: var(--text-light); font-size: 0.85rem;">Multi-tenancy</p></div>
+        <div class="card" style="padding: 0.75rem 1rem;"><p style="color: var(--text-light); font-size: 0.85rem;">Connettori SIEM / IAM</p></div>
+        <div class="card" style="padding: 0.75rem 1rem;"><p style="color: var(--text-light); font-size: 0.85rem;">ServiceNow/CMDB</p></div>
+        <div class="card" style="padding: 0.75rem 1rem;"><p style="color: var(--text-light); font-size: 0.85rem;">WebSocket real-time</p></div>
+        <div class="card" style="padding: 0.75rem 1rem;"><p style="color: var(--text-light); font-size: 0.85rem;">API key management</p></div>
+        <div class="card" style="padding: 0.75rem 1rem;"><p style="color: var(--text-light); font-size: 0.85rem;">Email alerts & notifiche</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 12: CLOSING -->
+<section class="slide footer-slide" id="closing">
+  <div class="slide-label">Grazie</div>
+  <h1>GOVERN<span class="highlight">.AI</span></h1>
+  <p class="subtitle" style="margin: 0 auto; text-align: center;">Sovereign Control Plane for Enterprise AI</p>
+  <p style="color: var(--text-dim); margin-top: 2rem; font-size: 0.9rem;">powered by ANTHERA Systems</p>
+  <div class="divider" style="max-width: 200px; margin: 2rem auto;"></div>
+  <div style="display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap; margin-top: 1rem;">
+    <div style="text-align: center;">
+      <div style="color: var(--text-muted); font-size: 0.75rem; margin-bottom: 0.25rem;">Founder</div>
+      <div style="font-weight: 600;">Angelo Anglani</div>
+    </div>
+    <div style="text-align: center;">
+      <div style="color: var(--text-muted); font-size: 0.75rem; margin-bottom: 0.25rem;">Email</div>
+      <div style="font-weight: 500; color: var(--blue);">angelo.anglani94@gmail.com</div>
+    </div>
+    <div style="text-align: center;">
+      <div style="color: var(--text-muted); font-size: 0.75rem; margin-bottom: 0.25rem;">Telefono</div>
+      <div style="font-weight: 500;">+39 342 754 8655</div>
+    </div>
+  </div>
+  <p style="color: var(--text-dim); margin-top: 3rem; font-size: 0.7rem;">Documento generato: Marzo 2026 &mdash; Versione MVP 1.7</p>
+</section>
+
+<script>
+// Intersection Observer for slide animations
+const slides = document.querySelectorAll('.slide');
+const navLinks = document.querySelectorAll('.nav-links a');
+const counter = document.getElementById('slideCounter');
+const totalSlides = slides.length;
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      
+      // Update nav
+      const id = entry.target.id;
+      navLinks.forEach(l => l.classList.remove('active'));
+      const activeLink = document.querySelector(`.nav-links a[href="#${id}"]`);
+      if (activeLink) activeLink.classList.add('active');
+      
+      // Update counter
+      const idx = Array.from(slides).indexOf(entry.target) + 1;
+      counter.textContent = `${idx} / ${totalSlides}`;
+      
+      // Animate progress bars if compliance slide
+      if (id === 'compliance') {
+        document.querySelectorAll('.progress-fill').forEach(bar => {
+          const target = bar.dataset.target;
+          setTimeout(() => { bar.style.width = target + '%'; }, 200);
+        });
+      }
+    }
+  });
+}, { threshold: 0.3 });
+
+slides.forEach(s => observer.observe(s));
+
+// Keyboard navigation
+document.addEventListener('keydown', (e) => {
+  const currentIdx = Array.from(slides).findIndex(s => s.classList.contains('visible') && s.getBoundingClientRect().top >= -100);
+  if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === ' ') {
+    e.preventDefault();
+    const next = slides[Math.min(currentIdx + 1, totalSlides - 1)];
+    if (next) next.scrollIntoView({ behavior: 'smooth' });
+  }
+  if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+    e.preventDefault();
+    const prev = slides[Math.max(currentIdx - 1, 0)];
+    if (prev) prev.scrollIntoView({ behavior: 'smooth' });
+  }
+});
+</script>
+</body>
+</html>

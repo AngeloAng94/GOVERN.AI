@@ -124,6 +124,14 @@
 - [x] .env.example + .dockerignore
 - [x] README.md professionale completo
 
+### Documentazione (24 Mar 2026) — v1.7.1
+- [x] GOVERN_AI_TECHNICAL_OVERVIEW.md (670 righe, architettura completa)
+- [x] Presentazione HTML interattiva (12 slide navigabili con animazioni)
+- [x] PDF Technical Overview professionale (ReportLab, 10+ pagine)
+- [x] Endpoint API /api/docs/technical-overview-pdf per download PDF
+- [x] Documenti per investitori (IT/EN, PDF)
+- [x] Audit tecnico aggiornato (PDF)
+
 ## Roadmap Tecnica (dal Business Plan)
 
 ### Phase 1 — Foundation (Q2 2026, 3 mesi)
@@ -186,7 +194,11 @@
 - Recharts 3.6.0 → pronto per dashboard avanzate
 
 ## Next Tasks
-1. Phase 1 Foundation: JWT + RBAC (P0)
-2. Phase 1 Foundation: Split monolite backend
-3. Phase 1 Foundation: Rate limiting + security headers
-4. Loghi ANTHERA + GOVERN.AI (richiesta utente — in sospeso)
+1. P1: CI/CD GitHub Actions pipeline
+2. P1: Streaming Chat SSE per ARIA
+3. P2: Policy Conflict Detection
+4. P2: Algoritmo scoring automatico compliance
+5. P2: Multi-tenancy
+6. P2: Connettori Enterprise (SIEM, IAM, ServiceNow)
+7. P2: WebSocket real-time monitoring
+8. P2: Sistema notifiche (email alerts)

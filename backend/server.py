@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from contextlib import asynccontextmanager
@@ -72,6 +73,21 @@ app.include_router(chat_router)
 @app.get("/api/")
 async def root():
     return {"message": "GOVERN.AI API - Sovereign AI Control Plane"}
+
+
+@app.get("/api/docs/technical-overview-pdf")
+async def get_technical_overview_pdf():
+    pdf_path = Path(__file__).parent.parent / "GOVERN_AI_Technical_Overview.pdf"
+    if not pdf_path.exists():
+        from generate_overview_pdf import build_pdf
+        pdf_bytes = build_pdf()
+        with open(pdf_path, "wb") as f:
+            f.write(pdf_bytes)
+    return FileResponse(
+        path=str(pdf_path),
+        media_type="application/pdf",
+        filename="GOVERN_AI_Technical_Overview.pdf",
+    )
 
 
 # CORS
