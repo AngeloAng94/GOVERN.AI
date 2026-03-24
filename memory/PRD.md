@@ -40,7 +40,7 @@
 - **Compliance Officer**: Tracciamento standard regolatori (AI Act, ISO, DORA, NIS2)
 - **IT Administrator**: Ciclo di vita agenti e enforcement policy
 
-## Architecture (Current — MVP v1.5)
+## Architecture (Current — MVP v1.6)
 - **Frontend**: React 19 + Tailwind 3.4 + Shadcn/UI + Recharts (port 3000)
 - **Backend**: FastAPI 0.110 + Pydantic V2 + modular routes + reportlab (port 8001)
 - **Database**: MongoDB + Motor async (15 indici, 6 collections)
@@ -108,6 +108,13 @@
 - [x] Export Compliance Report PDF (progress bars, status badges)
 - [x] Bottoni export UI con RBAC (solo admin/dpo/auditor)
 - [x] Rate limiting su endpoint export
+
+### Step C3A (24 Mar 2026) — v1.6
+- [x] Logo ufficiale GOVERN.AI powered by ANTHERA integrato
+- [x] Componente Logo.js riutilizzabile (size, variant, tagline)
+- [x] Mobile sidebar con hamburger menu e drawer overlay
+- [x] Desktop sidebar collapsabile (solo icone)
+- [x] Favicon e meta tags aggiornati
 
 ## Roadmap Tecnica (dal Business Plan)
 

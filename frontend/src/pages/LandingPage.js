@@ -2,10 +2,8 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Activity, FileText, Link2, AlertTriangle, MessageSquare, Building2, Landmark, Heart, Zap, Phone, ChevronRight, Globe, Shield } from "lucide-react";
-
-const GOVERN_LOGO = "https://customer-assets.emergentagent.com/job_audit-first-ai/artifacts/5sbc8sgs_GOVERN%20AI.png";
-const ANTHERA_LOGO = "https://customer-assets.emergentagent.com/job_audit-first-ai/artifacts/stbit48o_ANTHERA.png";
 import { Button } from "@/components/ui/button";
+import Logo from "@/components/Logo";
 
 const features = [
   { key: "policy", icon: Shield, color: "text-blue-400", border: "border-blue-500/30", bg: "bg-blue-500/10", span: "col-span-2" },
@@ -34,10 +32,7 @@ export default function LandingPage() {
       {/* Nav */}
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-slate-800/60 bg-[#020617]/80 backdrop-blur-xl" data-testid="landing-nav">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Shield className="w-7 h-7 text-blue-500" />
-            <span className="font-['Space_Grotesk'] text-xl font-bold tracking-tight">GOVERN<span className="text-blue-500">.AI</span></span>
-          </div>
+          <Logo size="md" variant="full" />
           <div className="hidden md:flex items-center gap-8">
             <a href="#features" className="text-sm text-slate-400 hover:text-white transition-colors duration-200">{t("nav_features")}</a>
             <a href="#clients" className="text-sm text-slate-400 hover:text-white transition-colors duration-200">{t("nav_clients")}</a>
@@ -62,17 +57,21 @@ export default function LandingPage() {
         <div className="absolute inset-0 hero-glow" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-blue-500/30 bg-blue-500/10 text-blue-400 text-xs font-mono uppercase tracking-widest mb-8 animate-fade-up">
+            {/* Logo in Hero */}
+            <div className="mb-8 animate-fade-up">
+              <Logo size="lg" variant="full" showTagline={true} />
+            </div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-blue-500/30 bg-blue-500/10 text-blue-400 text-xs font-mono uppercase tracking-widest mb-8 animate-fade-up animate-delay-100">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse-glow" />
               Compliance-First AI Governance
             </div>
-            <h1 className="font-['Space_Grotesk'] text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] mb-6 animate-fade-up animate-delay-100" data-testid="hero-title">
+            <h1 className="font-['Space_Grotesk'] text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] mb-6 animate-fade-up animate-delay-200" data-testid="hero-title">
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">{t("hero_title")}</span>
             </h1>
-            <p className="text-lg md:text-xl text-slate-400 leading-relaxed max-w-2xl mb-10 animate-fade-up animate-delay-200" data-testid="hero-subtitle">
+            <p className="text-lg md:text-xl text-slate-400 leading-relaxed max-w-2xl mb-10 animate-fade-up animate-delay-300" data-testid="hero-subtitle">
               {t("hero_subtitle")}
             </p>
-            <div className="flex flex-wrap gap-4 animate-fade-up animate-delay-300">
+            <div className="flex flex-wrap gap-4 animate-fade-up animate-delay-400">
               <Button
                 onClick={() => navigate("/dashboard")}
                 className="bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_20px_rgba(59,130,246,0.4)] rounded-sm text-base px-8 py-3 h-auto font-medium"
@@ -92,7 +91,7 @@ export default function LandingPage() {
             </div>
           </div>
           {/* Stats bar */}
-          <div className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-6 animate-fade-up animate-delay-400">
+          <div className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-6 animate-fade-up animate-delay-500">
             {[
               { value: "99.9%", label: "Uptime SLA" },
               { value: "< 50ms", label: "Policy Evaluation" },
@@ -159,7 +158,9 @@ export default function LandingPage() {
           <div className="relative glass-card rounded-sm p-12 md:p-16 text-center overflow-hidden">
             <div className="absolute inset-0 hero-glow opacity-50" />
             <div className="relative">
-              <Shield className="w-12 h-12 text-blue-500 mx-auto mb-6" />
+              <div className="flex justify-center mb-6">
+                <Logo size="lg" variant="icon" />
+              </div>
               <h2 className="font-['Space_Grotesk'] text-3xl md:text-5xl font-semibold tracking-tight text-white mb-4">
                 {lang === "it" ? "Pronto a governare i tuoi agenti AI?" : "Ready to govern your AI agents?"}
               </h2>
@@ -185,10 +186,7 @@ export default function LandingPage() {
       <footer className="border-t border-slate-800/60 py-12" data-testid="footer">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <Shield className="w-5 h-5 text-blue-500" />
-              <span className="font-['Space_Grotesk'] text-sm font-semibold">GOVERN<span className="text-blue-500">.AI</span></span>
-            </div>
+            <Logo size="sm" variant="full" />
             <p className="text-xs text-slate-600 font-mono">
               {lang === "it" ? "Il control plane sovrano per l'AI enterprise" : "The sovereign control plane for enterprise AI"}
             </p>

@@ -2,11 +2,12 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Shield, Loader2, AlertCircle, Globe } from "lucide-react";
+import { Loader2, AlertCircle, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import Logo from "@/components/Logo";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -46,11 +47,9 @@ export default function LoginPage() {
 
       <Card className="relative w-full max-w-sm bg-slate-900/60 backdrop-blur-xl border-slate-800 rounded-sm" data-testid="login-card">
         <CardContent className="p-8">
-          <div className="flex items-center justify-center gap-3 mb-8">
-            <Shield className="w-8 h-8 text-blue-500" />
-            <span className="font-['Space_Grotesk'] text-2xl font-bold tracking-tight text-white">
-              GOVERN<span className="text-blue-500">.AI</span>
-            </span>
+          {/* Logo */}
+          <div className="flex justify-center mb-6">
+            <Logo size="lg" variant="full" showTagline={true} />
           </div>
 
           <p className="text-xs font-mono text-center text-slate-500 uppercase tracking-widest mb-6">
