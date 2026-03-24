@@ -1,11 +1,14 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Activity, Search } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuth } from "@/contexts/AuthContext";
+import { Activity, Search, FileText, FileDown, Loader2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { toast } from "sonner";
 import axios from "axios";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -24,8 +27,12 @@ const riskColors = {
   critical: "bg-red-950/30 text-red-400 border-red-900/50",
 };
 
+// Roles that can export
+const EXPORT_ROLES = ["admin", "dpo", "auditor"];
+
 export default function AuditPage() {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const [logs, setLogs] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -33,6 +40,11 @@ export default function AuditPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [outcome, setOutcome] = useState("all");
   const [risk, setRisk] = useState("all");
+  const [exportingCsv, setExportingCsv] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
+
+  // Check if user can export
+  const canExport = user && EXPORT_ROLES.includes(user.role);
 
   // Fix 1.6: Debounce search input (300ms)
   useEffect(() => {
@@ -68,11 +80,95 @@ export default function AuditPage() {
     } catch { return ts; }
   };
 
+  const buildExportParams = () => {
+    const params = new URLSearchParams();
+    if (debouncedSearch) params.append("search", debouncedSearch);
+    if (outcome !== "all") params.append("outcome", outcome);
+    if (risk !== "all") params.append("risk_level", risk);
+    return params.toString();
+  };
+
+  const handleExport = async (type) => {
+    const setExporting = type === "csv" ? setExportingCsv : setExportingPdf;
+    const endpoint = type === "csv" ? "/audit/export/csv" : "/audit/export/pdf";
+    const mimeType = type === "csv" ? "text/csv" : "application/pdf";
+    
+    setExporting(true);
+    
+    try {
+      const params = buildExportParams();
+      const response = await axios.get(`${API}${endpoint}?${params}`, {
+        responseType: "blob",
+      });
+      
+      // Extract filename from Content-Disposition header or generate one
+      const contentDisposition = response.headers["content-disposition"];
+      let filename = `audit_export_${new Date().toISOString().slice(0,10)}.${type}`;
+      if (contentDisposition) {
+        const match = contentDisposition.match(/filename=([^;]+)/);
+        if (match) filename = match[1].replace(/"/g, "");
+      }
+      
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: mimeType }));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      toast.success(type === "csv" ? "CSV exported successfully" : "PDF exported successfully");
+    } catch (error) {
+      console.error("Export failed:", error);
+      toast.error(t("export_failed"));
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="space-y-6" data-testid="audit-page">
-      <div>
-        <h1 className="font-['Space_Grotesk'] text-2xl font-bold tracking-tight text-white">{t("audit_title")}</h1>
-        <p className="text-sm text-slate-500 mt-1">{t("audit_subtitle")}</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="font-['Space_Grotesk'] text-2xl font-bold tracking-tight text-white">{t("audit_title")}</h1>
+          <p className="text-sm text-slate-500 mt-1">{t("audit_subtitle")}</p>
+        </div>
+        
+        {/* Export Buttons */}
+        {canExport && (
+          <div className="flex gap-2" data-testid="export-buttons">
+            <Button
+              variant="outline"
+              className="border-slate-700 bg-slate-900/50 text-slate-300 hover:bg-slate-800 hover:text-white rounded-sm gap-2"
+              onClick={() => handleExport("csv")}
+              disabled={exportingCsv || exportingPdf}
+              data-testid="export-csv-btn"
+            >
+              {exportingCsv ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <FileText className="w-4 h-4" />
+              )}
+              {exportingCsv ? t("exporting") : t("export_csv")}
+            </Button>
+            <Button
+              variant="outline"
+              className="border-slate-700 bg-slate-900/50 text-slate-300 hover:bg-slate-800 hover:text-white rounded-sm gap-2"
+              onClick={() => handleExport("pdf")}
+              disabled={exportingCsv || exportingPdf}
+              data-testid="export-pdf-btn"
+            >
+              {exportingPdf ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <FileDown className="w-4 h-4" />
+              )}
+              {exportingPdf ? t("exporting") : t("export_pdf")}
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Filters */}

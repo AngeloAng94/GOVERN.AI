@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ShieldCheck, AlertTriangle, CheckCircle, XCircle, Clock } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuth } from "@/contexts/AuthContext";
+import { ShieldCheck, AlertTriangle, CheckCircle, XCircle, Clock, FileDown, Loader2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { toast } from "sonner";
 import axios from "axios";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -20,10 +23,18 @@ const categoryBadge = {
   directive: "bg-cyan-950/30 text-cyan-400 border-cyan-900/50",
 };
 
+// Roles that can export
+const EXPORT_ROLES = ["admin", "dpo", "auditor"];
+
 export default function CompliancePage() {
   const { t, lang } = useLanguage();
+  const { user } = useAuth();
   const [standards, setStandards] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
+
+  // Check if user can export
+  const canExport = user && EXPORT_ROLES.includes(user.role);
 
   useEffect(() => {
     axios.get(`${API}/compliance`)
@@ -31,6 +42,41 @@ export default function CompliancePage() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
+
+  const handleExportPdf = async () => {
+    setExporting(true);
+    
+    try {
+      const response = await axios.get(`${API}/compliance/export/pdf`, {
+        responseType: "blob",
+      });
+      
+      // Extract filename from header or generate one
+      const contentDisposition = response.headers["content-disposition"];
+      let filename = `compliance_report_${new Date().toISOString().slice(0,10)}.pdf`;
+      if (contentDisposition) {
+        const match = contentDisposition.match(/filename=([^;]+)/);
+        if (match) filename = match[1].replace(/"/g, "");
+      }
+      
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: "application/pdf" }));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      toast.success("Compliance report exported successfully");
+    } catch (error) {
+      console.error("Export failed:", error);
+      toast.error(t("export_failed"));
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const overallProgress = standards.length > 0
     ? Math.round(standards.reduce((sum, s) => sum + s.progress, 0) / standards.length)
@@ -42,9 +88,29 @@ export default function CompliancePage() {
 
   return (
     <div className="space-y-6" data-testid="compliance-page">
-      <div>
-        <h1 className="font-['Space_Grotesk'] text-2xl font-bold tracking-tight text-white">{t("compliance_title")}</h1>
-        <p className="text-sm text-slate-500 mt-1">{t("compliance_subtitle")}</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="font-['Space_Grotesk'] text-2xl font-bold tracking-tight text-white">{t("compliance_title")}</h1>
+          <p className="text-sm text-slate-500 mt-1">{t("compliance_subtitle")}</p>
+        </div>
+        
+        {/* Export Button */}
+        {canExport && (
+          <Button
+            variant="outline"
+            className="border-slate-700 bg-slate-900/50 text-slate-300 hover:bg-slate-800 hover:text-white rounded-sm gap-2"
+            onClick={handleExportPdf}
+            disabled={exporting}
+            data-testid="export-compliance-btn"
+          >
+            {exporting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <FileDown className="w-4 h-4" />
+            )}
+            {exporting ? t("exporting") : t("export_compliance_report")}
+          </Button>
+        )}
       </div>
 
       {loading ? (

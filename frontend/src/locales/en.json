@@ -94,5 +94,10 @@
   "actions": "Actions",
   "status": "Status",
   "back_to_site": "Back to Site",
-  "language": "Language"
+  "language": "Language",
+  "export_csv": "Export CSV",
+  "export_pdf": "Export PDF",
+  "exporting": "Exporting...",
+  "export_compliance_report": "Export Compliance Report",
+  "export_failed": "Export failed. Please try again."
 }

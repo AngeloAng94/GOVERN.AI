@@ -94,5 +94,10 @@
   "actions": "Azioni",
   "status": "Stato",
   "back_to_site": "Torna al Sito",
-  "language": "Lingua"
+  "language": "Lingua",
+  "export_csv": "Esporta CSV",
+  "export_pdf": "Esporta PDF",
+  "exporting": "Esportazione...",
+  "export_compliance_report": "Esporta Report Compliance",
+  "export_failed": "Esportazione fallita. Riprova."
 }
