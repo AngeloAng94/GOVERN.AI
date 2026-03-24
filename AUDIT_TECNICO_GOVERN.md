@@ -1,6 +1,6 @@
 # AUDIT TECNICO — GOVERN.AI
-**Data**: 24 Marzo 2026 (aggiornato post Step C3A)  
-**Versione codebase**: MVP v1.6 (Step C3A completato)  
+**Data**: 24 Marzo 2026 (aggiornato post Step C3B)  
+**Versione codebase**: MVP v1.7 (Step C3B completato)  
 **Autore**: Audit automatico  
 
 ---
@@ -462,6 +462,10 @@ Risultato: la chat LLM non ha contesto delle conversazioni precedenti, ogni mess
 - **[Step C2 — 24/03/2026] Endpoint Export** — GET /api/audit/export/csv, GET /api/audit/export/pdf, GET /api/compliance/export/pdf con rate limiting e RBAC
 - **[Step C3A — 24/03/2026] Logo Ufficiale** — Logo GOVERN.AI powered by ANTHERA integrato in navbar, hero, sidebar, login — TD logo risolto
 - **[Step C3A — 24/03/2026] Mobile Sidebar** — Hamburger menu su mobile, drawer overlay, sidebar collapsabile su desktop con solo icone — TD21 risolto
+- **[Step C3B — 24/03/2026] Docker + docker-compose** — Dockerfile backend/frontend, nginx.conf, docker-compose.yml con MongoDB, .env.example, .dockerignore — TD17 risolto
+- **[Step C3B — 24/03/2026] README.md professionale** — Documentazione completa con Quick Start, Tech Stack, API docs, Security, Roadmap — Documentazione completa
+
+**Step C3B completato il 24 Marzo 2026** — Docker + README professionale. 22/22 test passati.
 
 **Step C3A completato il 24 Marzo 2026** — Logo ufficiale + Mobile sidebar. 22/22 test passati.
 
@@ -478,8 +482,7 @@ Risultato: la chat LLM non ha contesto delle conversazioni precedenti, ogni mess
 ### Da completare 🔄
 
 - **Streaming chat** — risposta LLM non in streaming (P2)
-- **CI/CD pipeline** — assente (P2)
-- **Dockerfile** — assente (P2)
+- **CI/CD pipeline** — GitHub Actions assente (P2)
 - **Test unitari frontend** — assenti (P2)
 - **Connettori enterprise** (IAM, SIEM, ServiceNow) — non implementati (P2)
 - **Multi-tenancy** — non implementato (P2)

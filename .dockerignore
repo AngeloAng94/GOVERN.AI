@@ -1,0 +1,12 @@
+node_modules
+.env
+__pycache__
+*.pyc
+*.pyo
+.git
+AUDIT_TECNICO_GOVERN.md
+STEP_C*.md
+STEP2*.md
+test_reports/
+memory/
+*.pdf
