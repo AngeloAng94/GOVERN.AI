@@ -1,6 +1,6 @@
 # AUDIT TECNICO — GOVERN.AI
-**Data**: 26 Febbraio 2026 (aggiornato post Step 1)  
-**Versione codebase**: MVP v1.1 (Step 1 completato)  
+**Data**: 02 Marzo 2026 (aggiornato post Step 2B)  
+**Versione codebase**: MVP v1.3 (Step 2B completato)  
 **Autore**: Audit automatico  
 
 ---
@@ -57,11 +57,12 @@
 
 ### 1.3 Tipo di architettura
 
-**Monolite a due tier** con separazione frontend/backend:
-- Backend: singolo file `server.py` (491 righe) — monolite funzionale
-- Frontend: SPA con routing lato client, 8 pagine
+**Architettura modulare a due tier** con separazione frontend/backend:
+- Backend: `server.py` (orchestratore) + 7 file di route modulari in `routes/` + `models.py` + `database.py` + `seed.py`
+- Frontend: SPA con routing lato client, 8 pagine, componente CRUD generico `CrudPage.js`
 - Database: singola istanza MongoDB, nessun replica set
-- Nessun layer di servizi, nessun message broker, nessuna cache
+- Autenticazione: JWT con RBAC (4 ruoli)
+- Nessun message broker, nessuna cache
 
 ---
 
@@ -72,75 +73,87 @@
 ```
 /app/
 ├── backend/
-│   ├── .env                          # Variabili ambiente (4 chiavi)
-│   ├── requirements.txt              # 125 dipendenze (pip freeze completo)
-│   └── server.py                     # UNICO file backend — 491 righe
+│   ├── .env                          # Variabili ambiente (6 chiavi)
+│   ├── requirements.txt              # Dipendenze Python
+│   ├── server.py                     # FastAPI app + middleware + router include (~80 righe)
+│   ├── models.py                     # Modelli Pydantic + Enum (~180 righe)
+│   ├── database.py                   # Connessione MongoDB + indici (~40 righe)
+│   ├── seed.py                       # Dati seed iniziali (~200 righe)
+│   ├── rate_limiter.py               # Istanza condivisa slowapi
+│   ├── routes/
+│   │   ├── __init__.py
+│   │   ├── auth.py                   # Login, register, JWT, RBAC
+│   │   ├── agents.py                 # CRUD agenti AI
+│   │   ├── policies.py               # CRUD policy
+│   │   ├── audit.py                  # Audit trail
+│   │   ├── compliance.py             # Standard compliance
+│   │   ├── dashboard.py              # Stats dashboard
+│   │   └── chat.py                   # ARIA AI assistant
+│   └── tests/
+│       ├── __init__.py
+│       └── test_api.py               # Suite test API (22 test)
 ├── frontend/
 │   ├── .env                          # REACT_APP_BACKEND_URL
-│   ├── package.json                  # 52 dependencies + 12 devDependencies
+│   ├── package.json                  # Dependencies
 │   ├── tailwind.config.js            # Config Tailwind + shadcn theme
-│   ├── postcss.config.js             # PostCSS standard
-│   ├── craco.config.js               # Webpack overrides, alias @/
-│   ├── jsconfig.json                 # Path alias
-│   ├── components.json               # Shadcn config
-│   ├── public/
-│   │   └── index.html                # HTML template con font Google
 │   └── src/
-│       ├── index.js                  # Entry point React — 11 righe
-│       ├── index.css                 # CSS globale + CSS vars + animazioni — 163 righe
-│       ├── App.js                    # Router principale — 36 righe
-│       ├── App.css                   # Vuoto (1 riga commento)
+│       ├── index.js                  # Entry point React
+│       ├── index.css                 # CSS globale + animazioni
+│       ├── App.js                    # Router principale
 │       ├── contexts/
-│       │   └── LanguageContext.js     # i18n EN/IT — 227 righe
+│       │   ├── AuthContext.js        # Gestione auth + token JWT
+│       │   └── LanguageContext.js    # i18n con file JSON esterni
 │       ├── pages/
-│       │   ├── LandingPage.js        # Landing page — 198 righe
-│       │   ├── DashboardLayout.js    # Shell con sidebar — 83 righe
-│       │   ├── OverviewPage.js       # KPI dashboard — 145 righe
-│       │   ├── AgentsPage.js         # CRUD agenti — 235 righe
-│       │   ├── PoliciesPage.js       # CRUD policy — 234 righe
-│       │   ├── AuditPage.js          # Tabella audit — 148 righe
-│       │   ├── CompliancePage.js     # Monitor compliance — 142 righe
-│       │   └── AssistantPage.js      # Chat AI — 167 righe
-│       ├── components/ui/            # 39 componenti Shadcn (pre-installati)
+│       │   ├── LandingPage.js        # Landing page
+│       │   ├── LoginPage.js          # Login form
+│       │   ├── DashboardLayout.js    # Shell con sidebar
+│       │   ├── OverviewPage.js       # KPI dashboard
+│       │   ├── AgentsPage.js         # CRUD agenti (usa CrudPage)
+│       │   ├── PoliciesPage.js       # CRUD policy (usa CrudPage)
+│       │   ├── AuditPage.js          # Tabella audit
+│       │   ├── CompliancePage.js     # Monitor compliance
+│       │   └── AssistantPage.js      # Chat AI (react-markdown)
+│       ├── components/
+│       │   ├── CrudPage.js           # Componente CRUD generico
+│       │   └── ui/                   # 39 componenti Shadcn
+│       ├── locales/
+│       │   ├── en.json               # Traduzioni inglese
+│       │   └── it.json               # Traduzioni italiano
 │       ├── hooks/
-│       │   └── use-toast.js          # Hook toast (pre-installato)
+│       │   └── use-toast.js          # Hook toast
 │       └── lib/
-│           └── utils.js              # cn() utility — 6 righe
-├── backend_test.py                   # Test suite API (generato dal testing agent) — 339 righe
-├── tests/
-│   └── __init__.py                   # Vuoto
+│           └── utils.js              # cn() utility
 ├── test_reports/
-│   └── iteration_1.json             # Report test automatici
+│   └── iteration_*.json              # Report test automatici
 ├── memory/
-│   └── PRD.md                       # Product Requirements Document
-└── design_guidelines.json           # Linee guida UX generate
+│   └── PRD.md                        # Product Requirements Document
+├── AUDIT_TECNICO_GOVERN.md           # Questo documento
+├── GOVERN_AI_Investor_Intro_EN.pdf   # Deck investitori (EN)
+└── GOVERN_AI_Investor_Intro_IT.pdf   # Deck investitori (IT)
 ```
 
-### 2.2 Analisi file principali
+### 2.2 Analisi file principali (POST REFACTORING)
 
-| File | Righe | Responsabilita | Note |
+| File | Righe | Responsabilità | Note |
 |---|---|---|---|
-| `backend/server.py` | 491 | Modelli, seed data, TUTTI gli endpoint, startup/shutdown | **Monolite**: modelli, logica, routing, seeding tutto in un file |
-| `frontend/src/pages/AgentsPage.js` | 235 | CRUD agenti + form dialog + listing | Componente grande, potrebbe essere splittato |
-| `frontend/src/pages/PoliciesPage.js` | 234 | CRUD policy + form dialog + listing | Pattern quasi identico ad AgentsPage (duplicazione logica) |
-| `frontend/src/contexts/LanguageContext.js` | 227 | Tutte le traduzioni EN/IT inline | ~200 righe solo di stringhe hardcoded |
-| `frontend/src/pages/LandingPage.js` | 198 | Landing completa: nav, hero, features, clients, CTA, footer | Un unico componente per l'intera landing |
-| `frontend/src/pages/AssistantPage.js` | 167 | Chat UI + markdown renderer custom | Rendering markdown rudimentale (riga 50-61) |
-| `frontend/src/index.css` | 163 | CSS vars, animazioni, scrollbar, glass-morphism | Ben strutturato con @layer |
-| `frontend/src/pages/AuditPage.js` | 148 | Tabella audit filtri/ricerca | Buona separazione |
-| `frontend/src/pages/CompliancePage.js` | 142 | Monitor compliance con progress bar | Buona separazione |
-| `backend_test.py` | 339 | Suite test API completa | Generato dal testing agent, non integrato in CI |
+| `backend/server.py` | ~80 | App FastAPI, middleware sicurezza, include router | Orchestratore pulito |
+| `backend/models.py` | ~180 | Tutti i modelli Pydantic + Enum | Separato e riutilizzabile |
+| `backend/routes/*.py` | ~50-100 | Endpoint specifici per dominio | Architettura modulare |
+| `frontend/src/components/CrudPage.js` | ~200 | Componente CRUD generico | Riusato da Agents/Policies |
+| `frontend/src/pages/AgentsPage.js` | ~130 | Config + render card per agenti | Usa CrudPage (refactored) |
+| `frontend/src/pages/PoliciesPage.js` | ~130 | Config + render card per policy | Usa CrudPage (refactored) |
+| `frontend/src/locales/*.json` | ~95 | Traduzioni EN/IT | File JSON separati |
 
-### 2.3 Problemi strutturali identificati
+### 2.3 Problemi strutturali — STATO POST STEP 2B
 
-| ID | Problema | File | Impatto |
+| ID | Problema Originale | Stato | Soluzione Applicata |
 |---|---|---|---|
-| S1 | Backend monolite: modelli, routing, seed, logica in un unico file da 491 righe | `server.py` | Manutenibilita scarsa su lungo termine |
-| S2 | Duplicazione pattern CRUD tra AgentsPage e PoliciesPage (~80% struttura identica) | `AgentsPage.js`, `PoliciesPage.js` | Codice duplicato, bug da fixare in 2 posti |
-| S3 | Traduzioni inline nel context (227 righe) — non scalabile per aggiunta lingue | `LanguageContext.js` | Difficile aggiungere DE/FR/ES senza esplodere il file |
-| S4 | `App.css` praticamente vuoto (1 riga) | `App.css` | File morto, nessun impatto funzionale |
+| S1 | Backend monolite 491 righe | ✅ RISOLTO | Split in `models.py`, `database.py`, `seed.py`, 7 file route |
+| S2 | Duplicazione CRUD AgentsPage/PoliciesPage | ✅ RISOLTO | Componente generico `CrudPage.js` |
+| S3 | Traduzioni inline (227 righe) | ✅ RISOLTO | File JSON esterni `en.json`, `it.json` |
+| S4 | `App.css` vuoto | ✅ RISOLTO | File ignorato |
 
-### 2.4 Import inutilizzati
+### 2.4 Import inutilizzati — STATO POST STEP 1
 
 | File | Riga | Import | Usato? |
 |---|---|---|---|
@@ -423,7 +436,7 @@ Risultato: la chat LLM non ha contesto delle conversazioni precedenti, ogni mess
 - Ogni operazione CRUD genera automaticamente un audit log
 - Dati seed realistici (4 agenti, 5 policy, 25 log audit, 6 standard compliance)
 - Design system coerente: dark mode, Space Grotesk headings, JetBrains Mono code, glassmorphism
-- Suite test API completa (25/25 passati)
+- Suite test API completa (22/22 passati con pytest)
 - data-testid su tutti gli elementi interattivi
 - **[Step 1 — 26/02/2026] Indici MongoDB** su tutte le collection (id unique + campi filtro) — TD4 risolto
 - **[Step 1 — 26/02/2026] Sanitizzazione regex** nella search audit con re.escape() — TD3/V4 risolto
@@ -437,25 +450,32 @@ Risultato: la chat LLM non ha contesto delle conversazioni precedenti, ogni mess
 - **[Step 2A — 02/03/2026] Autenticazione JWT + RBAC** — 4 ruoli (admin>dpo>auditor>viewer), bcrypt, HS256, scadenza 8h — TD1/V1 risolto
 - **[Step 2A — 02/03/2026] ARIA AI Assistant verticale** — system prompt rigido, rifiuta domande off-topic, validazione 5-2000 chars — Fix A2 completato
 - **[Step 2A — 02/03/2026] Rate limiting** — slowapi su tutti gli endpoint (chat 10/min, login 5/min, CRUD 30/min) — TD9/V5 risolto
+- **[Step 2B — 02/03/2026] Backend modulare** — Split `server.py` in: `models.py`, `database.py`, `seed.py`, `rate_limiter.py`, 7 file route (`routes/auth.py`, `agents.py`, `policies.py`, `audit.py`, `compliance.py`, `dashboard.py`, `chat.py`) — TD5 risolto
+- **[Step 2B — 02/03/2026] Header di sicurezza** — Middleware custom con X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, Referrer-Policy, Permissions-Policy — V9/B3 risolto
+- **[Step 2B — 02/03/2026] Componente CRUD generico** — `CrudPage.js` riutilizzato da AgentsPage e PoliciesPage, elimina ~150 righe duplicate — TD10/B2 risolto
+- **[Step 2B — 02/03/2026] Traduzioni JSON esterne** — Spostate in `locales/en.json` e `locales/it.json`, `LanguageContext.js` ora importa file JSON — TD12/B4 risolto
+- **[Step 2B — 02/03/2026] react-markdown** — Sostituito renderer custom in AssistantPage con libreria professionale — TD13/B5 risolto
+- **[Step 2B — 02/03/2026] Test backend aggiornati** — `backend/tests/test_api.py` con 22 test pytest, token caching per rate limiting — Test suite funzionante
 
-**Step 2A completato il 02 Marzo 2026** — Auth JWT + ARIA + Rate Limiting applicati. Test 100% passati.
+**Step 2B completato il 02 Marzo 2026** — Refactoring backend + frontend + sicurezza + test. 22/22 test passati.
+
+**Step 2A completato il 02 Marzo 2026** — Auth JWT + ARIA + Rate Limiting applicati.
 
 **Step 1 completato il 26 Febbraio 2026** — 9 fix critici e quick wins applicati con successo.
 
 ### Da completare 🔄
 
-- **Refactoring backend** — monolite da splittare (P1)
-- **Refactoring frontend** — duplicazione CRUD da eliminare (P1)
 - **Streaming chat** — risposta LLM non in streaming (P2)
 - **CI/CD pipeline** — assente (P2)
 - **Dockerfile** — assente (P2)
-- **Test unitari** — assenti (P2)
+- **Test unitari frontend** — assenti (P2)
 - **Dashboard charts** — recharts installato ma non usato (P2)
 - **Export PDF/CSV** — non implementato (P2)
 - **Connettori enterprise** (IAM, SIEM, ServiceNow) — non implementati (P2)
 - **Multi-tenancy** — non implementato (P2)
 - **Mobile sidebar** — non responsiva (P3)
+- **Logo ANTHERA/GOVERN.AI** — placeholder testuale da sostituire con immagini (P1)
 
 ---
 
-*Fine audit tecnico. Documento generato analizzando il codice sorgente senza modifiche.*
+*Fine audit tecnico. Documento generato analizzando il codice sorgente. Ultimo aggiornamento: 02 Marzo 2026.*
