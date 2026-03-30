@@ -1,6 +1,6 @@
 # AUDIT TECNICO — GOVERN.AI
-**Data**: 24 Marzo 2026 (aggiornato post Step C3B)  
-**Versione codebase**: MVP v1.7 (Step C3B completato)  
+**Data**: 24 Marzo 2026 (aggiornato post Step CICD)  
+**Versione codebase**: MVP v1.8 (Step CICD completato)  
 **Autore**: Audit automatico  
 
 ---
@@ -312,9 +312,10 @@ Risultato: la chat LLM non ha contesto delle conversazioni precedenti, ogni mess
 
 | Elemento | Stato |
 |---|---|
-| Dockerfile | **ASSENTE** — nessun Dockerfile nel progetto |
-| docker-compose | **ASSENTE** |
-| GitHub Actions | **ASSENTE** — nessuna directory `.github/workflows` |
+| Dockerfile | **PRESENTE** — Dockerfile per backend (Python 3.11-slim) e frontend (multi-stage node+nginx) |
+| docker-compose | **PRESENTE** — Orchestrazione 3 container (MongoDB, Backend, Frontend) |
+| GitHub Actions | **PRESENTE** — `.github/workflows/ci.yml` con 4 job |
+| Jobs CI | backend-tests (22 pytest), frontend-build (yarn build), security-scan (bandit+safety), docker-build (BE+FE images) |
 | GitLab CI | **ASSENTE** |
 | Jenkins | **ASSENTE** |
 | Pre-commit hooks | **ASSENTE** |
@@ -357,8 +358,8 @@ Risultato: la chat LLM non ha contesto delle conversazioni precedenti, ogni mess
 | TD14 | Backend | Import inutilizzati (StreamingResponse, asyncio, json) | Nessun impatto runtime, ma sporcizia nel codice | 5 min | **P2** |
 | TD15 | Frontend | Import lucide inutilizzati (Ban, Filter, X) | Bundle leggermente piu pesante | 5 min | **P2** |
 | TD16 | Backend | Errore LLM espone stacktrace (`str(e)`) | Information disclosure | 10 min | **P2** |
-| TD17 | Infra | Nessun Dockerfile/docker-compose | Non riproducibile localmente da altri dev | 1-2h | **P2** |
-| TD18 | Infra | Nessun CI/CD pipeline | Test non automatizzati, deploy manuale | 2-4h | **P2** |
+| TD17 | Infra | ~~Nessun Dockerfile/docker-compose~~ | ✅ RISOLTO — Step C3B | 1-2h | ~~**P2**~~ |
+| TD18 | Infra | ~~Nessun CI/CD pipeline~~ | ✅ RISOLTO — GitHub Actions con 4 job | 2-4h | ~~**P2**~~ |
 | TD19 | Database | Date come stringhe ISO anziché tipi nativi `datetime` | Query di range temporale inefficienti, sort lessicografico | 2h (migrazione) | **P2** |
 | TD20 | Database | DB name `test_database` | Confusione ambiente, indovinabile | 5 min | **P3** |
 | TD21 | Frontend | Sidebar non collassabile su mobile | UX mobile compromessa | 1-2h | **P3** |
@@ -464,8 +465,11 @@ Risultato: la chat LLM non ha contesto delle conversazioni precedenti, ogni mess
 - **[Step C3A — 24/03/2026] Mobile Sidebar** — Hamburger menu su mobile, drawer overlay, sidebar collapsabile su desktop con solo icone — TD21 risolto
 - **[Step C3B — 24/03/2026] Docker + docker-compose** — Dockerfile backend/frontend, nginx.conf, docker-compose.yml con MongoDB, .env.example, .dockerignore — TD17 risolto
 - **[Step C3B — 24/03/2026] README.md professionale** — Documentazione completa con Quick Start, Tech Stack, API docs, Security, Roadmap — Documentazione completa
+- **[Step CICD — 24/03/2026] GitHub Actions CI** — `.github/workflows/ci.yml` con 4 job paralleli: backend-tests (pytest 22/22), frontend-build (yarn build), security-scan (bandit+safety), docker-build (BE+FE images) — TD18 risolto
 
 **Step C3B completato il 24 Marzo 2026** — Docker + README professionale. 22/22 test passati.
+
+**Step CICD completato il 24 Marzo 2026** — GitHub Actions CI pipeline con 4 job (backend-tests, frontend-build, security-scan, docker-build). 22/22 test passati.
 
 **Step C3A completato il 24 Marzo 2026** — Logo ufficiale + Mobile sidebar. 22/22 test passati.
 
@@ -482,11 +486,10 @@ Risultato: la chat LLM non ha contesto delle conversazioni precedenti, ogni mess
 ### Da completare 🔄
 
 - **Streaming chat** — risposta LLM non in streaming (P2)
-- **CI/CD pipeline** — GitHub Actions assente (P2)
 - **Test unitari frontend** — assenti (P2)
 - **Connettori enterprise** (IAM, SIEM, ServiceNow) — non implementati (P2)
 - **Multi-tenancy** — non implementato (P2)
 
 ---
 
-*Fine audit tecnico. Documento generato analizzando il codice sorgente. Ultimo aggiornamento: 02 Marzo 2026.*
+*Fine audit tecnico. Documento generato analizzando il codice sorgente. Ultimo aggiornamento: 24 Marzo 2026 (post Step CICD — v1.8).*

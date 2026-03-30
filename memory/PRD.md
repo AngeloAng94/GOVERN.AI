@@ -132,6 +132,17 @@
 - [x] Documenti per investitori (IT/EN, PDF)
 - [x] Audit tecnico aggiornato (PDF)
 
+### Step CICD (24 Mar 2026) — v1.8
+- [x] `.github/workflows/ci.yml` — Pipeline GitHub Actions con 4 job paralleli
+- [x] Job `backend-tests`: pytest 22/22 con MongoDB service container
+- [x] Job `frontend-build`: yarn build check
+- [x] Job `security-scan`: bandit + safety su dipendenze Python
+- [x] Job `docker-build`: build immagini Docker backend + frontend
+- [x] YAML validato (zero tab, sintassi corretta)
+- [x] README.md aggiornato con badge CI, sezione CI/CD, istruzioni secrets
+- [x] AUDIT_TECNICO_GOVERN.md aggiornato (TD18 risolto, v1.8)
+- [x] STEP_CICD_REPORT.md generato
+
 ## Roadmap Tecnica (dal Business Plan)
 
 ### Phase 1 — Foundation (Q2 2026, 3 mesi)

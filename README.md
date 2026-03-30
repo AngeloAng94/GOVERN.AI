@@ -1,5 +1,7 @@
 # GOVERN.AI
 
+![CI](https://github.com/AngeloAng94/GOVERN.AI/actions/workflows/ci.yml/badge.svg)
+
 ### Sovereign Control Plane for Enterprise AI
 
 #### powered by ANTHERA | antherasystems.com
@@ -188,6 +190,31 @@ Expected: **22/22 tests passed**
 
 ---
 
+## CI/CD
+
+Every push to `main` or `develop` triggers the GitHub Actions pipeline:
+
+| Job | What it verifies |
+|-----|------------------|
+| `backend-tests` | 22 pytest against live API + MongoDB |
+| `frontend-build` | `yarn build` completes without errors |
+| `security-scan` | bandit + safety on Python dependencies |
+| `docker-build` | `docker build` for backend + frontend images |
+
+### GitHub Secrets Configuration
+
+To enable the full pipeline, configure this secret in your GitHub repository:
+
+**Settings > Secrets and variables > Actions > New repository secret**
+
+| Secret | Value | Required |
+|--------|-------|----------|
+| `EMERGENT_LLM_KEY` | Your Emergent API key | Optional* |
+
+*If `EMERGENT_LLM_KEY` is not configured, the backend-tests job will skip LLM-dependent tests. The pipeline will not fail.
+
+---
+
 ## Environment Variables Reference
 
 | Variable | Required | Description |
@@ -217,7 +244,7 @@ Expected: **22/22 tests passed**
 
 ## Roadmap
 
-### ✅ Completed (MVP v1.7)
+### ✅ Completed (MVP v1.8)
 
 - Core platform (agents, policies, audit, compliance)
 - JWT authentication + RBAC
@@ -229,10 +256,7 @@ Expected: **22/22 tests passed**
 - Responsive UI with collapsible sidebar
 - Bilingual IT/EN
 - Docker + docker-compose
-
-### 🔄 In Progress
-
-- CI/CD GitHub Actions
+- CI/CD GitHub Actions (4 jobs)
 
 ### 📋 Planned
 

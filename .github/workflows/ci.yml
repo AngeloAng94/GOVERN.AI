@@ -1,0 +1,181 @@
+name: GOVERN.AI CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+
+  backend-tests:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:7.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ping:1})'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+
+      - name: Start backend server
+        env:
+          MONGO_URL: mongodb://localhost:27017
+          DB_NAME: governai_test
+          JWT_SECRET_KEY: ci_test_secret_key_minimum_32_chars_long
+          EMERGENT_LLM_KEY: ${{ secrets.EMERGENT_LLM_KEY }}
+          ALLOWED_ORIGINS: http://localhost:3000
+        run: |
+          cd backend
+          uvicorn server:app \
+            --host 0.0.0.0 \
+            --port 8001 &
+          echo "Waiting for backend to start..."
+          sleep 8
+
+      - name: Run backend tests
+        env:
+          MONGO_URL: mongodb://localhost:27017
+          DB_NAME: governai_test
+          JWT_SECRET_KEY: ci_test_secret_key_minimum_32_chars_long
+          EMERGENT_LLM_KEY: ${{ secrets.EMERGENT_LLM_KEY }}
+          ALLOWED_ORIGINS: http://localhost:3000
+        run: |
+          cd backend
+          pytest tests/test_api.py -v \
+            --tb=short \
+            --no-header \
+            -q
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: backend/tests/
+          retention-days: 7
+
+  frontend-build:
+    name: Frontend Build Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+          cache-dependency-path: frontend/yarn.lock
+
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          yarn install --frozen-lockfile
+
+      - name: Build frontend
+        env:
+          REACT_APP_BACKEND_URL: http://localhost:8001
+          CI: false
+        run: |
+          cd frontend
+          yarn build
+
+      - name: Verify build output
+        run: |
+          test -f frontend/build/index.html
+          echo "Build successful"
+          ls -lh frontend/build/
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install security tools
+        run: |
+          pip install safety bandit
+
+      - name: Check Python dependencies for CVEs
+        run: |
+          cd backend
+          safety check -r requirements.txt \
+            --output text || true
+
+      - name: Run bandit security linter
+        run: |
+          cd backend
+          bandit -r . \
+            -x tests/ \
+            --severity-level medium \
+            -f txt || true
+
+  docker-build:
+    name: Docker Build Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create minimal .env for build
+        run: |
+          echo "MONGO_URL=mongodb://mongodb:27017" \
+            > backend/.env
+          echo "DB_NAME=governai_db" >> backend/.env
+          echo "JWT_SECRET_KEY=build_check_secret_32_chars_ok" \
+            >> backend/.env
+          echo "EMERGENT_LLM_KEY=build_check_placeholder" \
+            >> backend/.env
+          echo "ALLOWED_ORIGINS=http://localhost:3000" \
+            >> backend/.env
+          echo "REACT_APP_BACKEND_URL=http://localhost:8001" \
+            > frontend/.env
+
+      - name: Build backend Docker image
+        run: |
+          docker build \
+            -t governai-backend:ci \
+            ./backend
+
+      - name: Build frontend Docker image
+        run: |
+          docker build \
+            -t governai-frontend:ci \
+            ./frontend
+
+      - name: Verify images exist
+        run: |
+          docker images | grep governai
+          echo "Docker build successful"
