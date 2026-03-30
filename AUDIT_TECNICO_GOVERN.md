@@ -1,6 +1,6 @@
 # AUDIT TECNICO — GOVERN.AI
-**Data**: 30 Marzo 2026 (aggiornato post Step FINAL)  
-**Versione codebase**: MVP v1.9 (Step FINAL completato)  
+**Data**: 30 Marzo 2026 (aggiornato post Fix v2.0)  
+**Versione codebase**: MVP v2.0  
 **Autore**: Audit automatico  
 
 ---
@@ -472,6 +472,8 @@ Risultato: la chat LLM non ha contesto delle conversazioni precedenti, ogni mess
 - **[Step FINAL — 30/03/2026] Titoli pagina dinamici** — PageTitleUpdater con mappa per 8 pagine
 - **[Step FINAL — 30/03/2026] Empty states** — Componente EmptyState con icona, titolo, sottotitolo e azione opzionale (Agents, Policies, Audit, ARIA)
 - **[Step FINAL — 30/03/2026] Skeleton loaders** — Componente SkeletonLoader per table/card/stat (Overview, Agents, Policies, Audit, Compliance)
+- **[Fix v2.0 — 30/03/2026] Bar chart Audit Outcomes** — usa stats.audit.blocked/escalated reali invece dei 5 log recenti — grafico ora coerente con KPI card
+- **[Fix v2.0 — 30/03/2026] Delete confirmation dialog** — CrudPage.js ora mostra dialog di conferma prima di eliminare qualsiasi elemento — UX sicura per demo
 
 **Step C3B completato il 24 Marzo 2026** — Docker + README professionale. 22/22 test passati.
 
@@ -499,4 +501,4 @@ Risultato: la chat LLM non ha contesto delle conversazioni precedenti, ogni mess
 
 ---
 
-*Fine audit tecnico. Documento generato analizzando il codice sorgente. Ultimo aggiornamento: 30 Marzo 2026 (post Step FINAL — v1.9).*
+*Fine audit tecnico. Documento generato analizzando il codice sorgente. Ultimo aggiornamento: 30 Marzo 2026 (post Fix v2.0).*

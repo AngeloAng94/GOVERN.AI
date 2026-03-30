@@ -91,18 +91,15 @@ export default function OverviewPage() {
   }, [stats]);
 
   const auditChartData = useMemo(() => {
-    if (!stats?.recent_audit) return [];
-    const counts = { allowed: 0, blocked: 0, escalated: 0 };
-    stats.recent_audit.forEach(log => {
-      if (counts[log.outcome] !== undefined) {
-        counts[log.outcome]++;
-      }
-    });
-    return Object.entries(counts).map(([name, value]) => ({
-      name: name.charAt(0).toUpperCase() + name.slice(1),
-      value,
-      color: AUDIT_CHART_COLORS[name] || "#64748b"
-    }));
+    if (!stats?.audit) return [];
+    const blocked = stats.audit.blocked || 0;
+    const escalated = stats.audit.escalated || 0;
+    const allowed = Math.max(0, (stats.audit.total || 0) - blocked - escalated);
+    return [
+      { name: "Allowed", value: allowed, color: AUDIT_CHART_COLORS.allowed || "#22c55e" },
+      { name: "Blocked", value: blocked, color: AUDIT_CHART_COLORS.blocked || "#ef4444" },
+      { name: "Escalated", value: escalated, color: AUDIT_CHART_COLORS.escalated || "#f97316" },
+    ].filter(item => item.value > 0);
   }, [stats]);
 
   const complianceChartData = useMemo(() => {

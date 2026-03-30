@@ -154,6 +154,12 @@
 - [x] AUDIT_TECNICO_GOVERN.md aggiornato (v1.9)
 - [x] STEP_FINAL_REPORT.md generato
 
+### Fix v2.0 (30 Mar 2026) — v2.0
+- [x] Bar chart "Audit Outcomes" corretto — usa stats.audit reali
+- [x] Delete confirmation dialog — CrudPage.js con dialog di conferma
+- [x] AUDIT_TECNICO_GOVERN.md aggiornato (v2.0)
+- [x] STEP_FIX_V2_REPORT.md generato
+
 ## Roadmap Tecnica (dal Business Plan)
 
 ### Phase 1 — Foundation (Q2 2026, 3 mesi)
