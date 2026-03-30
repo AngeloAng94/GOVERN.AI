@@ -1,7 +1,8 @@
 import React from "react";
-import { FileText } from "lucide-react";
+import { FileText, Shield } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/contexts/LanguageContext";
 import CrudPage, { CrudCardActions } from "@/components/CrudPage";
 
 const severityBadge = {
@@ -151,6 +152,7 @@ const renderPolicyCard = (policy, { onEdit, onDelete, t }) => (
 );
 
 export default function PoliciesPage() {
+  const { t } = useLanguage();
   return (
     <CrudPage
       entityName="policies"
@@ -166,6 +168,12 @@ export default function PoliciesPage() {
       renderCard={renderPolicyCard}
       listLayout="list"
       testIdPrefix="policy"
+      emptyStateProps={{
+        icon: Shield,
+        title: t("empty_policies_title"),
+        subtitle: t("empty_policies_subtitle"),
+        action: t("empty_policies_action"),
+      }}
     />
   );
 }

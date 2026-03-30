@@ -2,6 +2,7 @@ import React from "react";
 import { Bot } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/contexts/LanguageContext";
 import CrudPage, { CrudCardActions } from "@/components/CrudPage";
 
 const riskBadge = {
@@ -142,6 +143,7 @@ const renderAgentCard = (agent, { onEdit, onDelete, t }) => (
 );
 
 export default function AgentsPage() {
+  const { t } = useLanguage();
   return (
     <CrudPage
       entityName="agents"
@@ -157,6 +159,12 @@ export default function AgentsPage() {
       renderCard={renderAgentCard}
       listLayout="grid"
       testIdPrefix="agent"
+      emptyStateProps={{
+        icon: Bot,
+        title: t("empty_agents_title"),
+        subtitle: t("empty_agents_subtitle"),
+        action: t("empty_agents_action"),
+      }}
     />
   );
 }

@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import axios from "axios";
+import EmptyState from "@/components/EmptyState";
+import SkeletonLoader from "@/components/SkeletonLoader";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -41,6 +43,7 @@ export default function CrudPage({
   renderCard,
   listLayout = "grid",
   testIdPrefix,
+  emptyStateProps,
 }) {
   const { t } = useLanguage();
   const [items, setItems] = useState([]);
@@ -248,15 +251,22 @@ export default function CrudPage({
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-16">
-          <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-        </div>
+        <SkeletonLoader rows={listLayout === "grid" ? 6 : 5} type={listLayout === "grid" ? "card" : "table"} />
       ) : items.length === 0 ? (
-        <Card className="bg-slate-900/40 border-slate-800 rounded-sm">
-          <CardContent className="p-12 text-center text-slate-500">
-            {t("no_data")}
-          </CardContent>
-        </Card>
+        emptyStateProps ? (
+          <EmptyState
+            icon={emptyStateProps.icon}
+            title={emptyStateProps.title}
+            subtitle={emptyStateProps.subtitle}
+            action={emptyStateProps.action ? { label: emptyStateProps.action, onClick: openCreate } : undefined}
+          />
+        ) : (
+          <Card className="bg-slate-900/40 border-slate-800 rounded-sm">
+            <CardContent className="p-12 text-center text-slate-500">
+              {t("no_data")}
+            </CardContent>
+          </Card>
+        )
       ) : (
         <div
           className={listLayout === "grid" ? "grid grid-cols-1 lg:grid-cols-2 gap-4" : "space-y-3"}

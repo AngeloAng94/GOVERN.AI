@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Shield, Send, User, Loader2 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Shield, Send, User, Loader2, MessageSquare } from "lucide-react";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import axios from "axios";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const MAX_CHARS = 2000;
@@ -15,29 +15,78 @@ export default function AssistantPage() {
   const { t, lang } = useLanguage();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamingMessage, setStreamingMessage] = useState("");
   const [sessionId] = useState(() => `session_${Date.now()}`);
   const scrollRef = useRef(null);
+  const eventSourceRef = useRef(null);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-  }, [messages]);
+  }, [messages, streamingMessage]);
 
-  const sendMessage = async () => {
-    if (!input.trim() || loading || input.trim().length < 5 || input.length > MAX_CHARS) return;
+  // Cleanup EventSource on unmount
+  useEffect(() => {
+    return () => {
+      if (eventSourceRef.current) eventSourceRef.current.close();
+    };
+  }, []);
+
+  const sendMessage = () => {
+    if (!input.trim() || isStreaming || input.trim().length < 5 || input.length > MAX_CHARS) return;
+
     const userMsg = input.trim();
-    setInput("");
     setMessages(prev => [...prev, { role: "user", content: userMsg }]);
-    setLoading(true);
-    try {
-      const res = await axios.post(`${API}/chat`, { message: userMsg, session_id: sessionId });
-      setMessages(prev => [...prev, { role: "assistant", content: res.data.response }]);
-    } catch (e) {
-      const detail = e.response?.data?.detail || "Error: Unable to reach ARIA. Please try again.";
-      setMessages(prev => [...prev, { role: "assistant", content: detail }]);
-    } finally {
-      setLoading(false);
-    }
+    setInput("");
+    setIsStreaming(true);
+    setStreamingMessage("");
+
+    const token = localStorage.getItem("govern_token");
+    const params = new URLSearchParams({
+      message: userMsg,
+      session_id: sessionId,
+      token: token
+    });
+
+    const url = `${API}/chat/stream?${params}`;
+
+    if (eventSourceRef.current) eventSourceRef.current.close();
+
+    eventSourceRef.current = new EventSource(url);
+    let fullResponse = "";
+
+    eventSourceRef.current.onmessage = (event) => {
+      if (event.data === "[DONE]") {
+        eventSourceRef.current.close();
+        setIsStreaming(false);
+        setMessages(prev => [...prev, { role: "assistant", content: fullResponse }]);
+        setStreamingMessage("");
+        return;
+      }
+
+      if (event.data.startsWith("ERROR:")) {
+        eventSourceRef.current.close();
+        setIsStreaming(false);
+        setStreamingMessage("");
+        toast.error(lang === "it" ? "ARIA non disponibile. Riprova." : "ARIA unavailable. Please retry.");
+        return;
+      }
+
+      // Unescape newlines from SSE
+      const chunk = event.data.replace(/\\n/g, "\n");
+      fullResponse += chunk;
+      setStreamingMessage(fullResponse);
+    };
+
+    eventSourceRef.current.onerror = () => {
+      eventSourceRef.current.close();
+      setIsStreaming(false);
+      if (fullResponse) {
+        setMessages(prev => [...prev, { role: "assistant", content: fullResponse }]);
+      }
+      setStreamingMessage("");
+      toast.error(lang === "it" ? "Connessione interrotta. Riprova." : "Connection interrupted. Please retry.");
+    };
   };
 
   const handleKeyDown = (e) => {
@@ -81,17 +130,16 @@ export default function AssistantPage() {
 
       <Card className="flex-1 bg-slate-900/40 backdrop-blur-md border-slate-800 rounded-sm flex flex-col overflow-hidden" data-testid="chat-card">
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
-          {messages.length === 0 && (
+          {messages.length === 0 && !isStreaming && (
             <div className="flex flex-col items-center justify-center h-full text-center py-16" data-testid="chat-empty-state">
               <div className="w-14 h-14 rounded-sm bg-blue-500/10 border border-blue-500/30 flex items-center justify-center mb-4">
-                <Shield className="w-7 h-7 text-blue-400" />
+                <MessageSquare className="w-7 h-7 text-blue-400" />
               </div>
-              <h3 className="font-['Space_Grotesk'] text-lg font-semibold text-white mb-1">ARIA</h3>
-              <p className="text-xs font-mono text-slate-500 mb-4">AI Regulatory Intelligence Assistant</p>
+              <h3 className="font-['Space_Grotesk'] text-lg font-semibold text-white mb-1">
+                {t("empty_assistant_title")}
+              </h3>
               <p className="text-sm text-slate-500 max-w-md mb-6">
-                {lang === "it"
-                  ? "Esperta in EU AI Act, GDPR, DORA, NIS2, ISO 42001/27001 e governance agenti AI."
-                  : "Expert in EU AI Act, GDPR, DORA, NIS2, ISO 42001/27001 and AI agent governance."}
+                {t("empty_assistant_subtitle")}
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-lg">
                 {[
@@ -126,7 +174,23 @@ export default function AssistantPage() {
             </div>
           ))}
 
-          {loading && (
+          {/* Streaming message */}
+          {isStreaming && streamingMessage && (
+            <div className="flex gap-3" data-testid="chat-streaming">
+              <div className="w-8 h-8 rounded-sm bg-blue-500/10 border border-blue-500/30 flex items-center justify-center shrink-0">
+                <Shield className="w-4 h-4 text-blue-400" />
+              </div>
+              <div className="max-w-[75%] rounded-sm p-4 bg-slate-800/50 border border-slate-700">
+                <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
+                  {streamingMessage}
+                </ReactMarkdown>
+                <span className="inline-block w-2 h-4 bg-blue-400 ml-1 animate-pulse" />
+              </div>
+            </div>
+          )}
+
+          {/* Loading indicator before first chunk */}
+          {isStreaming && !streamingMessage && (
             <div className="flex gap-3" data-testid="chat-loading">
               <div className="w-8 h-8 rounded-sm bg-blue-500/10 border border-blue-500/30 flex items-center justify-center shrink-0"><Shield className="w-4 h-4 text-blue-400" /></div>
               <div className="bg-slate-800/50 border border-slate-700 rounded-sm p-4 flex items-center gap-2">
@@ -137,7 +201,7 @@ export default function AssistantPage() {
           )}
         </div>
 
-        {/* Input + char counter + footer */}
+        {/* Input */}
         <div className="border-t border-slate-800">
           <div className="p-4 pb-2" data-testid="chat-input-area">
             <div className="flex gap-2">
@@ -145,12 +209,12 @@ export default function AssistantPage() {
                 className="bg-slate-950 border-slate-800 text-slate-200 rounded-sm flex-1 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 placeholder={lang === "it" ? "Chiedi ad ARIA sulla compliance EU AI Act, GDPR, DORA, NIS2..." : "Ask ARIA about EU AI Act, GDPR, DORA, NIS2 compliance..."}
                 value={input} onChange={e => setInput(e.target.value.slice(0, MAX_CHARS))}
-                onKeyDown={handleKeyDown} disabled={loading} maxLength={MAX_CHARS}
+                onKeyDown={handleKeyDown} disabled={isStreaming} maxLength={MAX_CHARS}
                 data-testid="chat-input"
               />
-              <Button onClick={sendMessage} disabled={!input.trim() || loading || isTooShort || charCount > MAX_CHARS}
+              <Button onClick={sendMessage} disabled={!input.trim() || isStreaming || isTooShort || charCount > MAX_CHARS}
                 className="bg-blue-600 hover:bg-blue-500 text-white rounded-sm px-4" data-testid="chat-send-btn">
-                <Send className="w-4 h-4" />
+                {isStreaming ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               </Button>
             </div>
             <div className="flex items-center justify-between mt-1.5 px-1">

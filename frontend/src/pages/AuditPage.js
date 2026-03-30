@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { Activity, Search, FileText, FileDown, Loader2 } from "lucide-react";
+import { Activity, Search, FileText, FileDown, FileSearch, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
 import axios from "axios";
+import EmptyState from "@/components/EmptyState";
+import SkeletonLoader from "@/components/SkeletonLoader";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -215,7 +217,13 @@ export default function AuditPage() {
       <Card className="bg-slate-900/40 backdrop-blur-md border-slate-800 rounded-sm overflow-hidden" data-testid="audit-table-card">
         <CardContent className="p-0">
           {loading ? (
-            <div className="flex justify-center py-16"><div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" /></div>
+            <div className="p-4"><SkeletonLoader rows={8} type="table" /></div>
+          ) : logs.length === 0 ? (
+            <EmptyState
+              icon={FileSearch}
+              title={t("empty_audit_title")}
+              subtitle={t("empty_audit_subtitle")}
+            />
           ) : (
             <div className="overflow-x-auto">
               <Table>

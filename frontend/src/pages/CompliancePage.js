@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import axios from "axios";
+import SkeletonLoader from "@/components/SkeletonLoader";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -114,7 +115,10 @@ export default function CompliancePage() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-16"><div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" /></div>
+        <div className="space-y-4">
+          <SkeletonLoader type="stat" />
+          <SkeletonLoader rows={6} type="card" />
+        </div>
       ) : (
         <>
           {/* Summary Cards */}

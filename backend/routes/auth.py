@@ -57,6 +57,16 @@ def require_role(min_role: str):
     return role_checker
 
 
+async def get_current_user_from_token(token: str):
+    """Validate a JWT token string directly (for SSE endpoints where headers aren't available)."""
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        user = await db.users.find_one({"username": payload.get("sub")}, {"_id": 0})
+        return user
+    except JWTError:
+        return None
+
+
 @router.post("/login")
 @limiter.limit("5/minute")
 async def login(request: Request, data: UserLogin):

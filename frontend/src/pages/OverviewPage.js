@@ -4,6 +4,7 @@ import { Bot, FileText, Activity, ShieldCheck, AlertTriangle, ArrowUpRight, PieC
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import axios from "axios";
+import SkeletonLoader from "@/components/SkeletonLoader";
 import {
   PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid
@@ -114,8 +115,16 @@ export default function OverviewPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64" data-testid="overview-loading">
-        <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      <div className="space-y-6" data-testid="overview-loading">
+        <div>
+          <h1 className="font-['Space_Grotesk'] text-2xl font-bold tracking-tight text-white">{t("overview_title")}</h1>
+          <p className="text-sm text-slate-500 mt-1 font-mono uppercase tracking-widest">Control Plane Status</p>
+        </div>
+        <SkeletonLoader type="stat" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 animate-pulse">
+          <div className="h-80 bg-slate-800 rounded-xl border border-slate-700/50" />
+          <div className="h-80 bg-slate-800 rounded-xl border border-slate-700/50" />
+        </div>
       </div>
     );
   }

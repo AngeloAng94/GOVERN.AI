@@ -1,6 +1,7 @@
 import React from "react";
 import "@/App.css";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { useEffect } from "react";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { Toaster } from "@/components/ui/sonner";
@@ -13,6 +14,25 @@ import PoliciesPage from "@/pages/PoliciesPage";
 import AuditPage from "@/pages/AuditPage";
 import CompliancePage from "@/pages/CompliancePage";
 import AssistantPage from "@/pages/AssistantPage";
+
+const pageTitles = {
+  "/": "GOVERN.AI — Sovereign Control Plane",
+  "/login": "Login — GOVERN.AI",
+  "/dashboard": "Dashboard — GOVERN.AI",
+  "/dashboard/agents": "AI Agents — GOVERN.AI",
+  "/dashboard/policies": "Policy Engine — GOVERN.AI",
+  "/dashboard/audit": "Audit Trail — GOVERN.AI",
+  "/dashboard/compliance": "Compliance — GOVERN.AI",
+  "/dashboard/assistant": "ARIA Assistant — GOVERN.AI",
+};
+
+function PageTitleUpdater() {
+  const location = useLocation();
+  useEffect(() => {
+    document.title = pageTitles[location.pathname] || "GOVERN.AI";
+  }, [location.pathname]);
+  return null;
+}
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
@@ -31,6 +51,7 @@ function App() {
     <LanguageProvider>
       <AuthProvider>
         <BrowserRouter>
+          <PageTitleUpdater />
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />

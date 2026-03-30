@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Activity, FileText, Link2, AlertTriangle, MessageSquare, Building2, Landmark, Heart, Zap, Phone, ChevronRight, Globe, Shield } from "lucide-react";
+import { Activity, FileText, Link2, AlertTriangle, MessageSquare, Building2, Landmark, Heart, Zap, Phone, ChevronRight, Globe, Shield, CheckCircle2, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Logo from "@/components/Logo";
 
@@ -129,6 +129,124 @@ export default function LandingPage() {
                 <p className="text-sm text-slate-400 leading-relaxed">{t(`feat_${key}_desc`)}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Social Proof Stats */}
+      <section className="py-16 border-t border-b border-slate-800/60" data-testid="social-proof-section">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-0">
+            {[
+              { value: "6", label: t("stats_standards") },
+              { value: "150+", label: t("stats_audit") },
+              { value: "4", label: t("stats_rbac") },
+              { value: "22/22", label: t("stats_tests") },
+            ].map((stat, i) => (
+              <React.Fragment key={i}>
+                {i > 0 && <div className="hidden md:block w-px h-16 bg-slate-700 mx-10" />}
+                <div className="text-center" data-testid={`social-stat-${i}`}>
+                  <div className="text-4xl font-bold text-white font-['Space_Grotesk']">{stat.value}</div>
+                  <div className="text-sm text-slate-400 font-mono uppercase tracking-wider mt-1">{stat.label}</div>
+                </div>
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Use Cases */}
+      <section id="usecases" className="py-24 bg-slate-900/50" data-testid="usecases-section">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <p className="text-xs font-mono uppercase tracking-widest text-emerald-400 mb-3">Use Cases</p>
+            <h2 className="font-['Space_Grotesk'] text-3xl md:text-5xl font-semibold tracking-tight text-white mb-4">{t("usecases_title")}</h2>
+            <p className="text-base md:text-lg text-slate-400 max-w-xl mx-auto">{t("usecases_subtitle")}</p>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Card 1 - Banking */}
+            <div className="bg-slate-800/60 backdrop-blur-sm border border-slate-700 hover:border-slate-500 transition-all duration-300 rounded-xl p-6" data-testid="usecase-banking">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                  <Building2 className="w-5 h-5 text-[#3b82f6]" />
+                </div>
+                <span className="text-xs font-mono bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full">{t("uc_banking_sector")}</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                {["DORA", "EU AI Act", "ISO 42001"].map(r => (
+                  <span key={r} className="text-xs font-mono bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full">{r}</span>
+                ))}
+              </div>
+              <h3 className="font-['Space_Grotesk'] text-base font-semibold text-white mb-2">{t("uc_banking_title")}</h3>
+              <p className="text-sm text-slate-400 mb-4">{t("uc_banking_scenario")}</p>
+              <div className="space-y-2 mb-4">
+                {["uc_banking_point1", "uc_banking_point2", "uc_banking_point3"].map(k => (
+                  <div key={k} className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#22c55e] mt-0.5 shrink-0" />
+                    <span className="text-sm text-slate-300">{t(k)}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="bg-slate-900/80 border border-slate-600 rounded-lg p-3 mt-4">
+                <p className="text-sm font-medium text-[#3b82f6]">{t("uc_banking_result")}</p>
+              </div>
+            </div>
+
+            {/* Card 2 - Healthcare */}
+            <div className="bg-slate-800/60 backdrop-blur-sm border border-slate-700 hover:border-slate-500 transition-all duration-300 rounded-xl p-6" data-testid="usecase-health">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                  <Heart className="w-5 h-5 text-[#22c55e]" />
+                </div>
+                <span className="text-xs font-mono bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full">{t("uc_health_sector")}</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                {["GDPR", "ISO 42001", "NIS2"].map(r => (
+                  <span key={r} className="text-xs font-mono bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full">{r}</span>
+                ))}
+              </div>
+              <h3 className="font-['Space_Grotesk'] text-base font-semibold text-white mb-2">{t("uc_health_title")}</h3>
+              <p className="text-sm text-slate-400 mb-4">{t("uc_health_scenario")}</p>
+              <div className="space-y-2 mb-4">
+                {["uc_health_point1", "uc_health_point2", "uc_health_point3"].map(k => (
+                  <div key={k} className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#22c55e] mt-0.5 shrink-0" />
+                    <span className="text-sm text-slate-300">{t(k)}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="bg-slate-900/80 border border-slate-600 rounded-lg p-3 mt-4">
+                <p className="text-sm font-medium text-[#22c55e]">{t("uc_health_result")}</p>
+              </div>
+            </div>
+
+            {/* Card 3 - Legal */}
+            <div className="bg-slate-800/60 backdrop-blur-sm border border-slate-700 hover:border-slate-500 transition-all duration-300 rounded-xl p-6" data-testid="usecase-legal">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                  <Scale className="w-5 h-5 text-[#f97316]" />
+                </div>
+                <span className="text-xs font-mono bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full">{t("uc_legal_sector")}</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                {["EU AI Act", "GDPR", "ISO 27001"].map(r => (
+                  <span key={r} className="text-xs font-mono bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full">{r}</span>
+                ))}
+              </div>
+              <h3 className="font-['Space_Grotesk'] text-base font-semibold text-white mb-2">{t("uc_legal_title")}</h3>
+              <p className="text-sm text-slate-400 mb-4">{t("uc_legal_scenario")}</p>
+              <div className="space-y-2 mb-4">
+                {["uc_legal_point1", "uc_legal_point2", "uc_legal_point3"].map(k => (
+                  <div key={k} className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#22c55e] mt-0.5 shrink-0" />
+                    <span className="text-sm text-slate-300">{t(k)}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="bg-slate-900/80 border border-slate-600 rounded-lg p-3 mt-4">
+                <p className="text-sm font-medium text-[#f97316]">{t("uc_legal_result")}</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
