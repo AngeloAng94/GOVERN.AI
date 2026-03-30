@@ -45,7 +45,7 @@ export default function CrudPage({
   testIdPrefix,
   emptyStateProps,
 }) {
-  const { t, lang } = useLanguage();
+  const { t } = useLanguage();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -133,8 +133,6 @@ export default function CrudPage({
       toast.error(t("error_saving") || "Error saving");
     }
   };
-
-  const [deleteConfirm, setDeleteConfirm] = useState({ open: false, itemId: null });
 
   const handleDelete = async (id) => {
     try {
@@ -276,7 +274,7 @@ export default function CrudPage({
         >
           {items.map((item) => renderCard(item, {
             onEdit: () => openEdit(item),
-            onDelete: () => setDeleteConfirm({ open: true, itemId: item.id }),
+            onDelete: () => handleDelete(item.id),
             t,
             Icon,
             iconColor,
@@ -324,54 +322,65 @@ export default function CrudPage({
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteConfirm.open} onOpenChange={(open) => !open && setDeleteConfirm({ open: false, itemId: null })}>
-        <DialogContent className="bg-slate-900 border-slate-800 rounded-sm max-w-sm" data-testid={`${testIdPrefix}-delete-dialog`}>
-          <DialogHeader>
-            <DialogTitle className="font-['Space_Grotesk'] text-white">
-              {lang === "it" ? "Conferma eliminazione" : "Confirm Delete"}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="py-4 text-slate-400 text-sm">
-            {lang === "it"
-              ? "Sei sicuro di voler eliminare questo elemento? Questa azione non puo essere annullata."
-              : "Are you sure you want to delete this item? This action cannot be undone."}
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" className="border-slate-700 text-slate-300 hover:bg-slate-800" onClick={() => setDeleteConfirm({ open: false, itemId: null })} data-testid={`${testIdPrefix}-delete-cancel`}>
-              {t("cancel")}
-            </Button>
-            <Button variant="destructive" className="bg-red-600 hover:bg-red-700 text-white" onClick={() => { handleDelete(deleteConfirm.itemId); setDeleteConfirm({ open: false, itemId: null }); }} data-testid={`${testIdPrefix}-delete-confirm`}>
-              {lang === "it" ? "Elimina" : "Delete"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
 
 // Export helper components for card rendering
-export const CrudCardActions = ({ onEdit, onDelete, testIdPrefix, itemId }) => (
-  <div className="flex items-center gap-1 shrink-0">
-    <Button
-      variant="ghost"
-      size="icon"
-      className="h-8 w-8 text-slate-500 hover:text-white"
-      onClick={onEdit}
-      data-testid={`edit-${testIdPrefix}-${itemId}`}
-    >
-      <Pencil className="w-3.5 h-3.5" />
-    </Button>
-    <Button
-      variant="ghost"
-      size="icon"
-      className="h-8 w-8 text-slate-500 hover:text-red-400"
-      onClick={onDelete}
-      data-testid={`delete-${testIdPrefix}-${itemId}`}
-    >
-      <Trash2 className="w-3.5 h-3.5" />
-    </Button>
-  </div>
-);
+export const CrudCardActions = ({ onEdit, onDelete, testIdPrefix, itemId }) => {
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  return (
+    <>
+      <div className="flex gap-1">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-slate-400 hover:text-white hover:bg-slate-700"
+          onClick={() => onEdit()}
+          data-testid={`edit-${testIdPrefix}-${itemId}`}
+        >
+          <Pencil className="h-3.5 w-3.5" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-slate-400 hover:text-red-400 hover:bg-red-950/30"
+          onClick={() => setConfirmOpen(true)}
+          data-testid={`delete-${testIdPrefix}-${itemId}`}
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent className="bg-slate-900 border-slate-800 rounded-sm max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="font-['Space_Grotesk'] text-white">
+              Confirm Delete
+            </DialogTitle>
+          </DialogHeader>
+          <p className="py-3 text-slate-400 text-sm">
+            Are you sure? This action cannot be undone.
+          </p>
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              className="border-slate-700 text-slate-300 hover:bg-slate-800"
+              onClick={() => setConfirmOpen(false)}
+              data-testid={`${testIdPrefix}-delete-cancel`}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={() => { onDelete(); setConfirmOpen(false); }}
+              data-testid={`${testIdPrefix}-delete-confirm`}
+            >
+              Delete
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};
