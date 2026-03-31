@@ -49,7 +49,7 @@ Designed for **DPO**, **CISO**, **Compliance Managers** and **AI Engineers** who
 | Frontend | React + TailwindCSS | 19.0.0 |
 | UI | Shadcn/UI + Radix | — |
 | Database | MongoDB (Motor async) | 7.0 |
-| LLM | GPT-5.2 via Emergent | — |
+| LLM | litellm (OpenAI GPT-4o default) | — |
 | Auth | JWT HS256 + bcrypt | — |
 | Export | ReportLab (PDF) | 4.1.0 |
 
@@ -73,7 +73,8 @@ cp .env.example backend/.env
 ```
 
 Edit `backend/.env` and set:
-- `EMERGENT_LLM_KEY` = your Emergent API key
+- `OPENAI_API_KEY` = your OpenAI API key (or any litellm-compatible key)
+- `LLM_MODEL` = model identifier (default: `openai/gpt-4o`)
 - `JWT_SECRET_KEY` = random string, min 32 chars
 
 ```bash
@@ -209,9 +210,9 @@ To enable the full pipeline, configure this secret in your GitHub repository:
 
 | Secret | Value | Required |
 |--------|-------|----------|
-| `EMERGENT_LLM_KEY` | Your Emergent API key | Optional* |
+| `OPENAI_API_KEY` | Your OpenAI API key | Optional* |
 
-*If `EMERGENT_LLM_KEY` is not configured, the backend-tests job will skip LLM-dependent tests. The pipeline will not fail.
+*If `OPENAI_API_KEY` is not configured, the backend-tests job will skip LLM-dependent tests. The pipeline will not fail.
 
 ---
 
@@ -221,7 +222,8 @@ To enable the full pipeline, configure this secret in your GitHub repository:
 |----------|----------|-------------|
 | `MONGO_URL` | Yes | MongoDB connection string |
 | `DB_NAME` | Yes | Database name |
-| `EMERGENT_LLM_KEY` | Yes | Emergent API key for GPT-5.2 |
+| `OPENAI_API_KEY` | Yes | OpenAI API key (or any litellm-compatible provider) |
+| `LLM_MODEL` | No | LLM model identifier (default: `openai/gpt-4o`) |
 | `JWT_SECRET_KEY` | Yes | JWT signing secret (32+ chars) |
 | `ALLOWED_ORIGINS` | Yes | CORS allowed origins |
 | `REACT_APP_BACKEND_URL` | Yes | Backend URL for frontend |
@@ -256,7 +258,8 @@ To enable the full pipeline, configure this secret in your GitHub repository:
 - Responsive UI with collapsible sidebar
 - Bilingual IT/EN
 - Docker + docker-compose
-- CI/CD GitHub Actions (4 jobs)
+- CI/CD GitHub Actions (4/4 jobs green)
+- Portable LLM via litellm (any OpenAI-compatible provider)
 
 ### 📋 Planned
 

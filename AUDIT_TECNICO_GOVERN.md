@@ -32,7 +32,7 @@
                                   └────────────────┘
                                   
                                   ┌────────────────┐
-                                  │  OpenAI GPT-5.2 │
+                                  │     litellm       │
                                   │  (via Emergent  │
                                   │   LLM Key)      │
                                   └────────────────┘
@@ -49,7 +49,7 @@
 | Component library | Shadcn/UI (Radix primitives) | New York style |
 | CSS framework | Tailwind CSS | 3.4.17 |
 | Database | MongoDB (Motor async driver) | pymongo 4.5.0 / motor 3.3.1 |
-| LLM integration | OpenAI GPT-5.2 via `emergentintegrations` | 0.1.0 |
+| LLM integration | litellm (OpenAI GPT-4o default, configurabile via `LLM_MODEL`) | 1.80.0 |
 | HTTP client (FE) | Axios | 1.8.4 |
 | Routing (FE) | React Router DOM | 7.5.1 |
 | Process manager | Supervisord | (sistema) |
@@ -233,7 +233,7 @@ Risultato: la chat LLM non ha contesto delle conversazioni precedenti, ogni mess
 |---|---|---|---|---|---|
 | V1 | **ALTA** | P0 | **Zero autenticazione**: tutti gli endpoint CRUD sono accessibili pubblicamente. Chiunque puo creare/eliminare agenti, policy, leggere audit trail. | `server.py:261-476` | Aperto |
 | V2 | **ALTA** | P0 | **CORS wildcard**: `allow_origins="*"` consente richieste da qualsiasi dominio. In produzione permette attacchi CSRF. | `server.py:484` (`.env:3`) | Aperto |
-| V3 | **ALTA** | P0 | **Chiave LLM esposta nel filesystem**: `EMERGENT_LLM_KEY` in `.env` senza crittografia. Se il server viene compromesso, la chiave e utilizzabile immediatamente. | `backend/.env:4` | Aperto |
+| V3 | **ALTA** | P0 | **Chiave LLM esposta nel filesystem**: `OPENAI_API_KEY` in `.env` senza crittografia. Se il server viene compromesso, la chiave e utilizzabile immediatamente. | `backend/.env` | Aperto |
 | V4 | **ALTA** | P1 | **Regex injection**: il parametro `search` dell'audit trail viene passato direttamente a `$regex` MongoDB senza sanitizzazione. Un attaccante puo inviare pattern regex malevoli causando ReDoS. | `server.py:378-383` | Aperto |
 | V5 | **MEDIA** | P1 | **Nessun rate limiting sugli endpoint**: possibile abuso dell'endpoint chat (costo LLM elevato per ogni richiesta) o flooding degli endpoint CRUD. | `server.py` (globale) | Aperto |
 | V6 | **MEDIA** | P1 | **Errore LLM espone stacktrace**: `HTTPException(detail=f"AI service error: {str(e)}")` puo rivelare informazioni interne. | `server.py:444` | Aperto |
@@ -263,7 +263,7 @@ Risultato: la chat LLM non ha contesto delle conversazioni precedenti, ogni mess
 |---|---|---|---|---|
 | P1 | Database | **Nessun indice** su nessuna collection custom. Ogni query su `id` fa COLLSCAN. | Tutte le collections | Con >1K documenti: query lente (>100ms). Con >100K: inutilizzabile. |
 | P2 | Dashboard | **7 query sequenziali** per la dashboard stats (count_documents x6 + find + aggregazione manuale). | `server.py:232-258` | Latenza proporzionale al numero di collection. Nessun caching. |
-| P3 | Chat LLM | **Risposta sincrona** (no streaming). Il client attende ~8s per la risposta GPT-5.2 completa. | `server.py:440-441` | UX scadente: l'utente vede solo spinner per 8+ secondi. |
+| P3 | Chat LLM | **Risposta sincrona** (no streaming nativo LLM). Il server riceve la risposta completa e la streamma al client in chunk via SSE. | `routes/chat.py` | UX migliorata con SSE, streaming nativo LLM pianificato. |
 | P4 | Chat history | **History letta ma non usata**: si leggono fino a 20 messaggi (riga 434-436) che vengono scartati. Query inutile. | `server.py:434-436` | Spreco I/O su ogni chiamata chat. |
 | P5 | Audit logs | **Nessuna paginazione reale** nel frontend. Il parametro `skip` esiste nel backend ma non e usato dal frontend. | `AuditPage.js` | Con 10K+ audit logs, la pagina carichera tutti i log (fino al limit di 50). |
 | P6 | Seed data | **Seeding a ogni restart**: controlla `count_documents({}) == 0` ma se qualcuno cancella tutti i record, ri-semina dati demo. | `server.py:132-222` | Potenziale confusione in ambiente staging/produzione. |
@@ -433,7 +433,7 @@ Risultato: la chat LLM non ha contesto delle conversazioni precedenti, ogni mess
 - CRUD completo per Policy Engine con mapping a 6 normative (GDPR, AI Act, ISO 27001, ISO 42001, DORA, NIS2)
 - Audit Trail con tabella densa, ricerca testuale, filtri per outcome e risk level
 - Compliance Monitor con progress bar, stato per 6 standard normativi, date di revisione
-- AI Compliance Assistant con GPT-5.2 reale (non mockato), chat bidirezionale, domande suggerite
+- AI Compliance Assistant con LLM reale via litellm (OpenAI GPT-4o default, configurabile), chat bidirezionale con SSE streaming, domande suggerite
 - Ogni operazione CRUD genera automaticamente un audit log
 - Dati seed realistici (4 agenti, 5 policy, 25 log audit, 6 standard compliance)
 - Design system coerente: dark mode, Space Grotesk headings, JetBrains Mono code, glassmorphism

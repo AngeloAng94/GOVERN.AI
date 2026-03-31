@@ -80,8 +80,8 @@ GOVERN.AI fornisce:
         ┌──────────────────────┴──────────────────────┐
         │                                              │
 ┌───────┴───────┐                          ┌──────────┴──────────┐
-│   MongoDB     │                          │    OpenAI GPT-5.2   │
-│   Database    │                          │    (via Emergent)   │
+│   MongoDB     │                          │      litellm        │
+│   Database    │                          │   (configurable)    │
 │               │                          │                     │
 │ • users       │                          │  ARIA AI Assistant  │
 │ • agents      │                          │  System Prompt      │
@@ -115,7 +115,7 @@ GOVERN.AI fornisce:
 | Auth | python-jose + bcrypt | JWT HS256 + password hashing |
 | Rate Limiting | SlowAPI | Protezione endpoint |
 | PDF Export | ReportLab 4.1 | Generazione report |
-| LLM | Emergent Integrations | Accesso a GPT-5.2 |
+| LLM | litellm | Integrazione multi-provider LLM (OpenAI GPT-4o default, configurabile via `LLM_MODEL`) |
 
 ### Infrastructure
 | Componente | Tecnologia | Scopo |
@@ -149,7 +149,7 @@ GOVERN.AI fornisce:
   "id": "uuid",
   "name": "Customer Due Diligence Bot",
   "description": "Automated KYC document analysis...",
-  "model_type": "GPT-5.2|Claude-3.5|Custom-ML",
+  "model_type": "GPT-4o|Claude-3.5|Custom-ML",
   "risk_level": "low|medium|high|critical",
   "status": "active|suspended|inactive",
   "allowed_actions": ["analyze_documents", "verify_identity"],
@@ -305,7 +305,7 @@ db.users.createIndex({ "username": 1 }, { unique: true })
                           │  3. Carica history da chat_messages       │
                           │  4. Prepara system prompt ARIA:           │
                           │     "Sei ARIA, assistente compliance..."  │
-                          │  5. Chiama GPT-5.2 via Emergent           │
+                          │  5. Chiama LLM via litellm              │
                           │  6. Salva messaggio + risposta in DB      │
                           │  7. Log audit "chat_query"                │
                           └─────────────────────┬─────────────────────┘
@@ -448,7 +448,7 @@ async def security_headers(request, call_next):
 
 **Campi tracciati**:
 - Nome e descrizione
-- Tipo di modello (GPT-5.2, Claude, Custom ML)
+- Tipo di modello (GPT-4o, Claude, Custom ML)
 - Livello di rischio (low → critical)
 - Stato operativo (active/suspended/inactive)
 - Azioni consentite (whitelist)
