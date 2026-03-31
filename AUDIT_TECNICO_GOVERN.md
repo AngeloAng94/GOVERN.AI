@@ -474,6 +474,7 @@ Risultato: la chat LLM non ha contesto delle conversazioni precedenti, ogni mess
 - **[Step FINAL — 30/03/2026] Skeleton loaders** — Componente SkeletonLoader per table/card/stat (Overview, Agents, Policies, Audit, Compliance)
 - **[Fix v2.0 — 30/03/2026] Bar chart Audit Outcomes** — usa stats.audit.blocked/escalated reali invece dei 5 log recenti — grafico ora coerente con KPI card
 - **[Fix v2.0 — 30/03/2026] Delete confirmation dialog** — CrudCardActions gestisce internamente il dialog di conferma con useState — fix definitivo, flusso: click cestino -> dialog -> Cancel/Delete (verificato visivamente)
+- **[Fix v2.0 — 31/03/2026] Portabilita LLM** — Sostituito emergentintegrations con litellm in chat.py — deployabile su qualsiasi ambiente esterno (AWS, Azure, ecc.) mantenendo compatibilita con Emergent proxy
 
 **Step C3B completato il 24 Marzo 2026** — Docker + README professionale. 22/22 test passati.
 

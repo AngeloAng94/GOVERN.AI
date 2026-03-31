@@ -6,7 +6,7 @@ import os
 import uuid
 import logging
 
-from emergentintegrations.llm.chat import LlmChat, UserMessage
+import litellm
 
 from database import db
 from models import ChatRequest, AuditLog, AuditOutcome
@@ -57,24 +57,29 @@ async def _get_chat_history(session_id: str) -> list:
 
 async def _get_aria_response(message: str, history: list) -> str:
     """Call LLM and return ARIA's response."""
-    api_key = os.environ.get("EMERGENT_LLM_KEY", "")
+    api_key = os.environ.get("OPENAI_API_KEY") or os.environ.get("EMERGENT_LLM_KEY", "")
+    model = os.environ.get("LLM_MODEL", "openai/gpt-4o")
 
-    initial_messages = [{"role": "system", "content": ARIA_SYSTEM_PROMPT}]
+    messages = [{"role": "system", "content": ARIA_SYSTEM_PROMPT}]
     for msg in history:
-        if msg["role"] == "user":
-            initial_messages.append({"role": "user", "content": [{"type": "text", "text": msg["content"]}]})
-        elif msg["role"] == "assistant":
-            initial_messages.append({"role": "assistant", "content": msg["content"]})
+        if msg["role"] in ("user", "assistant"):
+            messages.append({"role": msg["role"], "content": msg["content"]})
+    messages.append({"role": "user", "content": message})
 
-    chat = LlmChat(
+    kwargs = dict(
+        model=model,
+        messages=messages,
         api_key=api_key,
-        session_id=f"aria_{uuid.uuid4().hex[:8]}",
-        system_message=ARIA_SYSTEM_PROMPT,
-        initial_messages=initial_messages
+        temperature=0.4,
+        max_tokens=2048,
     )
-    chat.with_model("openai", "gpt-5.2")
 
-    return await chat.send_message(UserMessage(text=message))
+    # Route through Emergent proxy when using their key
+    if os.environ.get("EMERGENT_LLM_KEY") and not os.environ.get("OPENAI_API_KEY"):
+        kwargs["api_base"] = "https://integrations.emergentagent.com/llm"
+
+    response = await litellm.acompletion(**kwargs)
+    return response.choices[0].message.content
 
 
 async def _save_chat_messages(session_id: str, user_msg: str, ai_msg: str):
