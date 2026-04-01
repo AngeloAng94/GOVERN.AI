@@ -73,7 +73,7 @@ def draw_page(canvas_obj, doc):
     canvas_obj.drawRightString(PAGE_W - MARGIN, PAGE_H - 12 * mm, "TECHNICAL OVERVIEW")
     canvas_obj.setFillColor(C["muted"])
     canvas_obj.setFont("Helvetica", 7)
-    canvas_obj.drawRightString(PAGE_W - MARGIN, PAGE_H - 16 * mm, f"v1.7 — {datetime.now().strftime('%B %Y')}")
+    canvas_obj.drawRightString(PAGE_W - MARGIN, PAGE_H - 16 * mm, f"v2.4 — {datetime.now().strftime('%B %Y')}")
     canvas_obj.setFillColor(C["red"])
     canvas_obj.setFont("Helvetica", 7)
     canvas_obj.drawRightString(PAGE_W - MARGIN, PAGE_H - 20 * mm, "Confidential")
@@ -117,7 +117,7 @@ def draw_first_page(canvas_obj, doc):
     meta_y = PAGE_H - 120 * mm
     canvas_obj.setFillColor(C["light"])
     canvas_obj.setFont("Helvetica", 10)
-    canvas_obj.drawString(MARGIN, meta_y, f"Versione: MVP 1.7")
+    canvas_obj.drawString(MARGIN, meta_y, f"Versione: MVP 2.4")
     canvas_obj.drawString(MARGIN, meta_y - 16, f"Data: {datetime.now().strftime('%B %Y')}")
     canvas_obj.drawString(MARGIN, meta_y - 32, "Autore: ANTHERA Systems")
     canvas_obj.drawString(MARGIN, meta_y - 48, "Classificazione: Confidential")
@@ -171,7 +171,7 @@ def build_pdf() -> bytes:
     toc_items = [
         "1. Executive Summary",
         "2. Architettura del Sistema",
-        "3. Modello Dati (6 Collections)",
+        "3. Modello Dati (7 Collections)",
         "4. Flussi Applicativi",
         "5. Sistema di Sicurezza",
         "6. Moduli Funzionali",
@@ -206,10 +206,11 @@ def build_pdf() -> bytes:
     elements.append(Paragraph("La Soluzione", S["h2"]))
     solutions = [
         "<b>Registro centralizzato</b> di tutti gli agenti AI con profilo di rischio completo",
-        "<b>Motore di policy</b> per definire regole di governance per 6 normative europee",
+        "<b>Motore di policy</b> con rilevamento automatico conflitti per 8 normative",
+        "<b>SOX Section 404 Wizard</b> con Audit Readiness Score per controlli interni",
         "<b>Audit trail completo</b> di ogni azione, con export PDF/CSV per i regolatori",
-        "<b>Dashboard di compliance</b> con monitoraggio real-time di 6 standard",
-        "<b>Assistente AI (ARIA)</b> esperto di regolamentazione EU, powered by GPT-5.2",
+        "<b>Dashboard di compliance</b> con monitoraggio real-time di 8 standard",
+        "<b>Assistente AI (ARIA)</b> esperto di regolamentazione, con SSE streaming",
     ]
     for s in solutions:
         elements.append(Paragraph(f"<bullet>&bull;</bullet> {s}", S["bullet"]))
@@ -275,9 +276,9 @@ def build_pdf() -> bytes:
         "  server.py          # Entry point, middleware, lifespan",
         "  models.py           # Pydantic models + Enum",
         "  database.py         # Motor connection + indexes",
-        "  seed.py             # Enterprise demo data (12 agents, 15 policies, 150+ logs)",
+        "  seed.py             # Enterprise demo data (14 agents, 20+ policies, 150+ logs, 20 SOX controls)",
         "  exporters.py        # PDF/CSV generation (ReportLab)",
-        "  routes/             # 7 modular routers (auth, agents, policies, audit, ...)",
+        "  routes/             # 9 modular routers (auth, agents, policies, audit, sox_wizard, policy_engine, ...)",
         "frontend/src/",
         "  pages/              # DashboardLayout, OverviewPage, AgentsPage, ...",
         "  components/         # CrudPage (generic), Logo, UI components",
@@ -290,7 +291,7 @@ def build_pdf() -> bytes:
     # ─── 3. MODELLO DATI ───
     elements.append(Paragraph("3. Modello Dati", S["h1"]))
     elements.append(Paragraph(
-        "Il database MongoDB ospita 6 collections con 15 indici ottimizzati per performance su query con filtri, ordinamento e ricerca full-text.",
+        "Il database MongoDB ospita 7 collections con 15+ indici ottimizzati per performance su query con filtri, ordinamento e ricerca full-text.",
         S["body"]
     ))
 
@@ -341,6 +342,13 @@ def build_pdf() -> bytes:
             ["role", "Enum", "user | assistant"],
             ["content", "String", "Contenuto messaggio (markdown)"],
             ["timestamp", "ISO DateTime", "Momento del messaggio"],
+        ]),
+        ("sox_controls", "Controlli interni SOX Section 404", [
+            ["domain", "String", "Access Control | Change Mgmt | IT Ops | Data Integrity | Security"],
+            ["control_id", "String", "Codice controllo (es. AC-01)"],
+            ["status", "Enum", "not_started | in_progress | completed | failed"],
+            ["evidence", "String", "Evidenze documentali"],
+            ["risk_level", "Enum", "low | medium | high | critical"],
         ]),
     ]
 
@@ -507,7 +515,7 @@ def build_pdf() -> bytes:
     # ─── 7. COMPLIANCE FRAMEWORK ───
     elements.append(Paragraph("7. Compliance Framework", S["h1"]))
     elements.append(Paragraph(
-        "GOVERN.AI monitora 6 standard normativi europei, coprendo l'intero spettro di requisiti per le organizzazioni "
+        "GOVERN.AI monitora 8 standard normativi europei e internazionali, coprendo l'intero spettro di requisiti per le organizzazioni "
         "che utilizzano agenti AI in settori regolamentati (finance, healthcare, PA, energy).",
         S["body"]
     ))
@@ -518,8 +526,10 @@ def build_pdf() -> bytes:
             ["GDPR", "Regolamento", "Protezione dati personali", "Fino a 20M / 4%", "78%"],
             ["ISO 27001", "Standard", "Sicurezza delle informazioni", "Perdita certificazione", "92%"],
             ["ISO 42001", "Standard", "Gestione sistemi AI", "Perdita certificazione", "35%"],
-            ["DORA", "Regolamento", "Resilienza digitale finanza", "Sanzioni settoriali", "68%"],
-            ["NIS2", "Direttiva", "Cybersecurity infrastrutture", "Fino a 10M / 2%", "55%"],
+            ["DORA", "Regolamento", "Resilienza digitale finanza", "Sanzioni settoriali", "61%"],
+            ["NIS2", "Direttiva", "Cybersecurity infrastrutture", "Fino a 10M / 2%", "83%"],
+            ["SOX", "Regolamento", "Controlli interni finanziari", "Sanzioni penali/civili", "56%"],
+            ["D.Lgs. 262", "Legge IT", "Controlli contabili quotate", "Sanzioni CONSOB", "48%"],
         ],
         col_widths=[65, 65, 120, 95, 65]
     ))
@@ -565,27 +575,28 @@ def build_pdf() -> bytes:
     # ─── 9. ROADMAP ───
     elements.append(Paragraph("9. Roadmap Prodotto", S["h1"]))
 
-    elements.append(Paragraph("Completato (v1.7)", S["h2"]))
+    elements.append(Paragraph("Completato (MVP v2.4)", S["h2"]))
     completed = [
         "Core platform completa (Agent Registry, Policy Engine, Audit Trail, Compliance Monitor)",
         "Autenticazione JWT con RBAC a 4 livelli",
-        "ARIA AI Assistant powered by GPT-5.2",
-        "Export report in PDF e CSV",
-        "Dashboard con grafici interattivi (Recharts)",
-        "Interfaccia mobile responsive",
-        "Docker deployment (Compose)",
-        "Documentazione tecnica completa",
+        "ARIA AI Assistant con SSE streaming",
+        "Export report in PDF e CSV (Audit, Compliance, SOX)",
+        "Dashboard con 3 grafici interattivi (Recharts)",
+        "8 standard normativi (EU AI Act, GDPR, ISO 27001/42001, DORA, NIS2, SOX, D.Lgs. 262)",
+        "SOX Section 404 Wizard con 20 controlli e Audit Readiness Score",
+        "Policy Conflict Detection Engine (4 tipi di conflitto)",
+        "CI/CD GitHub Actions (4 job)",
+        "Docker deployment (Compose) + Interfaccia mobile responsive",
     ]
     for item in completed:
         elements.append(Paragraph(f"<bullet>&bull;</bullet> {item}", S["bullet"]))
 
     elements.append(Spacer(1, 6))
-    elements.append(Paragraph("Prossimi Sviluppi (P1)", S["h2"]))
+    elements.append(Paragraph("Prossimi Sviluppi", S["h2"]))
     next_items = [
-        "<b>CI/CD GitHub Actions:</b> Pipeline di continuous integration/delivery automatizzata",
-        "<b>Streaming Chat (SSE):</b> Risposte ARIA in streaming con Server-Sent Events",
-        "<b>Policy Conflict Detection:</b> Motore per rilevare conflitti tra policy",
-        "<b>Scoring Automatico Compliance:</b> Algoritmo di valutazione automatica della conformita",
+        "<b>D.Lgs. 262 Wizard:</b> Workflow dedicato per attestazione dirigente preposto",
+        "<b>Auto-Fix Engine:</b> Risoluzione automatica dei conflitti tra policy",
+        "<b>Test Frontend:</b> Test unitari con Jest e Testing Library",
     ]
     for item in next_items:
         elements.append(Paragraph(f"<bullet>&bull;</bullet> {item}", S["bullet"]))
@@ -653,7 +664,7 @@ def build_pdf() -> bytes:
     elements.append(Paragraph("angelo.anglani94@gmail.com | +39 342 754 8655", S["body"]))
     elements.append(Paragraph("linkedin.com/in/angelo-anglani", S["body"]))
     elements.append(Spacer(1, 30))
-    elements.append(Paragraph(f"Documento generato: {datetime.now().strftime('%B %Y')} — Versione 1.0", S["caption"]))
+    elements.append(Paragraph(f"Documento generato: {datetime.now().strftime('%B %Y')} — Versione 2.4", S["caption"]))
 
     # ─── BUILD ───
     doc = SimpleDocTemplate(

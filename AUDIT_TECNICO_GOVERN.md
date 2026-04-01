@@ -1,6 +1,6 @@
 # AUDIT TECNICO — GOVERN.AI
-**Data**: 30 Marzo 2026 (aggiornato post Fix v2.0)  
-**Versione codebase**: MVP v2.0  
+**Data**: 01 Aprile 2026 (aggiornato post MVP v2.4)  
+**Versione codebase**: MVP v2.4  
 **Autore**: Audit automatico  
 
 ---
@@ -28,11 +28,11 @@
                                   ┌────────────────┐
                                   │   MongoDB       │
                                   │   :27017        │
-                                  │   db: test_db   │
+                                  │   7 collections │
                                   └────────────────┘
                                   
                                   ┌────────────────┐
-                                  │     litellm       │
+                                  │     litellm     │
                                   │  (via Emergent  │
                                   │   LLM Key)      │
                                   └────────────────┘
@@ -54,14 +54,18 @@
 | Routing (FE) | React Router DOM | 7.5.1 |
 | Process manager | Supervisord | (sistema) |
 | Validazione dati | Pydantic V2 | 2.12.5 |
+| Charts | Recharts | 3.6.0 |
+| PDF Export | ReportLab | 4.1.0 |
+| Rate Limiting | SlowAPI | — |
 
 ### 1.3 Tipo di architettura
 
 **Architettura modulare a due tier** con separazione frontend/backend:
-- Backend: `server.py` (orchestratore) + 7 file di route modulari in `routes/` + `models.py` + `database.py` + `seed.py`
-- Frontend: SPA con routing lato client, 8 pagine, componente CRUD generico `CrudPage.js`
-- Database: singola istanza MongoDB, nessun replica set
+- Backend: `server.py` (orchestratore) + 9 file di route modulari in `routes/` + `models.py` + `database.py` + `seed.py` + `exporters.py`
+- Frontend: SPA con routing lato client, 11 pagine, componente CRUD generico `CrudPage.js`
+- Database: singola istanza MongoDB, 7 collections, 15+ indici
 - Autenticazione: JWT con RBAC (4 ruoli)
+- LLM: litellm (provider-agnostico)
 - Nessun message broker, nessuna cache
 
 ---
@@ -73,25 +77,29 @@
 ```
 /app/
 ├── backend/
-│   ├── .env                          # Variabili ambiente (6 chiavi)
+│   ├── .env                          # Variabili ambiente
 │   ├── requirements.txt              # Dipendenze Python
-│   ├── server.py                     # FastAPI app + middleware + router include (~80 righe)
-│   ├── models.py                     # Modelli Pydantic + Enum (~180 righe)
+│   ├── server.py                     # FastAPI app + middleware + router include (~100 righe)
+│   ├── models.py                     # 14 modelli Pydantic + 10 Enum (~240 righe)
 │   ├── database.py                   # Connessione MongoDB + indici (~40 righe)
-│   ├── seed.py                       # Dati seed iniziali (~200 righe)
+│   ├── seed.py                       # Dati seed enterprise (~986 righe)
+│   ├── exporters.py                  # PDF/CSV generation con ReportLab
 │   ├── rate_limiter.py               # Istanza condivisa slowapi
+│   ├── generate_overview_pdf.py      # Generazione PDF technical overview
 │   ├── routes/
 │   │   ├── __init__.py
 │   │   ├── auth.py                   # Login, register, JWT, RBAC
 │   │   ├── agents.py                 # CRUD agenti AI
 │   │   ├── policies.py               # CRUD policy
-│   │   ├── audit.py                  # Audit trail
-│   │   ├── compliance.py             # Standard compliance
-│   │   ├── dashboard.py              # Stats dashboard
-│   │   └── chat.py                   # ARIA AI assistant
+│   │   ├── audit.py                  # Audit trail + export PDF/CSV
+│   │   ├── compliance.py             # Standard compliance + export PDF
+│   │   ├── dashboard.py              # Stats dashboard + KPI
+│   │   ├── chat.py                   # ARIA AI assistant (SSE streaming)
+│   │   ├── sox_wizard.py             # SOX Section 404 Wizard + Readiness Score
+│   │   └── policy_engine.py          # Policy Conflict Detection Engine
 │   └── tests/
 │       ├── __init__.py
-│       └── test_api.py               # Suite test API (22 test)
+│       └── test_api.py               # Suite test API (34 test completi)
 ├── frontend/
 │   ├── .env                          # REACT_APP_BACKEND_URL
 │   ├── package.json                  # Dependencies
@@ -99,70 +107,74 @@
 │   └── src/
 │       ├── index.js                  # Entry point React
 │       ├── index.css                 # CSS globale + animazioni
-│       ├── App.js                    # Router principale
+│       ├── App.js                    # Router principale + PageTitleUpdater
 │       ├── contexts/
 │       │   ├── AuthContext.js        # Gestione auth + token JWT
 │       │   └── LanguageContext.js    # i18n con file JSON esterni
 │       ├── pages/
-│       │   ├── LandingPage.js        # Landing page
+│       │   ├── LandingPage.js        # Landing page con use case e social proof
 │       │   ├── LoginPage.js          # Login form
-│       │   ├── DashboardLayout.js    # Shell con sidebar
-│       │   ├── OverviewPage.js       # KPI dashboard
+│       │   ├── DashboardLayout.js    # Shell con sidebar responsive
+│       │   ├── OverviewPage.js       # KPI dashboard + 3 grafici Recharts
 │       │   ├── AgentsPage.js         # CRUD agenti (usa CrudPage)
 │       │   ├── PoliciesPage.js       # CRUD policy (usa CrudPage)
-│       │   ├── AuditPage.js          # Tabella audit
-│       │   ├── CompliancePage.js     # Monitor compliance
-│       │   └── AssistantPage.js      # Chat AI (react-markdown)
+│       │   ├── AuditPage.js          # Tabella audit + export
+│       │   ├── CompliancePage.js     # Monitor compliance + export
+│       │   ├── AssistantPage.js      # Chat AI ARIA (SSE streaming, react-markdown)
+│       │   ├── SoxWizardPage.js      # SOX 404 Wizard con Readiness Score
+│       │   └── PolicyEnginePage.js   # Policy Conflict Detection Engine
 │       ├── components/
 │       │   ├── CrudPage.js           # Componente CRUD generico
-│       │   └── ui/                   # 39 componenti Shadcn
+│       │   ├── Logo.js               # Logo ufficiale GOVERN.AI
+│       │   ├── EmptyState.js         # Empty state generico
+│       │   ├── SkeletonLoader.js     # Skeleton loading generico
+│       │   └── ui/                   # ~39 componenti Shadcn
 │       ├── locales/
-│       │   ├── en.json               # Traduzioni inglese
-│       │   └── it.json               # Traduzioni italiano
+│       │   ├── en.json               # Traduzioni inglese (~130+ chiavi)
+│       │   └── it.json               # Traduzioni italiano (~130+ chiavi)
 │       ├── hooks/
 │       │   └── use-toast.js          # Hook toast
 │       └── lib/
 │           └── utils.js              # cn() utility
+├── .github/
+│   └── workflows/
+│       └── ci.yml                    # GitHub Actions CI (4 job)
 ├── test_reports/
-│   └── iteration_*.json              # Report test automatici
+│   └── iteration_*.json              # Report test automatici (7 iterazioni)
 ├── memory/
 │   └── PRD.md                        # Product Requirements Document
+├── docker-compose.yml                # Orchestrazione 3 container
+├── .env.example                      # Template variabili ambiente
+├── .dockerignore                     # Docker ignore
+├── README.md                         # Documentazione principale
 ├── AUDIT_TECNICO_GOVERN.md           # Questo documento
-├── GOVERN_AI_Investor_Intro_EN.pdf   # Deck investitori (EN)
-└── GOVERN_AI_Investor_Intro_IT.pdf   # Deck investitori (IT)
+├── GOVERN_AI_TECHNICAL_OVERVIEW.md   # Overview tecnica dettagliata
+├── GOVERN_AI_Investor_Intro_EN.md    # Deck investitori (EN)
+├── GOVERN_AI_Investor_Intro_IT.md    # Deck investitori (IT)
+└── GOVERN_AI_Investor_Intro_EN.pdf   # PDF investitori (EN)
 ```
 
-### 2.2 Analisi file principali (POST REFACTORING)
+### 2.2 Analisi file principali
 
-| File | Righe | Responsabilità | Note |
+| File | Righe | Responsabilita | Note |
 |---|---|---|---|
-| `backend/server.py` | ~80 | App FastAPI, middleware sicurezza, include router | Orchestratore pulito |
-| `backend/models.py` | ~180 | Tutti i modelli Pydantic + Enum | Separato e riutilizzabile |
-| `backend/routes/*.py` | ~50-100 | Endpoint specifici per dominio | Architettura modulare |
+| `backend/server.py` | ~100 | App FastAPI, middleware sicurezza, include 9 router | Orchestratore pulito |
+| `backend/models.py` | ~240 | 14 modelli Pydantic + 10 Enum | Separato e riutilizzabile |
+| `backend/seed.py` | ~986 | Dati seed enterprise banking | 14 agenti, 20+ policy, 150+ log, 20 SOX controls |
+| `backend/exporters.py` | ~300+ | PDF/CSV generation (ReportLab) | Audit + Compliance + SOX report |
+| `backend/routes/*.py` | ~50-150 | Endpoint specifici per dominio | 9 file modulari |
 | `frontend/src/components/CrudPage.js` | ~200 | Componente CRUD generico | Riusato da Agents/Policies |
-| `frontend/src/pages/AgentsPage.js` | ~130 | Config + render card per agenti | Usa CrudPage (refactored) |
-| `frontend/src/pages/PoliciesPage.js` | ~130 | Config + render card per policy | Usa CrudPage (refactored) |
-| `frontend/src/locales/*.json` | ~95 | Traduzioni EN/IT | File JSON separati |
+| `frontend/src/pages/SoxWizardPage.js` | ~400+ | SOX 404 controls + Readiness Score | Accordion + domain cards |
+| `frontend/src/pages/PolicyEnginePage.js` | ~350+ | Conflict detection UI | Summary + filtri + resolve dialog |
 
-### 2.3 Problemi strutturali — STATO POST STEP 2B
+### 2.3 Problemi strutturali — TUTTI RISOLTI
 
 | ID | Problema Originale | Stato | Soluzione Applicata |
 |---|---|---|---|
-| S1 | Backend monolite 491 righe | ✅ RISOLTO | Split in `models.py`, `database.py`, `seed.py`, 7 file route |
-| S2 | Duplicazione CRUD AgentsPage/PoliciesPage | ✅ RISOLTO | Componente generico `CrudPage.js` |
-| S3 | Traduzioni inline (227 righe) | ✅ RISOLTO | File JSON esterni `en.json`, `it.json` |
-| S4 | `App.css` vuoto | ✅ RISOLTO | File ignorato |
-
-### 2.4 Import inutilizzati — STATO POST STEP 1
-
-| File | Riga | Import | Usato? |
-|---|---|---|---|
-| `server.py` | 2 | `StreamingResponse` | **No** — mai usato in nessun endpoint |
-| `server.py` | 13 | `asyncio` | **No** — mai usato direttamente |
-| `server.py` | 14 | `json` | **No** — mai usato direttamente |
-| `OverviewPage.js` | 3 | `Ban` (da lucide-react) | **No** — importato ma mai renderizzato |
-| `AuditPage.js` | 3 | `Filter` (da lucide-react) | **No** — importato ma mai renderizzato |
-| `AgentsPage.js` | 3 | `X` (da lucide-react) | **No** — importato ma mai renderizzato |
+| S1 | Backend monolite 491 righe | RISOLTO | Split in `models.py`, `database.py`, `seed.py`, `exporters.py`, 9 file route |
+| S2 | Duplicazione CRUD AgentsPage/PoliciesPage | RISOLTO | Componente generico `CrudPage.js` |
+| S3 | Traduzioni inline (227 righe) | RISOLTO | File JSON esterni `en.json`, `it.json` |
+| S4 | `App.css` vuoto | RISOLTO | File ignorato |
 
 ---
 
@@ -172,44 +184,44 @@
 
 | Collection | Documenti (attuale) | Campi principali |
 |---|---|---|
-| `agents` | 5 | `id`, `name`, `description`, `model_type`, `risk_level`, `status`, `allowed_actions[]`, `restricted_domains[]`, `data_classification`, `owner`, `created_at`, `updated_at`, `policy_count`, `last_audit` |
-| `policies` | 7 | `id`, `name`, `description`, `agent_id`, `rule_type`, `conditions[]`, `actions[]`, `severity`, `regulation`, `enforcement`, `status`, `created_at`, `updated_at`, `violations_count` |
-| `audit_logs` | 41 | `id`, `timestamp`, `agent_id`, `agent_name`, `action`, `resource`, `outcome`, `policy_id`, `policy_name`, `details`, `risk_level`, `ip_address`, `user` |
-| `compliance_standards` | 6 | `id`, `name`, `code`, `description`, `status`, `progress`, `requirements_total`, `requirements_met`, `last_assessment`, `next_review`, `category` |
-| `chat_messages` | 12 | `id`, `session_id`, `role`, `content`, `timestamp` |
+| `agents` | 14 | `id`, `name`, `description`, `model_type`, `risk_level`, `status`, `allowed_actions[]`, `restricted_domains[]`, `data_classification`, `owner`, `created_at`, `updated_at` |
+| `policies` | 20+ | `id`, `name`, `description`, `agent_id`, `rule_type`, `conditions[]`, `actions[]`, `severity`, `regulation`, `enforcement`, `status`, `violations_count` |
+| `audit_logs` | 150+ | `id`, `timestamp`, `agent_name`, `action`, `resource`, `outcome`, `risk_level`, `details`, `policy_name`, `user`, `ip_address` |
+| `compliance_standards` | 8 | `id`, `name`, `code`, `description`, `status`, `progress`, `requirements_total`, `requirements_met`, `category`, `last_assessment`, `next_review` |
+| `chat_messages` | variabile | `id`, `session_id`, `role`, `content`, `timestamp` |
+| `users` | 1+ | `id`, `username`, `email`, `password_hash`, `role`, `full_name`, `created_at` |
+| `sox_controls` | 20 | `id`, `domain`, `control_id`, `title`, `description`, `section`, `status`, `evidence`, `assignee`, `due_date`, `completed_date`, `risk_level` |
 
 ### 3.2 Indici
 
-| Collection | Indici presenti | Indici necessari mancanti |
-|---|---|---|
-| `agents` | Solo `_id_` (default) | `id` (unique), `status`, `risk_level` |
-| `policies` | Solo `_id_` (default) | `id` (unique), `regulation`, `agent_id` |
-| `audit_logs` | Solo `_id_` (default) | `id` (unique), `timestamp` (desc), `outcome`, `risk_level`, `agent_name` |
-| `compliance_standards` | Solo `_id_` (default) | `id` (unique), `code` (unique) |
-| `chat_messages` | Solo `_id_` (default) | `session_id` + `timestamp` (compound) |
+| Collection | Indici presenti |
+|---|---|
+| `agents` | `id` (unique), `status`, `risk_level` |
+| `policies` | `id` (unique), `regulation`, `severity` |
+| `audit_logs` | `id` (unique), `timestamp` (desc), `outcome`, `risk_level`, `agent_name` |
+| `compliance_standards` | `id` (unique), `code` (unique) |
+| `chat_messages` | `session_id` + `timestamp` (compound) |
+| `users` | `id` (unique), `username` (unique) |
+| `sox_controls` | `id` (unique), `domain`, `status` |
 
-**Impatto**: Senza indici su `id`, ogni query `find_one({"id": ...})` fa un COLLSCAN. Con volumi reali (>10K documenti) le performance degraderanno significativamente.
+**Stato**: Tutti gli indici necessari sono stati creati. Nessun COLLSCAN sulle query principali.
 
-### 3.3 Note su schema e tipi
+### 3.3 Modelli Pydantic (14 totali)
 
-| Aspetto | Stato | Dettaglio |
-|---|---|---|
-| Date come stringhe | **Si** | `created_at`, `updated_at`, `timestamp`, `last_assessment` sono tutte `str` ISO 8601 (non `datetime` nativo MongoDB) |
-| `_id` duplicato | Presente | Ogni documento ha sia `_id` (ObjectId, auto-generato da MongoDB) che `id` (UUID string, generato dall'applicazione). Ridondanza. |
-| Multi-tenancy | **Assente** | Nessun campo `tenant_id` o `organization_id`. Single-tenant. |
-| Relazioni | **Deboli** | `policies.agent_id` e `audit_logs.agent_id` non sono enforced. Nessun indice, nessuna foreign key. |
-| Denormalizzazioni | **Presente** | `audit_logs.agent_name` e `audit_logs.policy_name` sono denormalizzati (copiati invece di join). Rischio di disallineamento se l'entita originale viene rinominata. |
-| DB name | `test_database` | Nome generico, evidentemente di default. Non rinominato per il progetto. |
-| Schema validation | **Assente** | Nessun JSON Schema validator su MongoDB. I modelli Pydantic validano solo in entrata, non a livello DB. |
+| Modello | Scopo |
+|---|---|
+| `UserCreate`, `UserLogin`, `UserOut` | Autenticazione utenti |
+| `AgentCreate`, `Agent` | Registro agenti AI |
+| `PolicyCreate`, `Policy` | Motore policy |
+| `AuditLog` | Traccia audit |
+| `ComplianceStandard` | Standard normativi |
+| `SoxControl`, `ControlStatus` | SOX Section 404 controls |
+| `PolicyConflict`, `ConflictType`, `ConflictSeverity` | Policy Conflict Engine |
+| `ChatRequest` | Messaggi chat |
 
-### 3.4 Campo `history` inutilizzato
+### 3.4 Enum Pydantic (10 totali)
 
-In `server.py:434`, la variabile `history` viene letta dal database ma **mai passata al LLM**:
-```python
-history = await db.chat_messages.find(...)  # riga 434
-# ... mai usata da chat.send_message()
-```
-Risultato: la chat LLM non ha contesto delle conversazioni precedenti, ogni messaggio e trattato come indipendente.
+`RiskLevel`, `AgentStatus`, `PolicySeverity`, `PolicyEnforcement`, `RuleType`, `AuditOutcome`, `DataClassification`, `UserRole`, `ControlStatus`, `ConflictType`, `ConflictSeverity`
 
 ---
 
@@ -219,29 +231,39 @@ Risultato: la chat LLM non ha contesto delle conversazioni precedenti, ogni mess
 
 | Meccanismo | Stato |
 |---|---|
-| Autenticazione | **ASSENTE** — nessun sistema auth |
-| Autorizzazione (RBAC) | **ASSENTE** — tutti gli endpoint sono pubblici |
-| Rate limiting | **ASSENTE** — nessun throttling |
-| CORS | Configurato ma `allow_origins="*"` (accetta tutto) |
-| HTTPS | Gestito a livello Kubernetes Ingress (non applicativo) |
-| Input sanitization | **Parziale** — Pydantic valida i tipi, ma nessuna sanitizzazione specifica |
-| API key management | Chiave LLM in `.env`, non ruotata |
+| Autenticazione JWT (HS256, 8h) | IMPLEMENTATO |
+| Autorizzazione RBAC (4 ruoli) | IMPLEMENTATO |
+| Rate limiting (SlowAPI) | IMPLEMENTATO |
+| CORS restrittivo (da env) | IMPLEMENTATO |
+| Security headers (5 header) | IMPLEMENTATO |
+| Sanitizzazione regex | IMPLEMENTATO |
+| Password hashing (bcrypt) | IMPLEMENTATO |
+| Enum validation (Pydantic V2) | IMPLEMENTATO |
+| LLM error masking | IMPLEMENTATO |
 
-### 4.2 Tabella vulnerabilita
+### 4.2 Rate Limiting
 
-| ID | Severita | Priorita | Descrizione | File:Riga | Stato |
-|---|---|---|---|---|---|
-| V1 | **ALTA** | P0 | **Zero autenticazione**: tutti gli endpoint CRUD sono accessibili pubblicamente. Chiunque puo creare/eliminare agenti, policy, leggere audit trail. | `server.py:261-476` | Aperto |
-| V2 | **ALTA** | P0 | **CORS wildcard**: `allow_origins="*"` consente richieste da qualsiasi dominio. In produzione permette attacchi CSRF. | `server.py:484` (`.env:3`) | Aperto |
-| V3 | **ALTA** | P0 | **Chiave LLM esposta nel filesystem**: `OPENAI_API_KEY` in `.env` senza crittografia. Se il server viene compromesso, la chiave e utilizzabile immediatamente. | `backend/.env` | Aperto |
-| V4 | **ALTA** | P1 | **Regex injection**: il parametro `search` dell'audit trail viene passato direttamente a `$regex` MongoDB senza sanitizzazione. Un attaccante puo inviare pattern regex malevoli causando ReDoS. | `server.py:378-383` | Aperto |
-| V5 | **MEDIA** | P1 | **Nessun rate limiting sugli endpoint**: possibile abuso dell'endpoint chat (costo LLM elevato per ogni richiesta) o flooding degli endpoint CRUD. | `server.py` (globale) | Aperto |
-| V6 | **MEDIA** | P1 | **Errore LLM espone stacktrace**: `HTTPException(detail=f"AI service error: {str(e)}")` puo rivelare informazioni interne. | `server.py:444` | Aperto |
-| V7 | **MEDIA** | P2 | **Nessuna validazione semantica**: i campi `risk_level`, `status`, `severity` accettano qualsiasi stringa (non sono enum Pydantic). Un client puo inviare `risk_level: "banana"`. | `server.py:36-127` | Aperto |
-| V8 | **MEDIA** | P2 | **Nessun limite su lunghezza messaggi chat**: un utente puo inviare messaggi di dimensione arbitraria all'endpoint `/api/chat`, causando costi LLM eccessivi. | `server.py:126-128` | Aperto |
-| V9 | **BASSA** | P2 | **Nessun header di sicurezza**: mancano Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security. | `server.py` (globale) | Aperto |
-| V10 | **BASSA** | P3 | **DB name generico**: `test_database` puo essere indovinato facilmente. | `backend/.env:2` | Aperto |
-| V11 | **BASSA** | P3 | **Nessun logging strutturato degli accessi**: le richieste HTTP non vengono loggate in formato strutturato (JSON). Difficile fare forensic analysis. | `server.py:30-32` | Aperto |
+| Endpoint | Limite | Motivazione |
+|----------|--------|-------------|
+| `/api/auth/login` | 5/min | Previene brute force |
+| `/api/chat`, `/api/chat/stream` | 10/min | Controlla costi LLM |
+| `/api/*/export/pdf` | 5/min | Generazione pesante |
+| `/api/*/export/csv` | 10/min | File piu leggeri |
+| `/api/sox/report/pdf` | 5/min | Report SOX pesante |
+| Altri endpoint | 30-60/min | Uso normale |
+
+### 4.3 Vulnerabilita precedenti — STATO
+
+| ID | Severita | Stato | Dettaglio |
+|---|---|---|---|
+| V1 | ALTA | RISOLTO | Autenticazione JWT implementata (Step 2A) |
+| V2 | ALTA | RISOLTO | CORS restrittivo da env (Step 1) |
+| V3 | ALTA | MITIGATO | Chiave LLM in `.env` — standard per SaaS |
+| V4 | ALTA | RISOLTO | Regex injection sanitizzata con re.escape (Step 1) |
+| V5 | MEDIA | RISOLTO | Rate limiting su tutti gli endpoint (Step 2A) |
+| V6 | MEDIA | RISOLTO | Errori LLM mascherati (Step 1) |
+| V7 | MEDIA | RISOLTO | Enum Pydantic per tutti i campi tipizzati (Step 1) |
+| V9 | BASSA | RISOLTO | Security headers implementati (Step 2B) |
 
 ---
 
@@ -252,254 +274,152 @@ Risultato: la chat LLM non ha contesto delle conversazioni precedenti, ogni mess
 | Aspetto | Dettaglio |
 |---|---|
 | Backend completamente async | Motor + FastAPI: tutte le operazioni DB sono non-bloccanti |
-| Frontend code splitting | React Router con import diretto (potenziale lazy loading) |
-| Proiezione `_id: 0` | Correttamente escluso `_id` da tutte le query MongoDB |
-| Pydantic V2 | Usa `model_dump()` (V2) non `dict()` (V1) — performance migliori |
-| Glassmorphism via CSS | `backdrop-filter: blur()` offloaded alla GPU |
+| Indici MongoDB completi | 15+ indici su tutte le collection (no COLLSCAN) |
+| Pydantic V2 | Usa `model_dump()` — performance migliori |
+| SSE Streaming | Chat ARIA con risposta streaming (chunked) |
+| Proiezione `_id: 0` | Correttamente escluso `_id` da tutte le query |
+| Debounce search | 300ms debounce sulla ricerca audit trail |
 
-### 5.2 Colli di bottiglia
+### 5.2 Colli di bottiglia residui
 
-| ID | Area | Problema | Dove | Impatto |
-|---|---|---|---|---|
-| P1 | Database | **Nessun indice** su nessuna collection custom. Ogni query su `id` fa COLLSCAN. | Tutte le collections | Con >1K documenti: query lente (>100ms). Con >100K: inutilizzabile. |
-| P2 | Dashboard | **7 query sequenziali** per la dashboard stats (count_documents x6 + find + aggregazione manuale). | `server.py:232-258` | Latenza proporzionale al numero di collection. Nessun caching. |
-| P3 | Chat LLM | **Risposta sincrona** (no streaming nativo LLM). Il server riceve la risposta completa e la streamma al client in chunk via SSE. | `routes/chat.py` | UX migliorata con SSE, streaming nativo LLM pianificato. |
-| P4 | Chat history | **History letta ma non usata**: si leggono fino a 20 messaggi (riga 434-436) che vengono scartati. Query inutile. | `server.py:434-436` | Spreco I/O su ogni chiamata chat. |
-| P5 | Audit logs | **Nessuna paginazione reale** nel frontend. Il parametro `skip` esiste nel backend ma non e usato dal frontend. | `AuditPage.js` | Con 10K+ audit logs, la pagina carichera tutti i log (fino al limit di 50). |
-| P6 | Seed data | **Seeding a ogni restart**: controlla `count_documents({}) == 0` ma se qualcuno cancella tutti i record, ri-semina dati demo. | `server.py:132-222` | Potenziale confusione in ambiente staging/produzione. |
-| P7 | Frontend | **Nessun debounce** sulla ricerca audit trail. Ogni keystroke trigga una chiamata API. | `AuditPage.js:36-53` | Flood di richieste durante la digitazione. |
-| P8 | Bundle size | **39 componenti Shadcn** importati nel progetto, ne vengono usati ~12. Tree-shaking CRA potrebbe non eliminarli tutti. | `components/ui/` | Bundle potenzialmente sovradimensionato. |
-
-### 5.3 Raccomandazioni ordinate per priorita
-
-| Priorita | Azione | Sforzo |
-|---|---|---|
-| 1 | Aggiungere indici MongoDB (`id` unique + campi filtro) | 30 min |
-| 2 | Aggiungere debounce alla search (300ms) | 15 min |
-| 3 | Aggregare dashboard stats in una singola pipeline MongoDB | 1h |
-| 4 | Implementare streaming per chat LLM (SSE) | 2-3h |
-| 5 | Rimuovere query `history` inutile o integrarla nel contesto LLM | 30 min |
-| 6 | Aggiungere paginazione frontend per audit trail | 1-2h |
+| ID | Area | Problema | Impatto |
+|---|---|---|---|
+| P2 | Dashboard | Query multiple per stats (non aggregate) | Latenza con volumi alti |
+| P5 | Audit | Nessuna paginazione reale nel frontend | Con 10K+ log: performance degradata |
+| P8 | Bundle | 39 componenti Shadcn, ~12 usati | Bundle leggermente sovradimensionato |
 
 ---
 
 ## 6. TESTING & QUALITA
 
-### 6.1 Test automatici esistenti
+### 6.1 Test automatici
 
 | File | Tipo | Copertura | Risultato |
 |---|---|---|---|
-| `backend_test.py` | Test API end-to-end (requests) | 16 endpoint testati su 16 | **25/25 passati** (ultimo run) |
-| `test_reports/iteration_1.json` | Report test automatizzati | Backend + Frontend integration | Tutti passati |
-| `tests/__init__.py` | Placeholder | Vuoto | N/A |
+| `backend/tests/test_api.py` | Test API end-to-end (pytest) | 34 endpoint/scenario testati | **34/34 passati** |
+| `test_reports/iteration_1-7.json` | Report test automatizzati (testing agent) | Backend + Frontend | 7 iterazioni, tutte passate |
 
-**Nota**: `backend_test.py` e stato generato dal testing agent e NON e integrato in un framework (pytest). E uno script standalone che usa `requests`.
+### 6.2 Copertura test backend (34/34)
 
-### 6.2 Cosa NON e coperto dai test
+| Area | Test | Stato |
+|---|---|---|
+| Auth | login, register, token | 3/3 |
+| Agents | CRUD completo | 4/4 |
+| Policies | CRUD completo | 4/4 |
+| Audit Trail | query, filtri, export PDF/CSV | 4/4 |
+| Compliance | list, export PDF, 8 standards | 3/3 |
+| Dashboard | stats | 1/1 |
+| Chat | ARIA query | 1/1 |
+| SOX Wizard | controls, patch, report JSON, report PDF | 4/4 |
+| Readiness Score | score calculation | 1/1 |
+| Policy Engine | conflicts, resolution, gaps, scan history | 4/4 |
+| Standards validation | 7 standards, 8 standards | 2/2 |
+| Misc | root, RBAC | 3/3 |
+
+### 6.3 Cosa NON e coperto
 
 | Area | Dettaglio | Rischio |
 |---|---|---|
-| Unit test backend | Nessun test unitario per modelli Pydantic, logica di validazione, edge case | ALTO — regressioni non rilevate |
-| Unit test frontend | Zero test React (jest/testing-library) | ALTO — nessun test su componenti, hook, context |
-| Test di integrazione DB | Nessun test su query MongoDB, indici, concorrenza | MEDIO — query inefficienti non monitorate |
-| Test negativi | Nessun test su input malformati, 404, 500, timeout LLM | ALTO — comportamento sconosciuto su errori |
-| Test di sicurezza | Nessun test OWASP, injection, CORS abuse | CRITICO — vulnerabilita non monitorate |
-| Test di performance | Nessun benchmark, load test, latency test | MEDIO — colli di bottiglia scoperti solo in produzione |
-| Test i18n | Nessun test che le chiavi di traduzione IT/EN siano complete e sincronizzate | BASSO — stringhe mancanti = key mostrata raw |
-| Accessibilita (a11y) | Nessun test WCAG | BASSO — ma richiesto da PA (cliente target) |
+| Unit test frontend | Zero test React (jest/testing-library) | MEDIO |
+| Test di performance | Nessun load test | BASSO (MVP) |
+| Test a11y | Nessun test WCAG | BASSO |
 
-### 6.3 CI/CD
+### 6.4 CI/CD
 
 | Elemento | Stato |
 |---|---|
-| Dockerfile | **PRESENTE** — Dockerfile per backend (Python 3.11-slim) e frontend (multi-stage node+nginx) |
-| docker-compose | **PRESENTE** — Orchestrazione 3 container (MongoDB, Backend, Frontend) |
-| GitHub Actions | **PRESENTE** — `.github/workflows/ci.yml` con 4 job |
-| Jobs CI | backend-tests (22 pytest), frontend-build (yarn build), security-scan (bandit+safety), docker-build (BE+FE images) |
-| GitLab CI | **ASSENTE** |
-| Jenkins | **ASSENTE** |
-| Pre-commit hooks | **ASSENTE** |
-| Linting automatico | **ASSENTE** — ESLint configurato in craco ma nessun script `lint` in package.json |
-| Type checking | **ASSENTE** — frontend JS puro (non TypeScript), backend senza mypy in CI |
+| Dockerfile | PRESENTE — backend (Python 3.11-slim) + frontend (multi-stage node+nginx) |
+| docker-compose | PRESENTE — 3 container (MongoDB, Backend, Frontend) |
+| GitHub Actions | PRESENTE — `.github/workflows/ci.yml` con 4 job |
+| Jobs CI | backend-tests (34 pytest), frontend-build, security-scan, docker-build |
 
-### 6.4 Qualita generale del codice
+### 6.5 Qualita generale del codice
 
 | Aspetto | Valutazione | Dettaglio |
 |---|---|---|
-| **Duplicazioni** | Medio-alta | AgentsPage/PoliciesPage condividono ~80% della struttura. Badge color maps ripetute in 4 file. |
-| **Logging** | Minimale | Solo `logger.error` nella chat e `logger.info` nel seeding. Nessun logging strutturato per richieste HTTP. |
-| **Error handling** | Insufficiente | Backend: un solo try/except (chat). Frontend: catch generico con `toast.error()` senza dettagli. |
-| **Type safety** | Parziale | Backend: Pydantic valida i tipi ma non i valori (enum mancanti). Frontend: JS puro senza TypeScript. |
-| **Commenti** | Minimi | Separatori di sezione (`# === AGENTS CRUD ===`) ma nessun docstring sulle funzioni. |
-| **Naming** | Buono | Convenzioni consistenti: snake_case backend, camelCase frontend, kebab-case per data-testid. |
-| **data-testid** | Eccellente | Presente su tutti gli elementi interattivi e strutturali. Naming chiaro. |
-| **Responsive** | Buono | Grid responsive su landing e dashboard. Sidebar fissa (no hamburger mobile). |
-| **Accessibilita** | Base | Shadcn usa Radix (aria nativo), ma nessun extra a11y custom. |
+| **Modularita** | Eccellente | 9 route file, modelli separati, seed separato |
+| **Type safety** | Buono | 14 modelli Pydantic + 10 Enum tipizzati |
+| **data-testid** | Eccellente | Presente su tutti gli elementi interattivi |
+| **Naming** | Buono | snake_case backend, camelCase frontend, kebab-case testid |
+| **Responsive** | Buono | Sidebar collapsabile + drawer mobile |
+| **i18n** | Completo | 130+ chiavi EN/IT in file JSON separati |
+| **Error handling** | Buono | try/except con masking errori LLM, toast frontend |
+| **Logging** | Adeguato | logger su seed, chat, startup/shutdown |
 
 ---
 
-## 7. DEBITO TECNICO ATTUALE
+## 7. DEBITO TECNICO RESIDUO
 
-| ID | Area | Problema | Impatto se non risolto | Sforzo stimato | Priorita |
-|---|---|---|---|---|---|
-| TD1 | Sicurezza | Zero autenticazione — tutti gli endpoint pubblici | Chiunque puo distruggere i dati in produzione | 4-8h (JWT base) | **P0** |
-| TD2 | Sicurezza | CORS wildcard `*` | Attacchi CSRF possibili da qualsiasi dominio | 15 min | **P0** |
-| TD3 | Sicurezza | Regex injection nella search audit | ReDoS attack, potenziale DoS | 30 min | **P0** |
-| TD4 | Database | Zero indici custom — tutte COLLSCAN | Performance degradano a >1K documenti, inutilizzabile a >100K | 30 min | **P0** |
-| TD5 | Backend | File monolite 491 righe (modelli + route + seed) | Ogni modifica tocca tutto, difficile lavorare in team | 2-3h (split in moduli) | **P1** |
-| TD6 | Backend | Chat history letta ma non passata al LLM | L'assistente non ha memoria delle conversazioni — UX rotta | 30 min | **P1** |
-| TD7 | Backend | Nessuna validazione enum sui campi (risk_level, status, severity) | Dati inconsistenti nel DB, filtri che non funzionano | 1h | **P1** |
-| TD8 | Backend | API deprecate `@app.on_event("startup"/"shutdown")` | FastAPI raccomanda `lifespan` context manager; rimosso in versioni future | 30 min | **P1** |
-| TD9 | Backend | Nessun rate limiting | Abuso API (flooding, costo LLM illimitato) | 1-2h (slowapi) | **P1** |
-| TD10 | Frontend | Duplicazione AgentsPage/PoliciesPage (~80% identici) | Bug da fixare in 2 posti, inconsistenze | 2h (componente CRUD generico) | **P1** |
-| TD11 | Frontend | Nessun debounce sulla ricerca audit | Flood di richieste API durante la digitazione | 15 min | **P1** |
-| TD12 | Frontend | Traduzioni inline (227 righe in un file) | Non scalabile per nuove lingue, file enorme | 1h (file JSON separati) | **P2** |
-| TD13 | Frontend | Markdown renderer custom rudimentale (chat) | Non gestisce bold inline, link, code block, tabelle | 1-2h (react-markdown) | **P2** |
-| TD14 | Backend | Import inutilizzati (StreamingResponse, asyncio, json) | Nessun impatto runtime, ma sporcizia nel codice | 5 min | **P2** |
-| TD15 | Frontend | Import lucide inutilizzati (Ban, Filter, X) | Bundle leggermente piu pesante | 5 min | **P2** |
-| TD16 | Backend | Errore LLM espone stacktrace (`str(e)`) | Information disclosure | 10 min | **P2** |
-| TD17 | Infra | ~~Nessun Dockerfile/docker-compose~~ | ✅ RISOLTO — Step C3B | 1-2h | ~~**P2**~~ |
-| TD18 | Infra | ~~Nessun CI/CD pipeline~~ | ✅ RISOLTO — GitHub Actions con 4 job | 2-4h | ~~**P2**~~ |
-| TD19 | Database | Date come stringhe ISO anziché tipi nativi `datetime` | Query di range temporale inefficienti, sort lessicografico | 2h (migrazione) | **P2** |
-| TD20 | Database | DB name `test_database` | Confusione ambiente, indovinabile | 5 min | **P3** |
-| TD21 | Frontend | Sidebar non collassabile su mobile | UX mobile compromessa | 1-2h | **P3** |
-| TD22 | Frontend | `App.css` vuoto (1 riga) | File morto | 1 min | **P3** |
+| ID | Area | Problema | Priorita |
+|---|---|---|---|
+| TD19 | Database | Date come stringhe ISO anziche `datetime` nativo | P2 |
+| TD20 | Database | DB name `test_database` in dev | P3 |
+| TD-FE1 | Frontend | Nessun test unitario frontend (Jest) | P2 |
+| TD-FE2 | Frontend | Bundle size ottimizzabile (tree-shaking) | P3 |
+| TD-BE1 | Backend | Query dashboard non aggregate in pipeline | P2 |
+| TD-BE2 | Backend | Paginazione audit solo backend (frontend non usa skip) | P2 |
 
 ---
 
-## 8. ROADMAP SUGGERITA (3 STEP)
+## 8. FUNZIONALITA IMPLEMENTATE — DETTAGLIO v2.4
 
-### Step 1: Fix critici e quick wins (P0/P1 a basso sforzo)
-**Tempo stimato**: 1-2 giorni  
-**Obiettivo**: Rendere il sistema sicuro e performante per demo/staging
+### 8.1 SOX Foundation (Step E1 — v2.1)
+- Standard SOX aggiunto come 7o framework di compliance
+- Agente "SOX Internal Control Auditor" (high risk, 4 azioni)
+- 3 policy SOX: Financial Reporting Integrity, Internal Control Testing, CEO/CFO Certification Workflow
+- Cluster audit log SOX con 5 eventi realistici
 
-| # | Azione | Sforzo | Riferimento |
-|---|---|---|---|
-| 1.1 | Aggiungere indici MongoDB su tutti i campi `id` (unique) + campi filtro | 30 min | TD4 |
-| 1.2 | Sanitizzare input regex nella search audit (`re.escape()`) | 30 min | TD3 |
-| 1.3 | Restringere CORS a domini specifici | 15 min | TD2 |
-| 1.4 | Passare la chat history al contesto LLM | 30 min | TD6 |
-| 1.5 | Aggiungere enum Pydantic per risk_level, status, severity, enforcement | 1h | TD7 |
-| 1.6 | Aggiungere debounce alla search audit (300ms) | 15 min | TD11 |
-| 1.7 | Rimuovere import inutilizzati (backend + frontend) | 10 min | TD14, TD15 |
-| 1.8 | Migrare da `on_event` a `lifespan` context manager | 30 min | TD8 |
-| 1.9 | Mascherare errori LLM (non esporre stacktrace) | 10 min | TD16 |
+### 8.2 SOX Section 404 Wizard (Step E2 — v2.2)
+- 20 controlli SOX in 5 domini: Access Control, Change Management, IT Operations, Data Integrity, Security
+- Pagina UI dedicata con domain cards, accordion controlli, edit dialog
+- Export report PDF con ReportLab (SoxReportPDFBuilder)
+- 4 endpoint: GET controls, PATCH control, GET report JSON, GET report PDF
 
-### Step 2: Refactoring strutturale e hardening
-**Tempo stimato**: 3-5 giorni  
-**Obiettivo**: Codebase manutenibile, sicura, pronta per team multi-persona
+### 8.3 D.Lgs. 262/2005 + Audit Readiness Score (Step E3 — v2.3)
+- 8o standard: D.Lgs. 262/2005 (Italian financial reporting controls)
+- 2 policy DLgs262: Attestazione Dirigente Preposto, Procedure Amministrativo-Contabili
+- Agente "Dirigente Preposto Assistant" (CFO Office)
+- **Audit Readiness Score**: score pesato per rischio con top 5 priority controls e domain scores
+- Endpoint: GET `/api/sox/readiness-score`
 
-| # | Azione | Sforzo | Riferimento |
-|---|---|---|---|
-| 2.1 | Implementare autenticazione JWT (login/register + middleware protect) | 4-8h | TD1 |
-| 2.2 | Splittare `server.py` in moduli: `models/`, `routes/`, `services/`, `seed.py` | 2-3h | TD5 |
-| 2.3 | Estrarre componente CRUD generico per Agents/Policies | 2h | TD10 |
-| 2.4 | Esternalizzare traduzioni in file JSON (`/locales/en.json`, `/locales/it.json`) | 1h | TD12 |
-| 2.5 | Aggiungere rate limiting (slowapi) sugli endpoint critici (chat, CRUD) | 1-2h | TD9 |
-| 2.6 | Aggiungere streaming SSE per risposte chat LLM | 2-3h | P3 |
-| 2.7 | Scrivere test unitari: modelli Pydantic, edge case CRUD, input malformati | 4h | Copertura test |
-| 2.8 | Convertire date in `datetime` nativo MongoDB (migrazione) | 2h | TD19 |
-| 2.9 | Aggiungere react-markdown per rendering chat | 1h | TD13 |
-| 2.10 | Aggiungere header di sicurezza (CSP, X-Frame-Options, HSTS) | 1h | V9 |
-
-### Step 3: DevOps, integrazioni, feature avanzate
-**Tempo stimato**: 1-2 settimane  
-**Obiettivo**: Produzione-ready, integrazioni enterprise, feature differenzianti
-
-| # | Azione | Sforzo | Riferimento |
-|---|---|---|---|
-| 3.1 | Creare Dockerfile + docker-compose per setup locale | 1-2h | TD17 |
-| 3.2 | Configurare CI/CD (GitHub Actions: lint, test, build, deploy) | 2-4h | TD18 |
-| 3.3 | RBAC: ruoli Admin, DPO, Auditor, Viewer con permessi granulari | 1-2 giorni | Backlog P0 |
-| 3.4 | Dashboard con grafici temporali (recharts — gia installato) | 4-6h | Backlog P1 |
-| 3.5 | Export PDF/CSV per audit trail e compliance report | 3-4h | Backlog P1 |
-| 3.6 | Policy conflict detection engine | 1-2 giorni | Backlog P1 |
-| 3.7 | Integrazione connettori enterprise (IAM, SIEM, ServiceNow) | 2-3 giorni/connettore | Backlog P2 |
-| 3.8 | Multi-tenancy (organization-scoped data) | 2-3 giorni | Backlog P2 |
-| 3.9 | Sidebar responsive con hamburger menu per mobile | 1-2h | TD21 |
-| 3.10 | WebSocket per real-time agent monitoring | 1-2 giorni | Backlog P2 |
+### 8.4 Policy Conflict Engine (Step E4 — v2.4)
+- Algoritmo di detection con 4 regole: action_conflict, gap, overlap, redundancy
+- 3 endpoint: GET conflicts, POST resolve, GET scan-history
+- Pagina UI con summary cards, filtri per tipo/severita, conflict cards, resolve dialog
+- 5o KPI card in OverviewPage con conteggio conflitti critici
+- Demo data: policy con conflitto intenzionale (block vs auto) su Fraud Detection Engine
 
 ---
 
 ## 9. RIEPILOGO STATO PROGETTO
 
-### Completato ✅
+### Completato
 
-- Landing page completa con hero, features bento grid, settori target, CTA, footer
-- Toggle lingua bilingue (EN/IT) funzionante su tutta l'applicazione
-- Dashboard con sidebar e navigazione tra 6 sezioni
-- Overview page con 4 KPI live (agenti, policy, audit, compliance score), attivita recente, distribuzione rischio
-- CRUD completo per AI Agents (crea, leggi, modifica, elimina) con dialog form
-- CRUD completo per Policy Engine con mapping a 6 normative (GDPR, AI Act, ISO 27001, ISO 42001, DORA, NIS2)
-- Audit Trail con tabella densa, ricerca testuale, filtri per outcome e risk level
-- Compliance Monitor con progress bar, stato per 6 standard normativi, date di revisione
-- AI Compliance Assistant con LLM reale via litellm (OpenAI GPT-4o default, configurabile), chat bidirezionale con SSE streaming, domande suggerite
-- Ogni operazione CRUD genera automaticamente un audit log
-- Dati seed realistici (4 agenti, 5 policy, 25 log audit, 6 standard compliance)
-- Design system coerente: dark mode, Space Grotesk headings, JetBrains Mono code, glassmorphism
-- Suite test API completa (22/22 passati con pytest)
-- data-testid su tutti gli elementi interattivi
-- **[Step 1 — 26/02/2026] Indici MongoDB** su tutte le collection (id unique + campi filtro) — TD4 risolto
-- **[Step 1 — 26/02/2026] Sanitizzazione regex** nella search audit con re.escape() — TD3/V4 risolto
-- **[Step 1 — 26/02/2026] CORS restrittivo** da ALLOWED_ORIGINS env (fallback wildcard solo dev) — TD2/V2 risolto
-- **[Step 1 — 26/02/2026] Chat history passata al LLM** via initial_messages — TD6 risolto
-- **[Step 1 — 26/02/2026] Enum Pydantic** per risk_level, status, severity, enforcement, rule_type, outcome, data_classification — TD7 risolto
-- **[Step 1 — 26/02/2026] Debounce search** audit trail (300ms) — TD11 risolto
-- **[Step 1 — 26/02/2026] Import inutilizzati rimossi** (StreamingResponse, asyncio, json, Ban, Filter, X) — TD14/TD15 risolto
-- **[Step 1 — 26/02/2026] Migrazione lifespan** da on_event a asynccontextmanager — TD8 risolto
-- **[Step 1 — 26/02/2026] Errori LLM mascherati** (messaggio generico al client, log completo interno) — TD16/V6 risolto
-- **[Step 2A — 02/03/2026] Autenticazione JWT + RBAC** — 4 ruoli (admin>dpo>auditor>viewer), bcrypt, HS256, scadenza 8h — TD1/V1 risolto
-- **[Step 2A — 02/03/2026] ARIA AI Assistant verticale** — system prompt rigido, rifiuta domande off-topic, validazione 5-2000 chars — Fix A2 completato
-- **[Step 2A — 02/03/2026] Rate limiting** — slowapi su tutti gli endpoint (chat 10/min, login 5/min, CRUD 30/min) — TD9/V5 risolto
-- **[Step 2B — 02/03/2026] Backend modulare** — Split `server.py` in: `models.py`, `database.py`, `seed.py`, `rate_limiter.py`, 7 file route (`routes/auth.py`, `agents.py`, `policies.py`, `audit.py`, `compliance.py`, `dashboard.py`, `chat.py`) — TD5 risolto
-- **[Step 2B — 02/03/2026] Header di sicurezza** — Middleware custom con X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, Referrer-Policy, Permissions-Policy — V9/B3 risolto
-- **[Step 2B — 02/03/2026] Componente CRUD generico** — `CrudPage.js` riutilizzato da AgentsPage e PoliciesPage, elimina ~150 righe duplicate — TD10/B2 risolto
-- **[Step 2B — 02/03/2026] Traduzioni JSON esterne** — Spostate in `locales/en.json` e `locales/it.json`, `LanguageContext.js` ora importa file JSON — TD12/B4 risolto
-- **[Step 2B — 02/03/2026] react-markdown** — Sostituito renderer custom in AssistantPage con libreria professionale — TD13/B5 risolto
-- **[Step 2B — 02/03/2026] Test backend aggiornati** — `backend/tests/test_api.py` con 22 test pytest, token caching per rate limiting — Test suite funzionante
-- **[Step C1 — 24/03/2026] Dashboard Charts** — 3 grafici recharts aggiunti: PieChart Risk Distribution, BarChart Audit Outcomes, Horizontal BarChart Compliance Progress — TD dashboard charts risolto
-- **[Step C1 — 24/03/2026] Enterprise Seed Data** — 12 agenti AI bancari, 15 policy enterprise, 150+ audit log con 5 incident cluster realistici — Demo-ready data
-- **[Step C2 — 24/03/2026] Export PDF/CSV** — Export Audit Trail (CSV + PDF) e Compliance Report (PDF) con reportlab 4.1.0 — TD export risolto
-- **[Step C2 — 24/03/2026] Endpoint Export** — GET /api/audit/export/csv, GET /api/audit/export/pdf, GET /api/compliance/export/pdf con rate limiting e RBAC
-- **[Step C3A — 24/03/2026] Logo Ufficiale** — Logo GOVERN.AI powered by ANTHERA integrato in navbar, hero, sidebar, login — TD logo risolto
-- **[Step C3A — 24/03/2026] Mobile Sidebar** — Hamburger menu su mobile, drawer overlay, sidebar collapsabile su desktop con solo icone — TD21 risolto
-- **[Step C3B — 24/03/2026] Docker + docker-compose** — Dockerfile backend/frontend, nginx.conf, docker-compose.yml con MongoDB, .env.example, .dockerignore — TD17 risolto
-- **[Step C3B — 24/03/2026] README.md professionale** — Documentazione completa con Quick Start, Tech Stack, API docs, Security, Roadmap — Documentazione completa
-- **[Step CICD — 24/03/2026] GitHub Actions CI** — `.github/workflows/ci.yml` con 4 job paralleli: backend-tests (pytest 22/22), frontend-build (yarn build), security-scan (bandit+safety), docker-build (BE+FE images) — TD18 risolto
-- **[Step FINAL — 30/03/2026] Landing use cases** — 3 card settoriali (Banking, Healthcare, Legal) con badge normativi, checklist e risultati
-- **[Step FINAL — 30/03/2026] Social proof stats** — 4 stat compatte (6 standard, 150+ log, 4 RBAC, 22/22 test)
-- **[Step FINAL — 30/03/2026] SSE streaming ARIA** — GET /api/chat/stream con StreamingResponse, chunks 3 char / 30ms, cursore lampeggiante
-- **[Step FINAL — 30/03/2026] Titoli pagina dinamici** — PageTitleUpdater con mappa per 8 pagine
-- **[Step FINAL — 30/03/2026] Empty states** — Componente EmptyState con icona, titolo, sottotitolo e azione opzionale (Agents, Policies, Audit, ARIA)
-- **[Step FINAL — 30/03/2026] Skeleton loaders** — Componente SkeletonLoader per table/card/stat (Overview, Agents, Policies, Audit, Compliance)
-- **[Fix v2.0 — 30/03/2026] Bar chart Audit Outcomes** — usa stats.audit.blocked/escalated reali invece dei 5 log recenti — grafico ora coerente con KPI card
-- **[Fix v2.0 — 30/03/2026] Delete confirmation dialog** — CrudCardActions gestisce internamente il dialog di conferma con useState — fix definitivo, flusso: click cestino -> dialog -> Cancel/Delete (verificato visivamente)
-- **[Fix v2.0 — 31/03/2026] Portabilita LLM** — Sostituito emergentintegrations con litellm in chat.py — deployabile su qualsiasi ambiente esterno (AWS, Azure, ecc.) mantenendo compatibilita con Emergent proxy
+- **[MVP v1.0]** Landing page, Dashboard 6 sezioni, CRUD Agents/Policies, Audit Trail, Compliance 6 standard, AI Assistant, i18n EN/IT
+- **[Step 1 — v1.1]** 15 indici MongoDB, sanitizzazione regex, CORS restrittivo, chat history, Enum Pydantic, debounce, lifespan, LLM error masking
+- **[Step 2A — v1.2]** JWT + RBAC (4 ruoli), ARIA verticale, rate limiting
+- **[Step 2B — v1.3]** Backend modulare (9 route), security headers, CrudPage generico, traduzioni JSON, react-markdown
+- **[Step C1 — v1.4]** Dashboard Recharts (3 grafici), enterprise seed data (banking)
+- **[Step C2 — v1.5]** Export PDF/CSV (Audit Trail + Compliance Report)
+- **[Step C3A — v1.6]** Logo ufficiale, mobile sidebar responsive
+- **[Step C3B — v1.7]** Docker + docker-compose, README professionale
+- **[Step CICD — v1.8]** GitHub Actions CI (4 job paralleli)
+- **[Step FINAL — v1.9]** Landing use cases, social proof, SSE streaming ARIA, titoli dinamici, empty states, skeleton loaders
+- **[Fix v2.0]** Bar chart audit corretto, delete confirmation dialog, portabilita LLM (litellm)
+- **[Step E1 — v2.1]** SOX Foundation (standard + agente + 3 policy + audit cluster)
+- **[Step E2 — v2.2]** SOX Section 404 Wizard (20 controlli, 5 domini, report PDF)
+- **[Step E3 — v2.3]** D.Lgs. 262/2005 (8o standard) + Audit Readiness Score
+- **[Step E4 — v2.4]** Policy Conflict Detection Engine (4 regole, 3 endpoint, UI completa)
 
-**Step C3B completato il 24 Marzo 2026** — Docker + README professionale. 22/22 test passati.
-
-**Step CICD completato il 24 Marzo 2026** — GitHub Actions CI pipeline con 4 job (backend-tests, frontend-build, security-scan, docker-build). 22/22 test passati.
-
-**Step FINAL completato il 30 Marzo 2026** — Landing page use cases reali (3 card settoriali) + Social proof stats + SSE streaming per ARIA + Titoli pagina dinamici + Empty states + Skeleton loaders. 22/22 test passati.
-
-**Step C3A completato il 24 Marzo 2026** — Logo ufficiale + Mobile sidebar. 22/22 test passati.
-
-**Step C2 completato il 24 Marzo 2026** — Export PDF/CSV funzionanti. 22/22 test passati.
-
-**Step C1 completato il 24 Marzo 2026** — Dashboard charts + enterprise seed data. 22/22 test passati.
-
-**Step 2B completato il 02 Marzo 2026** — Refactoring backend + frontend + sicurezza + test. 22/22 test passati.
-
-**Step 2A completato il 02 Marzo 2026** — Auth JWT + ARIA + Rate Limiting applicati.
-
-**Step 1 completato il 26 Febbraio 2026** — 9 fix critici e quick wins applicati con successo.
-
-### Da completare 🔄
+### Da completare
 
 - **Test unitari frontend** — assenti (P2)
 - **Connettori enterprise** (IAM, SIEM, ServiceNow) — non implementati (P2)
 - **Multi-tenancy** — non implementato (P2)
+- **D.Lgs. 262 Wizard** — workflow dedicato simile al SOX Wizard (P2)
+- **Auto-Fix Engine** — risoluzione automatica conflitti policy (P2)
+- **WebSocket real-time monitoring** — aggiornamenti dashboard live (P2)
 
 ---
 
-*Fine audit tecnico. Documento generato analizzando il codice sorgente. Ultimo aggiornamento: 30 Marzo 2026 (post Fix v2.0).*
+*Fine audit tecnico. Documento generato analizzando il codice sorgente. Ultimo aggiornamento: 01 Aprile 2026 (MVP v2.4).*

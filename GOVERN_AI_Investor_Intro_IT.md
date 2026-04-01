@@ -2,11 +2,11 @@
 
 ---
 
-## L'Opportunità
+## L'Opportunita
 
-**GOVERN.AI** è il control plane compliance-first per l'AI, progettato per le imprese che operano in settori altamente regolamentati.
+**GOVERN.AI** e il control plane compliance-first per l'AI, progettato per le imprese che operano in settori altamente regolamentati.
 
-Con l'accelerazione dell'adozione dell'AI in banche, assicurazioni, sanità e pubblica amministrazione, le organizzazioni affrontano una sfida critica: **come implementare agenti AI su larga scala mantenendo conformità normativa, auditabilità e controllo.**
+Con l'accelerazione dell'adozione dell'AI in banche, assicurazioni, sanita e pubblica amministrazione, le organizzazioni affrontano una sfida critica: **come implementare agenti AI su larga scala mantenendo conformita normativa, auditabilita e controllo.**
 
 GOVERN.AI risolve questo problema fornendo un layer di governance centralizzato per agenti AI, workflow e modelli — prima che compliance, sicurezza e audit diventino un problema.
 
@@ -16,135 +16,137 @@ GOVERN.AI risolve questo problema fornendo un layer di governance centralizzato 
 
 GOVERN.AI permette alle imprese di:
 
-| Funzionalità | Descrizione |
+| Funzionalita | Descrizione |
 |--------------|-------------|
-| **Motore di Policy** | Definisci regole granulari su cosa possono fare gli agenti AI, dove, come e perché — con enforcement in tempo reale |
-| **Traccia di Audit** | Tracciabilità completa di ogni azione AI con log di spiegabilità e registrazioni immutabili |
-| **Monitor Compliance** | Monitoraggio in tempo reale rispetto a EU AI Act, GDPR, ISO 27001/42001, DORA, NIS2 |
+| **Motore di Policy + Rilevamento Conflitti** | Regole granulari per agenti AI con rilevamento automatico di conflitti (action conflict, gap, overlap, ridondanza) |
+| **SOX Section 404 Wizard** | Valutazione guidata dei controlli interni con Audit Readiness Score per conformita SOX |
+| **Traccia di Audit** | Tracciabilita completa di ogni azione AI con log di spiegabilita, esportabile in PDF/CSV |
+| **Monitor Compliance** | Monitoraggio in tempo reale su **8 standard**: EU AI Act, GDPR, ISO 27001/42001, DORA, NIS2, SOX, D.Lgs. 262/2005 |
 | **Classificazione del Rischio** | Valutazione automatica del rischio allineata alle categorie dell'EU AI Act |
-| **Integrazione Enterprise** | Connessione fluida con IAM, SIEM, ServiceNow e lo stack di sicurezza esistente |
-| **Assistente AI Compliance** | Consulente basato su LLM per indicazioni normative immediate |
+| **Assistente AI (ARIA)** | Consulente LLM con streaming in tempo reale per indicazioni normative immediate |
 
 ---
 
 ## Casi d'Uso
 
-### 🏦 Caso d'Uso 1: Banca — Governance del Credit Scoring AI
+### Caso d'Uso 1: Banca — Governance del Credit Scoring AI
 
-**Contesto:** Una grande banca italiana implementa un modello AI per il credit scoring automatizzato. Secondo l'EU AI Act, questo è classificato come **AI ad alto rischio**.
+**Contesto:** Una grande banca italiana implementa un modello AI per il credit scoring automatizzato. Secondo l'EU AI Act, questo e classificato come **AI ad alto rischio**.
 
 **Sfida:**
-- I regolatori richiedono piena spiegabilità di ogni decisione creditizia
+- I regolatori richiedono piena spiegabilita di ogni decisione creditizia
 - La banca deve dimostrare l'assenza di bias discriminatori nel modello
+- SOX Section 404 richiede controlli interni sulla reportistica finanziaria
 - Ogni decisione deve essere registrata e auditabile per 10+ anni
 
 **Soluzione GOVERN.AI:**
 | Azione | Risultato |
 |--------|-----------|
 | Registra agente AI con classificazione "alto rischio" | Controlli di compliance automatici attivati |
-| Definisci policy: "Registra tutte le decisioni con spiegazione" | Ogni decisione creditizia registrata con motivazione |
-| Definisci policy: "Blocca se rilevati attributi protetti" | Previene input discriminatori |
-| Traccia di audit | I regolatori possono ispezionare qualsiasi decisione, in qualsiasi momento |
+| Definisci policy: "Registra tutte le decisioni con spiegazione" | Ogni decisione registrata con motivazione |
+| SOX 404 Wizard: valuta i controlli interni | Audit Readiness Score al 72% — identifica 5 gap prioritari |
+| Policy Conflict Engine: scansione conflitti | Rileva overlap tra policy GDPR e EU AI Act |
+| Traccia di audit + export PDF | I regolatori possono ispezionare qualsiasi decisione |
 
-**Risultato:** La banca raggiunge la compliance EU AI Act, evita sanzioni fino a €35M, mantiene la fiducia dei clienti.
+**Risultato:** La banca raggiunge la compliance EU AI Act + SOX, evita sanzioni fino a 35M EUR, mantiene la fiducia dei clienti.
 
 ---
 
-### 🏛️ Caso d'Uso 2: Pubblica Amministrazione — Chatbot per Servizi ai Cittadini
+### Caso d'Uso 2: Pubblica Amministrazione — Chatbot per Servizi ai Cittadini
 
-**Contesto:** Un governo regionale implementa un chatbot AI per gestire le richieste dei cittadini (permessi, tasse, servizi). Secondo la legge italiana/UE, i cittadini hanno il diritto di comprendere le decisioni automatizzate.
-
-**Sfida:**
-- I cittadini devono essere informati che stanno interagendo con un'AI
-- I dati sensibili (info fiscali, sanitarie) non devono essere condivisi erroneamente
-- Traccia di audit completa richiesta per controversie legali
+**Contesto:** Un governo regionale implementa un chatbot AI. I cittadini hanno il diritto di comprendere le decisioni automatizzate.
 
 **Soluzione GOVERN.AI:**
 | Azione | Risultato |
 |--------|-----------|
-| Policy: "Disclosure obbligatoria prima dell'interazione" | Il chatbot si identifica sempre come AI |
-| Policy: "Restringi accesso a domini di dati confidenziali" | L'AI non può accedere/condividere dati ristretti dei cittadini |
-| Policy: "Escalation a operatore umano se confidenza < 80%" | Query incerte indirizzate a operatori umani |
-| Dashboard compliance in tempo reale | Il DPO monitora tutte le interazioni live |
+| Policy: "Disclosure obbligatoria" | Il chatbot si identifica sempre come AI |
+| Policy: "Restringi accesso a dati confidenziali" | L'AI non puo accedere a dati ristretti dei cittadini |
+| Controlli D.Lgs. 262 per operazioni finanziarie | Workflow attestazione Dirigente Preposto applicato |
+| Dashboard compliance real-time | DPO monitora tutte le interazioni su 8 standard |
 
 **Risultato:** La PA mantiene trasparenza, protegge i dati dei cittadini, evita violazioni GDPR.
 
 ---
 
-### 🏥 Caso d'Uso 3: Sanità — Assistente Diagnostico AI
+### Caso d'Uso 3: Sanita — Assistente Diagnostico AI
 
-**Contesto:** Una rete ospedaliera usa l'AI per assistere i radiologi nel rilevare anomalie nelle immagini mediche. Questa è **AI ad alto rischio** secondo l'EU AI Act con regolamentazioni aggiuntive del settore sanitario.
-
-**Sfida:**
-- I suggerimenti dell'AI non devono mai sostituire il giudizio umano
-- Ogni raccomandazione AI deve essere tracciabile alla versione del modello sorgente
-- I dati dei pazienti devono rimanere entro confini conformi
+**Contesto:** Una rete ospedaliera usa l'AI per assistere i radiologi. AI ad alto rischio secondo EU AI Act.
 
 **Soluzione GOVERN.AI:**
 | Azione | Risultato |
 |--------|-----------|
-| Policy: "Output AI = solo suggerimento, approvazione umana richiesta" | Impone human-in-the-loop |
-| Versioning agenti e tracking modelli | Ogni raccomandazione collegata alla versione specifica del modello |
-| Policy: "Classificazione dati = ristretta, nessun trasferimento esterno" | I dati dei pazienti restano on-premise |
-| Log di audit con timestamp | Catena di custodia completa per scopi medico-legali |
-
-**Risultato:** L'ospedale sfrutta l'AI in sicurezza, mantiene la fiducia dei pazienti, soddisfa i requisiti delle autorità sanitarie.
+| Policy: "Output AI = solo suggerimento, approvazione umana" | Human-in-the-loop garantito |
+| Versioning agenti e tracking modelli | Ogni raccomandazione tracciata |
+| Policy Conflict Engine | Rileva automaticamente conflitti tra reparti |
+| Assistente ARIA | Guida normativa istantanea per compliance officer |
 
 ---
 
-### 🏭 Caso d'Uso 4: Manifatturiero — AI per Manutenzione Predittiva
+### Caso d'Uso 4: Infrastrutture Critiche — AI Manutenzione Predittiva (NIS2)
 
-**Contesto:** Una società energetica usa agenti AI per prevedere guasti delle apparecchiature e programmare la manutenzione. Le operazioni sono infrastrutture critiche secondo la direttiva NIS2.
-
-**Sfida:**
-- I falsi negativi potrebbero causare interruzioni che colpiscono migliaia di persone
-- Le decisioni AI su infrastrutture critiche devono essere spiegabili
-- Requisiti di cybersecurity secondo NIS2
+**Contesto:** Societa energetica con agenti AI per manutenzione predittiva su infrastrutture critiche (NIS2).
 
 **Soluzione GOVERN.AI:**
 | Azione | Risultato |
 |--------|-----------|
-| Classificazione rischio: "Infrastruttura critica" | Monitoraggio e logging potenziati |
-| Policy: "Alert + revisione umana per decisioni ad alto impatto" | Nessuno shutdown autonomo senza approvazione |
-| Integrazione con SIEM | Azioni AI monitorate dal security operations center |
-| Report di compliance trimestrali | Pronti per audit NIS2 |
+| Classificazione: "Infrastruttura critica" | Monitoraggio e logging potenziati |
+| Policy: "Alert + revisione umana per decisioni ad alto impatto" | Nessuno shutdown autonomo |
+| Audit Readiness Score | 85% di prontezza per prossimo audit NIS2 |
+| Report compliance trimestrali (PDF) | Pronti per audit NIS2 |
 
-**Risultato:** L'azienda ottimizza la manutenzione rispettando le normative sulle infrastrutture critiche.
+---
+
+## Highlights Piattaforma (MVP v2.4)
+
+| Metrica | Valore |
+|---------|--------|
+| Standard Normativi | **8** (EU AI Act, GDPR, ISO 27001, ISO 42001, DORA, NIS2, SOX, D.Lgs. 262) |
+| Controlli SOX Tracciati | **20** in 5 domini |
+| Tipi di Conflitto Policy | **4** (action conflict, gap, overlap, ridondanza) |
+| Audit Log (demo) | **150+** con 7 cluster incidenti realistici |
+| Ruoli RBAC | **4** (Admin, DPO, Auditor, Viewer) |
+| Test Backend | **34/34** passanti |
+| Lingue | **2** (Italiano, Inglese) |
 
 ---
 
 ## Timing di Mercato
 
-### Perché Ora?
+### Perche Ora?
 
-- **EU AI Act** entrato in vigore ad agosto 2024 — enforcement dal 2025-2026
-- Le imprese stanno implementando agenti AI (copilot, workflow autonomi) a velocità senza precedenti
-- **Nessuna soluzione incumbent** affronta specificamente la governance AI — gli strumenti GRC esistenti non sono stati progettati per l'AI
-- La pressione normativa è solo in aumento: DORA, NIS2, linee guida AI settoriali
+- **EU AI Act**: enforcement 2025-2026 — sanzioni fino a 35M EUR o 7% fatturato globale
+- Le imprese stanno implementando agenti AI a velocita senza precedenti
+- **Compliance SOX** richiede sempre piu controlli sulla governance AI
+- Nessuna soluzione incumbent affronta specificamente la governance AI
+- Convergenza normativa: AI Act + DORA + NIS2 + SOX = matrice di compliance unica
 
 ### Mercato Target
 
-| Segmento | Pain Point |
-|----------|------------|
-| **Banche e Servizi Finanziari** | AI nel trading, credit scoring, fraud detection — tutti ad alto rischio secondo l'AI Act |
-| **Pubblica Amministrazione** | Compliance obbligatoria, AI citizen-facing richiede piena trasparenza |
-| **Assicurazioni** | Underwriting automatizzato, gestione sinistri — spiegabilità richiesta |
-| **Sanità** | Diagnostica AI e triage — massimo scrutinio |
-| **Infrastrutture Critiche** | Energia, telecom — compliance NIS2 obbligatoria |
+| Segmento | Driver Normativo |
+|----------|-----------------|
+| **Banche e Servizi Finanziari** | AI Act + DORA + SOX + D.Lgs. 262 |
+| **Pubblica Amministrazione** | AI Act + GDPR + trasparenza |
+| **Assicurazioni** | AI Act + GDPR + DORA |
+| **Sanita** | AI Act + GDPR + massimo scrutinio |
+| **Infrastrutture Critiche** | NIS2 + AI Act |
 
 ---
 
 ## Traction e Status
 
-- **MVP funzionante** costruito e operativo (React + FastAPI + MongoDB)
-- Funzionalità core implementate:
-  - ✅ Registro Agenti AI con classificazione del rischio
-  - ✅ Motore di Policy con enforcement in tempo reale
-  - ✅ Sistema completo di Traccia di Audit
-  - ✅ Dashboard di monitoraggio compliance
-  - ✅ Controllo accessi basato su ruoli (Admin, DPO, Auditor, Viewer)
-  - ✅ Assistente AI Compliance (ARIA) powered by GPT
-- Architettura progettata per scalabilità e sicurezza enterprise
+- **MVP v2.4 funzionante** — piattaforma completamente operativa
+- Funzionalita core:
+  - Registro Agenti AI con classificazione del rischio (14 agenti enterprise)
+  - Motore di Policy con rilevamento automatico conflitti
+  - SOX Section 404 Wizard con Audit Readiness Score
+  - Sistema completo di Traccia di Audit con export PDF/CSV
+  - Monitoraggio compliance per 8 standard internazionali
+  - Controllo accessi RBAC (4 ruoli)
+  - Assistente AI (ARIA) con SSE streaming
+  - D.Lgs. 262/2005 controlli finanziari italiani
+- **34/34 test backend** passanti, pipeline CI/CD attiva
+- Architettura progettata per scalabilita enterprise
+- Completamente containerizzata (Docker + Docker Compose)
 
 ---
 
@@ -152,11 +154,11 @@ GOVERN.AI permette alle imprese di:
 
 **B2B SaaS** con pricing a tier:
 
-| Tier | Target | Modello di Pricing |
-|------|--------|-------------------|
-| **Starter** | Mid-market, 10-50 agenti AI | Per-agente/mese |
-| **Enterprise** | Grandi organizzazioni, 50-500 agenti | Licenza annuale + implementazione |
-| **Regulated** | Banche, PA, Sanità | Pricing custom, opzione on-premise |
+| Tier | Target | Prezzo/anno |
+|------|--------|-------------|
+| **Pro** | Team/PMI, fino a 10 agenti | 12.000 EUR |
+| **Business** | Medie imprese, fino a 50 agenti | 48.000 EUR |
+| **Enterprise** | Grandi aziende, agenti illimitati | 100.000+ EUR |
 
 Revenue stream addizionali:
 - Servizi di implementazione e consulenza
@@ -172,16 +174,16 @@ Revenue stream addizionali:
 | GRC Tradizionale | ServiceNow, Archer, OneTrust | Non AI-native, retrofit della compliance |
 | AI MLOps | MLflow, Weights & Biases | Focus tecnico, nessun layer di governance |
 | AI Security | Robust Intelligence, Protect AI | Focus sulla sicurezza, non compliance-first |
-| **GOVERN.AI** | — | **Purpose-built per AI governance + compliance EU** |
+| **GOVERN.AI** | — | **Purpose-built per AI governance + compliance EU/intl (8 standard)** |
 
 ---
 
 ## La Richiesta
 
-Stiamo attualmente esplorando conversazioni di finanziamento early-stage per:
+Stiamo esplorando conversazioni di finanziamento early-stage per:
 
-1. **Espandere il prodotto** — costruire integrazioni enterprise, potenziare il motore di policy
-2. **Assumere il team iniziale** — 2-3 engineer, 1 esperto di dominio compliance
+1. **Espandere il prodotto** — integrazioni enterprise, multi-tenancy, auto-fix engine
+2. **Assumere il team iniziale** — 2-3 engineer, 1 esperto compliance
 3. **Pilota con design partner** — 3-5 imprese in banking/PA
 4. **Go-to-market in Italia/EU** — vantaggio first-mover sulla compliance AI Act
 
@@ -197,8 +199,8 @@ Aperti a discutere la struttura e la partnership giusta.
 
 | Area | Esperienza |
 |------|------------|
-| **Cloud & Infrastruttura** | Gestito 18.000+ VM AWS per la più grande pubblica amministrazione italiana, con €3M+ di ottimizzazione costi annuali e 99.9% SLA uptime |
-| **Consulenza Enterprise** | BIP xTech, Deloitte Risk Advisory — guidato programmi di trasformazione digitale da €10M+ |
+| **Cloud & Infrastruttura** | Gestito 18.000+ VM AWS per la piu grande pubblica amministrazione italiana, con 3M+ EUR di ottimizzazione costi annuali e 99.9% SLA uptime |
+| **Consulenza Enterprise** | BIP xTech, Deloitte Risk Advisory — guidato programmi di trasformazione digitale da 10M+ EUR |
 | **IT Risk & Compliance** | IT Audit, advisory cybersecurity, track record zero violazioni di compliance |
 | **Comunicazione Finanziaria** | Master in Investor Relations (Euronext Academy / Borsa Italiana) |
 
@@ -206,16 +208,16 @@ Aperti a discutere la struttura e la partnership giusta.
 
 - **Master in Data & Cloud Engineering** — Politecnico di Milano (2023-2025)
 - **Master in Investor Relations** — Euronext Academy, Borsa Italiana (2025)
-- **Laurea Magistrale in Management Industriale** — LIUC Università Cattaneo
+- **Laurea Magistrale in Management Industriale** — LIUC Universita Cattaneo
 - Certificato **AWS Cloud Practitioner**
 - **HPC & Quantum Computing** — CINECA
 
-### Perché Angelo per GOVERN.AI
+### Perche Angelo per GOVERN.AI
 
-- **Combinazione rara**: Profonda expertise tecnica (Cloud, Data, DevOps) + competenze di comunicazione finanziaria/investor
-- **DNA Enterprise**: Anni di consulenza per grandi organizzazioni (PA, luxury brand, logistica) — comprende i cicli di vendita enterprise e i requisiti di compliance
-- **Compliance nativo**: Background IT Audit in Deloitte, comprende i framework di rischio dall'interno
-- **Mentalità da builder**: Da Business Analyst a Strategic Advisor, ha costantemente consegnato progetti IT complessi con ROI misurabile
+- **Combinazione rara**: Expertise tecnica profonda + competenze di comunicazione finanziaria
+- **DNA Enterprise**: Comprende cicli di vendita enterprise e requisiti di compliance
+- **Compliance nativo**: Background IT Audit in Deloitte
+- **Mentalita da builder**: Progetti IT complessi con ROI misurabile
 
 ---
 
@@ -224,9 +226,9 @@ Aperti a discutere la struttura e la partnership giusta.
 **Angelo Anglani**  
 Founder, GOVERN.AI  
 
-📧 angelo.anglani94@gmail.com  
-📱 +39 342 754 8655  
-🔗 linkedin.com/in/angelo-anglani
+angelo.anglani94@gmail.com  
++39 342 754 8655  
+linkedin.com/in/angelo-anglani
 
 ---
 
