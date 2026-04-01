@@ -40,11 +40,11 @@
 - **Compliance Officer**: Tracciamento standard regolatori (AI Act, ISO, DORA, NIS2)
 - **IT Administrator**: Ciclo di vita agenti e enforcement policy
 
-## Architecture (Current — MVP v1.7)
+## Architecture (Current — MVP v2.1)
 - **Frontend**: React 19 + Tailwind 3.4 + Shadcn/UI + Recharts (port 3000)
 - **Backend**: FastAPI 0.110 + Pydantic V2 + modular routes + reportlab (port 8001)
 - **Database**: MongoDB + Motor async (15 indici, 6 collections)
-- **LLM**: OpenAI GPT-5.2 via Emergent LLM key (ARIA assistant)
+- **LLM**: OpenAI GPT-4o via litellm (ARIA assistant, dual-mode Emergent/OpenAI)
 - **Auth**: JWT + RBAC (4 ruoli: admin, dpo, auditor, viewer)
 - **Process Manager**: Supervisord (dev), Docker Compose (prod)
 - **Tipo**: Architettura modulare a due tier
@@ -53,7 +53,7 @@
 1. **Agent Registry**: Catalogazione agenti con profilo completo (risk level, status, azioni, domini ristretti)
 2. **Policy Engine**: 5 tipi (restriction, approval, rate_limit, logging, retention) × 6 normative × 4 enforcement
 3. **Audit Trail**: Tracciabilita immutabile con search sanitizzata e filtri
-4. **Compliance Dashboard**: 6 standard EU (AI Act, GDPR, ISO 27001, ISO 42001, DORA, NIS2)
+4. **Compliance Dashboard**: 7 standard (AI Act, GDPR, ISO 27001, ISO 42001, DORA, NIS2, SOX)
 5. **AI Compliance Assistant**: GPT-5.2 con memoria conversazionale
 6. **Interfaccia bilingue**: IT/EN nativa
 
@@ -160,6 +160,22 @@
 - [x] AUDIT_TECNICO_GOVERN.md aggiornato (v2.0)
 - [x] STEP_FIX_V2_REPORT.md generato
 
+### Step E1 — SOX Foundation (01 Apr 2026) — v2.1
+- [x] SOX compliance standard aggiunto al seed (code: SOX, progress: 56%, 25/44 requisiti)
+- [x] Agente "SOX Internal Control Auditor" (high risk, 4 azioni, restricted domains)
+- [x] 3 policy SOX: Financial Reporting Integrity, Internal Control Testing, CEO/CFO Certification Workflow
+- [x] Cluster audit log SOX (5 eventi: control verification, effectiveness testing, deficiency flagging, sox report)
+- [x] PoliciesPage: "SOX" aggiunto al dropdown regulation
+- [x] OverviewPage: conteggio standard dinamico (da "6 standards" hardcoded a `${compliance.length} standards`)
+- [x] LandingPage: "7" Regulations Covered (hero stats e social proof)
+- [x] ARIA system prompt: SOX (Sarbanes-Oxley Act, 2002) aggiunto ai domini di competenza
+- [x] AssistantPage: placeholder aggiornato con SOX
+- [x] i18n: feat_compliance_desc e empty_assistant_subtitle aggiornati (en.json + it.json)
+- [x] exporters.py: nota legale aggiornata con SOX Section 802
+- [x] 2 nuovi test pytest (test_sox_standard_present, test_seven_compliance_standards)
+- [x] 24/24 test backend passano
+- [x] Testing agent: 100% pass rate frontend + backend
+
 ## Roadmap Tecnica (dal Business Plan)
 
 ### Phase 1 — Foundation (Q2 2026, 3 mesi)
@@ -213,7 +229,7 @@
 | OneTrust | US | $920M+ | Privacy, consent | No |
 | Airia | US | N/D | Agent constraints | Si |
 | Enkrypt AI | US | N/D | AI security, policy LLM | Si |
-| **GOVERN.AI** | **Italia** | **Pre-seed** | **Agent governance + compliance EU** | **Si (6 standard)** |
+| **GOVERN.AI** | **Italia** | **Pre-seed** | **Agent governance + compliance EU** | **Si (7 standard)** |
 
 ## Dipendenze Strategiche gia presenti
 - PyJWT 2.11.0 + bcrypt 4.1.3 → pronti per autenticazione
