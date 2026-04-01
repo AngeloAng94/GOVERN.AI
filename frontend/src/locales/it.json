@@ -14,7 +14,7 @@
   "feat_audit": "Traccia di Audit",
   "feat_audit_desc": "Tracciabilita completa di ogni azione AI. Log di spiegabilita, catene decisionali e registrazioni immutabili.",
   "feat_compliance": "Monitor Compliance",
-  "feat_compliance_desc": "AI Act, GDPR, ISO 27001, ISO 42001, DORA, NIS2, SOX — monitora lo stato di conformita in tempo reale.",
+  "feat_compliance_desc": "AI Act, GDPR, ISO 27001, ISO 42001, DORA, NIS2, SOX, D.Lgs. 262 — monitora lo stato di conformita in tempo reale.",
   "feat_integration": "Integrazione Enterprise",
   "feat_integration_desc": "Connessione fluida con IAM, SIEM, ServiceNow, CMDB e il tuo stack di sicurezza esistente.",
   "feat_risk": "Classificazione del Rischio",
@@ -137,7 +137,7 @@
   "empty_audit_title": "Nessun evento di audit",
   "empty_audit_subtitle": "Gli eventi di audit appariranno qui quando gli agenti eseguiranno azioni",
   "empty_assistant_title": "Chiedi ad ARIA",
-  "empty_assistant_subtitle": "Sono specializzata in EU AI Act, GDPR, DORA, NIS2 e SOX. Come posso aiutarti?",
+  "empty_assistant_subtitle": "Sono specializzata in EU AI Act, GDPR, DORA, NIS2, SOX e D.Lgs. 262. Come posso aiutarti?",
   "sox_title": "SOX Section 404 Wizard",
   "sox_subtitle": "Valutazione dei Controlli Interni sul Reporting Finanziario",
   "sox_overall_progress": "Progresso Generale",
@@ -160,5 +160,6 @@
   "sox_generate_report": "Genera Report Completo",
   "sox_legal_note": "Questo report e generato in conformita ai requisiti SOX Section 404.",
   "sox_control_updated": "Controllo aggiornato con successo",
-  "sox_update_failed": "Errore durante l'aggiornamento del controllo"
+  "sox_update_failed": "Errore durante l'aggiornamento del controllo",
+  "sox_readiness_title": "Audit Readiness Score"
 }

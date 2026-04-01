@@ -121,10 +121,22 @@ async def seed_compliance_standards():
                 last_assessment=(now - timedelta(days=12)).isoformat(),
                 next_review=(now + timedelta(days=58)).isoformat()
             ),
+            ComplianceStandard(
+                name="D.Lgs. 262/2005",
+                code="DLgs262",
+                description="Disposizioni per la tutela del risparmio - Controlli interni sui documenti contabili societari per societa quotate italiane (Euronext Milan)",
+                status="in_progress",
+                progress=48,
+                requirements_total=28,
+                requirements_met=13,
+                category="regulation",
+                last_assessment="2026-02-15T00:00:00+00:00",
+                next_review="2026-06-30T00:00:00+00:00"
+            ),
         ]
         for s in standards:
             await db.compliance_standards.insert_one(s.model_dump())
-        logger.info("Seeded compliance standards (7 standards)")
+        logger.info("Seeded compliance standards (8 standards)")
 
 
 async def seed_sample_data():
@@ -274,6 +286,17 @@ async def seed_sample_data():
                 restricted_domains=["financial_data_modification", "external_disclosure"],
                 data_classification=DataClassification.restricted,
                 owner="Internal Audit"
+            ),
+            AgentCreate(
+                name="Dirigente Preposto Assistant",
+                description="Supporta il dirigente preposto nella raccolta delle evidenze e nella redazione dell'attestazione semestrale ex art. 154-bis D.Lgs. 262/2005",
+                model_type="GPT-5.2",
+                risk_level=RiskLevel.high,
+                status=AgentStatus.active,
+                allowed_actions=["collect_evidence", "draft_attestation", "verify_procedures", "generate_262_report"],
+                restricted_domains=["financial_data_modification", "external_filing"],
+                data_classification=DataClassification.confidential,
+                owner="CFO Office"
             ),
         ]
         
@@ -489,6 +512,29 @@ async def seed_sample_data():
                 enforcement=PolicyEnforcement.block,
                 violations_count=0
             ),
+            # D.Lgs. 262/2005 Policies (2)
+            PolicyCreate(
+                name="Attestazione Dirigente Preposto",
+                description="Verifica semestrale attestazione del dirigente preposto sui controlli interni ai sensi dell'art. 154-bis D.Lgs. 262/2005",
+                rule_type=RuleType.approval,
+                conditions=["semi_annual_filing", "attestation_due", "material_change_detected"],
+                actions=["require_dp_attestation", "verify_control_adequacy", "log_certification"],
+                severity=PolicySeverity.critical,
+                regulation="DLgs262",
+                enforcement=PolicyEnforcement.block,
+                violations_count=1
+            ),
+            PolicyCreate(
+                name="Procedure Amministrativo-Contabili",
+                description="Verifica adeguatezza delle procedure amministrative e contabili per la redazione del bilancio consolidato",
+                rule_type=RuleType.logging,
+                conditions=["procedure_review_due", "accounting_anomaly_detected", "consolidation_cycle"],
+                actions=["flag_procedure_gap", "schedule_review", "document_remediation"],
+                severity=PolicySeverity.high,
+                regulation="DLgs262",
+                enforcement=PolicyEnforcement.log,
+                violations_count=3
+            ),
         ]
         
         for p in policies:
@@ -501,7 +547,7 @@ async def seed_sample_data():
             "Customer Service Assistant", "Regulatory Reporting Agent", "HR Policy Assistant",
             "Fraud Detection Engine", "Investment Advisory Bot", "Document Classifier",
             "DORA Incident Responder", "KYC Verification Agent", "Executive Report Generator",
-            "SOX Internal Control Auditor"
+            "SOX Internal Control Auditor", "Dirigente Preposto Assistant"
         ]
         
         # Define agent-specific behavior patterns
@@ -519,6 +565,7 @@ async def seed_sample_data():
             "DORA Incident Responder": {"allowed": 0.75, "blocked": 0.15, "escalated": 0.10},
             "Executive Report Generator": {"allowed": 0.88, "blocked": 0.08, "escalated": 0.04},
             "SOX Internal Control Auditor": {"allowed": 0.62, "blocked": 0.23, "escalated": 0.15},
+            "Dirigente Preposto Assistant": {"allowed": 0.72, "blocked": 0.18, "escalated": 0.10},
         }
         
         actions_by_agent = {
@@ -535,6 +582,7 @@ async def seed_sample_data():
             "Investment Advisory Bot": ["portfolio_analysis", "recommendation_generation", "market_research", "risk_assessment"],
             "Executive Report Generator": ["kpi_aggregation", "dashboard_update", "report_formatting", "data_consolidation"],
             "SOX Internal Control Auditor": ["control_verification", "effectiveness_testing", "sox_report_generation", "deficiency_flagging"],
+            "Dirigente Preposto Assistant": ["evidence_collection", "attestation_draft", "procedure_verification", "262_report_generation"],
         }
         
         resources_by_agent = {
@@ -551,6 +599,7 @@ async def seed_sample_data():
             "Investment Advisory Bot": ["/portfolios/clients", "/market/data", "/recommendations/queue", "/research/reports"],
             "Executive Report Generator": ["/kpis/realtime", "/dashboards/executive", "/reports/board", "/data/consolidated"],
             "SOX Internal Control Auditor": ["/sox/controls", "/sox/testing", "/financial/reports", "/sox/deficiencies"],
+            "Dirigente Preposto Assistant": ["/262/attestation", "/262/procedures", "/financial/consolidated", "/262/evidence"],
         }
         
         users = [
@@ -637,6 +686,21 @@ async def seed_sample_data():
                     ("sox_report_generation", "/sox/controls", AuditOutcome.allowed, RiskLevel.high, "SOX deficiency report generated and escalated to Audit Committee"),
                 ]
             },
+            # Cluster 7: D.Lgs. 262/2005 semi-annual attestation cycle (Day -8)
+            {
+                "agent": "Dirigente Preposto Assistant",
+                "day_offset": -8,
+                "events": [
+                    ("evidence_collection", "/262/evidence", AuditOutcome.allowed, RiskLevel.medium, "Semi-annual evidence collection initiated for art. 154-bis attestation"),
+                    ("procedure_verification", "/262/procedures", AuditOutcome.allowed, RiskLevel.medium, "Administrative accounting procedures reviewed - 22/28 requirements met"),
+                    ("procedure_verification", "/financial/consolidated", AuditOutcome.escalated, RiskLevel.high, "Gap detected in consolidated reporting reconciliation procedure"),
+                    ("attestation_draft", "/262/attestation", AuditOutcome.blocked, RiskLevel.high, "Attestation draft blocked - missing evidence for 3 control areas"),
+                    ("evidence_collection", "/262/evidence", AuditOutcome.allowed, RiskLevel.medium, "Additional evidence collected from Finance IT and Compliance Office"),
+                    ("attestation_draft", "/262/attestation", AuditOutcome.allowed, RiskLevel.high, "Attestation draft v2 generated - pending CFO review"),
+                    ("262_report_generation", "/262/procedures", AuditOutcome.allowed, RiskLevel.medium, "D.Lgs. 262 compliance report generated for Audit Committee"),
+                    ("262_report_generation", "/262/attestation", AuditOutcome.escalated, RiskLevel.high, "Final attestation escalated to Board of Statutory Auditors for countersign"),
+                ]
+            },
         ]
         
         # Add incident cluster events
@@ -715,7 +779,7 @@ async def seed_sample_data():
         for log in audit_logs:
             await db.audit_logs.insert_one(log.model_dump())
         
-        logger.info(f"Seeded enterprise data: 13 agents, 18 policies, {len(audit_logs)} audit logs")
+        logger.info(f"Seeded enterprise data: 14 agents, 20 policies, {len(audit_logs)} audit logs")
 
 
 async def seed_sox_controls():

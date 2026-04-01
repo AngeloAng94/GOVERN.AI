@@ -83,6 +83,78 @@ async def update_sox_control(
     return await db.sox_controls.find_one({"id": control_id}, {"_id": 0})
 
 
+@router.get("/readiness-score")
+async def readiness_score(user: dict = Depends(require_role("viewer"))):
+    """Calculate audit readiness score weighted by risk level."""
+    controls = await db.sox_controls.find({}, {"_id": 0}).to_list(200)
+    if not controls:
+        return {"overall_score": 0, "label": "NOT READY", "label_color": "red",
+                "gap_to_ready": 80, "priority_controls": [], "domain_scores": {},
+                "estimated_completion_days": 0}
+
+    weight = {"critical": 10, "high": 7, "medium": 5, "low": 3}
+
+    max_points = sum(weight.get(c.get("risk_level", "medium"), 5) for c in controls)
+    earned = sum(
+        weight.get(c.get("risk_level", "medium"), 5)
+        for c in controls if c.get("status") == "completed"
+    )
+    score = round(earned / max_points * 100, 1) if max_points else 0
+
+    if score >= 80:
+        label, color = "READY FOR AUDIT", "green"
+    elif score >= 50:
+        label, color = "IN PROGRESS", "yellow"
+    else:
+        label, color = "NOT READY", "red"
+
+    gap = round(max(0, 80 - score), 1)
+
+    # Priority controls: non-completed sorted by impact
+    incomplete = [c for c in controls if c.get("status") != "completed"]
+    for c in incomplete:
+        c["_impact"] = weight.get(c.get("risk_level", "medium"), 5)
+    incomplete.sort(key=lambda c: c["_impact"], reverse=True)
+
+    priority = []
+    for c in incomplete[:5]:
+        impact_pct = round(c["_impact"] / max_points * 100, 1) if max_points else 0
+        priority.append({
+            "control_id": c.get("control_id"),
+            "title": c.get("title"),
+            "domain": c.get("domain"),
+            "risk_level": c.get("risk_level"),
+            "impact_points": impact_pct,
+            "current_status": c.get("status"),
+        })
+
+    # Domain scores
+    domain_map = {}
+    for c in controls:
+        d = c.get("domain", "Unknown")
+        domain_map.setdefault(d, []).append(c)
+
+    domain_scores = {}
+    for name, ctrls in domain_map.items():
+        d_max = sum(weight.get(c.get("risk_level", "medium"), 5) for c in ctrls)
+        d_earned = sum(weight.get(c.get("risk_level", "medium"), 5) for c in ctrls if c.get("status") == "completed")
+        domain_scores[name] = round(d_earned / d_max * 100, 1) if d_max else 0
+
+    # Estimated days: ~3 days per critical, 2 per high, 1 per medium/low
+    day_weight = {"critical": 3, "high": 2, "medium": 1, "low": 1}
+    est_days = sum(day_weight.get(c.get("risk_level", "medium"), 1) for c in incomplete[:5])
+
+    return {
+        "overall_score": score,
+        "label": label,
+        "label_color": color,
+        "gap_to_ready": gap,
+        "priority_controls": priority,
+        "domain_scores": domain_scores,
+        "estimated_completion_days": est_days,
+    }
+
+
 @router.get("/report")
 async def sox_report_json(user: dict = Depends(require_role("viewer"))):
     """Generate SOX Section 404 report as structured JSON."""

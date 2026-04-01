@@ -95,7 +95,7 @@ export default function LandingPage() {
             {[
               { value: "99.9%", label: "Uptime SLA" },
               { value: "< 50ms", label: "Policy Evaluation" },
-              { value: "7", label: lang === "it" ? "Normative Coperte" : "Regulations Covered" },
+              { value: "8", label: lang === "it" ? "Normative Coperte" : "Regulations Covered" },
               { value: "100%", label: lang === "it" ? "Tracciabilita Audit" : "Audit Traceability" },
             ].map((stat, i) => (
               <div key={i} className="glass-card rounded-sm p-5 text-center">
@@ -138,7 +138,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-0">
             {[
-              { value: "7", label: t("stats_standards") },
+              { value: "8", label: t("stats_standards") },
               { value: "150+", label: t("stats_audit") },
               { value: "4", label: t("stats_rbac") },
               { value: "22/22", label: t("stats_tests") },

@@ -124,7 +124,7 @@ export default function AssistantPage() {
           <span className="text-xs font-mono text-blue-400 bg-blue-500/10 border border-blue-500/30 px-2 py-0.5 rounded-sm">AI Regulatory Intelligence Assistant</span>
         </div>
         <p className="text-sm text-slate-500 mt-1">
-          {lang === "it" ? "Chiedi ad ARIA sulla compliance EU AI Act, GDPR, DORA, NIS2, SOX..." : "Ask ARIA about EU AI Act, GDPR, DORA, NIS2, SOX compliance..."}
+          {lang === "it" ? "Chiedi ad ARIA sulla compliance EU AI Act, GDPR, DORA, NIS2, SOX, D.Lgs. 262..." : "Ask ARIA about EU AI Act, GDPR, DORA, NIS2, SOX, D.Lgs. 262 compliance..."}
         </p>
       </div>
 

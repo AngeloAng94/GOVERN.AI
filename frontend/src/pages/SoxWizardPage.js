@@ -55,6 +55,7 @@ export default function SoxWizardPage() {
   const [editControl, setEditControl] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [saving, setSaving] = useState(false);
+  const [readiness, setReadiness] = useState(null);
 
   const canExport = user && EXPORT_ROLES.includes(user.role);
   const canEdit   = user && EDIT_ROLES.includes(user.role);
@@ -71,6 +72,9 @@ export default function SoxWizardPage() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
+    axios.get(`${API}/sox/readiness-score`)
+      .then(res => setReadiness(res.data))
+      .catch(console.error);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { fetchControls(); }, [fetchControls]);
@@ -183,6 +187,90 @@ export default function SoxWizardPage() {
           />
         </CardContent>
       </Card>
+
+      {/* Audit Readiness Score */}
+      {readiness && (
+        <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm" data-testid="sox-readiness-card">
+          <CardContent className="p-5">
+            <div className="flex flex-col lg:flex-row gap-6">
+              {/* Score circle + label */}
+              <div className="flex items-center gap-5 lg:min-w-[240px]">
+                <div className={`relative w-20 h-20 rounded-full flex items-center justify-center border-4 ${
+                  readiness.label_color === "green" ? "border-emerald-500/60 bg-emerald-500/10" :
+                  readiness.label_color === "yellow" ? "border-amber-500/60 bg-amber-500/10" :
+                  "border-red-500/60 bg-red-500/10"
+                }`} data-testid="sox-readiness-score-circle">
+                  <span className={`text-2xl font-bold font-['Space_Grotesk'] ${
+                    readiness.label_color === "green" ? "text-emerald-400" :
+                    readiness.label_color === "yellow" ? "text-amber-400" :
+                    "text-red-400"
+                  }`}>{Math.round(readiness.overall_score)}</span>
+                  <span className="absolute -bottom-1 text-[10px] text-slate-500">/100</span>
+                </div>
+                <div>
+                  <Badge variant="outline" className={`text-xs mb-1 ${
+                    readiness.label_color === "green" ? "bg-emerald-950/30 text-emerald-400 border-emerald-900/50" :
+                    readiness.label_color === "yellow" ? "bg-amber-950/30 text-amber-400 border-amber-900/50" :
+                    "bg-red-950/30 text-red-400 border-red-900/50"
+                  }`} data-testid="sox-readiness-label">
+                    {readiness.label === "READY FOR AUDIT" ? t("sox_ready") :
+                     readiness.label === "IN PROGRESS" ? t("sox_in_progress_status") : t("sox_not_ready")}
+                  </Badge>
+                  <p className="text-xs text-slate-400 mt-1">
+                    {lang === "it" ? "Gap:" : "Gap to ready:"}{" "}
+                    <span className="text-white font-medium">{readiness.gap_to_ready} pts</span>
+                    {" "}{lang === "it" ? "per 80%" : "to reach 80%"}
+                  </p>
+                  {readiness.estimated_completion_days > 0 && (
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      ~{readiness.estimated_completion_days} {lang === "it" ? "giorni stimati" : "est. days"}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Priority Controls */}
+              <div className="flex-1">
+                <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  {lang === "it" ? "Controlli Prioritari — Completa questi per primo" : "Priority Controls — Complete these first"}
+                </h4>
+                <div className="space-y-1.5" data-testid="sox-priority-controls">
+                  {readiness.priority_controls.map((pc, idx) => (
+                    <div key={pc.control_id} className="flex items-center gap-2 py-1 px-2 rounded bg-slate-800/30 hover:bg-slate-800/50 transition-colors">
+                      <code className="text-[11px] text-blue-400 font-mono w-10">{pc.control_id}</code>
+                      <span className="text-xs text-slate-300 flex-1 truncate">{pc.title}</span>
+                      <Badge variant="outline" className={`text-[10px] ${riskConfig[pc.risk_level] || ""}`}>
+                        {pc.risk_level}
+                      </Badge>
+                      <span className="text-[11px] text-emerald-400 font-medium w-14 text-right">+{pc.impact_points}pts</span>
+                      {canEdit && (
+                        <Button
+                          size="sm" variant="ghost"
+                          className="h-5 px-1.5 text-[10px] text-slate-500 hover:text-white"
+                          onClick={() => {
+                            const fullCtrl = data?.domains
+                              .flatMap(d => d.controls)
+                              .find(c => c.control_id === pc.control_id);
+                            if (fullCtrl) openEdit(fullCtrl);
+                          }}
+                          data-testid={`sox-priority-edit-${pc.control_id}`}
+                        >
+                          {lang === "it" ? "Modifica" : "Update"}
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[10px] text-slate-600 mt-2 italic">
+                  {lang === "it"
+                    ? "Score pesato per rischio — i controlli critical valgono 2x rispetto ai medium"
+                    : "Score weighted by risk level — critical controls count 2x more than medium"}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Domain Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3" data-testid="sox-domain-cards">

@@ -308,11 +308,11 @@ class TestCompliance:
         assert sox["progress"] == 56
 
     def test_seven_compliance_standards(self):
-        """Test that all 7 compliance standards are present"""
+        """Test that all 8 compliance standards are present"""
         resp = self.client.get(f"{BASE}/compliance", headers=self.headers)
         assert resp.status_code == 200
         standards = resp.json()
-        expected_codes = {"GDPR", "EU-AI-ACT", "ISO-27001", "ISO-42001", "DORA", "NIS2", "SOX"}
+        expected_codes = {"GDPR", "EU-AI-ACT", "ISO-27001", "ISO-42001", "DORA", "NIS2", "SOX", "DLgs262"}
         actual_codes = {s["code"] for s in standards}
         assert expected_codes == actual_codes, f"Expected {expected_codes}, got {actual_codes}"
 
@@ -454,6 +454,34 @@ class TestSoxWizard:
         resp = self.client.get(f"{BASE}/sox/report/pdf", headers=self.headers)
         assert resp.status_code == 200
         assert "application/pdf" in resp.headers.get("content-type", "")
+
+    def test_sox_readiness_score(self):
+        """Test SOX readiness score calculation"""
+        resp = self.client.get(f"{BASE}/sox/readiness-score", headers=self.headers)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "overall_score" in data
+        assert "label" in data
+        assert "label_color" in data
+        assert "gap_to_ready" in data
+        assert "priority_controls" in data
+        assert "domain_scores" in data
+        assert "estimated_completion_days" in data
+        assert len(data["priority_controls"]) <= 5
+        assert data["label"] in ["READY FOR AUDIT", "IN PROGRESS", "NOT READY"]
+        assert data["label_color"] in ["green", "yellow", "red"]
+        assert 0 <= data["overall_score"] <= 100
+
+    def test_eight_compliance_standards(self):
+        """Test that all 8 compliance standards including DLgs262 are present"""
+        resp = self.client.get(f"{BASE}/compliance", headers=self.headers)
+        assert resp.status_code == 200
+        standards = resp.json()
+        assert len(standards) == 8
+        dlgs = next((s for s in standards if s["code"] == "DLgs262"), None)
+        assert dlgs is not None, "DLgs262 standard not found"
+        assert dlgs["requirements_total"] == 28
+        assert dlgs["requirements_met"] == 13
 
 
 if __name__ == "__main__":

@@ -68,7 +68,8 @@ const fields = [
       { value: "ISO-42001" },
       { value: "DORA" },
       { value: "NIS2" },
-      { value: "SOX" }
+      { value: "SOX" },
+      { value: "DLgs262" }
     ]
   },
   { 
