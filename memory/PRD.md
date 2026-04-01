@@ -40,7 +40,7 @@
 - **Compliance Officer**: Tracciamento standard regolatori (AI Act, ISO, DORA, NIS2)
 - **IT Administrator**: Ciclo di vita agenti e enforcement policy
 
-## Architecture (Current — MVP v2.1)
+## Architecture (Current — MVP v2.3)
 - **Frontend**: React 19 + Tailwind 3.4 + Shadcn/UI + Recharts (port 3000)
 - **Backend**: FastAPI 0.110 + Pydantic V2 + modular routes + reportlab (port 8001)
 - **Database**: MongoDB + Motor async (15 indici, 6 collections)
@@ -53,7 +53,7 @@
 1. **Agent Registry**: Catalogazione agenti con profilo completo (risk level, status, azioni, domini ristretti)
 2. **Policy Engine**: 5 tipi (restriction, approval, rate_limit, logging, retention) × 6 normative × 4 enforcement
 3. **Audit Trail**: Tracciabilita immutabile con search sanitizzata e filtri
-4. **Compliance Dashboard**: 7 standard (AI Act, GDPR, ISO 27001, ISO 42001, DORA, NIS2, SOX)
+4. **Compliance Dashboard**: 8 standard (AI Act, GDPR, ISO 27001, ISO 42001, DORA, NIS2, SOX, D.Lgs. 262)
 5. **AI Compliance Assistant**: GPT-5.2 con memoria conversazionale
 6. **Interfaccia bilingue**: IT/EN nativa
 
@@ -191,6 +191,19 @@
 - [x] 28/28 test backend passano
 - [x] Testing agent: 100% pass rate frontend + backend
 
+### Step E3 — D.Lgs. 262 + Audit Readiness Score (01 Apr 2026) — v2.3
+- [x] D.Lgs. 262/2005 come 8o standard di compliance (code: DLgs262, progress: 48%, 13/28)
+- [x] 2 policy DLgs262: Attestazione Dirigente Preposto (critical), Procedure Amministrativo-Contabili (high)
+- [x] Agente "Dirigente Preposto Assistant" (high risk, CFO Office)
+- [x] 8 audit log DLgs262 nel cluster 7 (evidence_collection, attestation_draft, procedure_verification, 262_report)
+- [x] GET /api/sox/readiness-score: score pesato per rischio, top 5 priority controls, domain_scores
+- [x] Frontend: Audit Readiness Score card con score circolare, badge, gap, priority controls con +pts
+- [x] PoliciesPage: DLgs262 nel dropdown, LandingPage: "8 regulations", locales aggiornati
+- [x] ARIA prompt aggiornato con D.Lgs. 262/2005 e art. 154-bis
+- [x] 2 nuovi test pytest (readiness_score, eight_compliance_standards)
+- [x] 30/30 test backend passano
+- [x] Testing agent: 100% pass rate frontend + backend
+
 ## Roadmap Tecnica (dal Business Plan)
 
 ### Phase 1 — Foundation (Q2 2026, 3 mesi)
@@ -244,7 +257,7 @@
 | OneTrust | US | $920M+ | Privacy, consent | No |
 | Airia | US | N/D | Agent constraints | Si |
 | Enkrypt AI | US | N/D | AI security, policy LLM | Si |
-| **GOVERN.AI** | **Italia** | **Pre-seed** | **Agent governance + compliance EU** | **Si (7 standard)** |
+| **GOVERN.AI** | **Italia** | **Pre-seed** | **Agent governance + compliance EU** | **Si (8 standard)** |
 
 ## Dipendenze Strategiche gia presenti
 - PyJWT 2.11.0 + bcrypt 4.1.3 → pronti per autenticazione
