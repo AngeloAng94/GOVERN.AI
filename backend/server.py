@@ -26,6 +26,7 @@ from routes.compliance import router as compliance_router
 from routes.dashboard import router as dashboard_router
 from routes.chat import router as chat_router
 from routes.sox_wizard import router as sox_router
+from routes.policy_engine import router as policy_engine_router
 from rate_limiter import limiter
 
 
@@ -70,6 +71,7 @@ app.include_router(compliance_router)
 app.include_router(dashboard_router)
 app.include_router(chat_router)
 app.include_router(sox_router)
+app.include_router(policy_engine_router, prefix="/api")
 
 
 @app.get("/api/")

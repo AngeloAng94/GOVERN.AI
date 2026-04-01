@@ -540,6 +540,74 @@ async def seed_sample_data():
         for p in policies:
             policy_obj = Policy(**p.model_dump())
             await db.policies.insert_one(policy_obj.model_dump())
+
+        # Assign some policies to agents for Policy Engine demo
+        all_agents = await db.agents.find({}, {"_id": 0, "id": 1, "name": 1}).to_list(20)
+        agent_by_name = {a["name"]: a["id"] for a in all_agents}
+
+        # AML Transaction Monitor gets GDPR + ISO policies (creates overlap scenario)
+        aml_id = agent_by_name.get("AML Transaction Monitor")
+        if aml_id:
+            await db.policies.update_one(
+                {"name": "PII Data Minimization"},
+                {"$set": {"agent_id": aml_id}})
+            await db.policies.update_one(
+                {"name": "Consent Verification"},
+                {"$set": {"agent_id": aml_id}})
+
+        # Fraud Detection Engine gets conflicting policies (block vs auto on same conditions)
+        fraud_id = agent_by_name.get("Fraud Detection Engine")
+        if fraud_id:
+            # Blocking policy on fraud detection
+            block_policy = Policy(
+                name="Block Suspicious Transactions",
+                description="Immediately block any transaction flagged as suspicious pending manual review",
+                agent_id=fraud_id,
+                rule_type="approval",
+                conditions=["transaction_flagged", "suspicious_pattern"],
+                actions=["block_transaction", "notify_compliance"],
+                severity="critical",
+                regulation="DORA",
+                enforcement="block",
+                status="active",
+                violations_count=5,
+            )
+            await db.policies.insert_one(block_policy.model_dump())
+            # Conflicting auto-approve policy
+            conflict_policy = Policy(
+                name="Auto-Process Low-Risk Transactions",
+                description="Automatically approve transactions flagged as low risk to reduce processing time",
+                agent_id=fraud_id,
+                rule_type="logging",
+                conditions=["transaction_flagged", "suspicious_pattern"],
+                actions=["auto_approve", "log_decision"],
+                severity="medium",
+                regulation="DORA",
+                enforcement="auto",
+                status="active",
+                violations_count=0,
+            )
+            await db.policies.insert_one(conflict_policy.model_dump())
+
+        # Credit Risk Assessor gets EU AI Act policies (overlap - 2 approval types)
+        credit_id = agent_by_name.get("Credit Risk Assessor")
+        if credit_id:
+            await db.policies.update_one(
+                {"name": "High-Risk AI Oversight"},
+                {"$set": {"agent_id": credit_id}})
+            await db.policies.update_one(
+                {"name": "Human-in-the-Loop Critical Decisions"},
+                {"$set": {"agent_id": credit_id}})
+
+        # SOX agent gets SOX policies
+        sox_id = agent_by_name.get("SOX Internal Control Auditor")
+        if sox_id:
+            await db.policies.update_one(
+                {"name": "Financial Reporting Integrity"},
+                {"$set": {"agent_id": sox_id}})
+            await db.policies.update_one(
+                {"name": "Internal Control Testing"},
+                {"$set": {"agent_id": sox_id}})
         
         # 150 Audit Logs over last 30 days
         agent_names = [

@@ -203,3 +203,35 @@ class SoxControl(BaseModel):
 class ChatRequest(BaseModel):
     message: str
     session_id: str = "default"
+
+# ============ POLICY CONFLICT ENGINE ============
+
+class ConflictType(str, Enum):
+    action_conflict = "action_conflict"
+    overlap = "overlap"
+    gap = "gap"
+    redundancy = "redundancy"
+
+class ConflictSeverity(str, Enum):
+    critical = "critical"
+    high = "high"
+    medium = "medium"
+    low = "low"
+
+class PolicyConflict(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    conflict_type: ConflictType
+    severity: ConflictSeverity
+    title: str
+    description: str
+    policy_ids: List[str] = []
+    policy_names: List[str] = []
+    agent_ids: List[str] = []
+    agent_names: List[str] = []
+    regulation: List[str] = []
+    recommendation: str = ""
+    detected_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    resolved: bool = False
+    resolved_at: str = ""
+    resolved_by: str = ""

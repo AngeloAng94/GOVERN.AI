@@ -65,16 +65,19 @@ export default function OverviewPage() {
   const { t } = useLanguage();
   const [stats, setStats] = useState(null);
   const [compliance, setCompliance] = useState([]);
+  const [conflictCount, setConflictCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
       axios.get(`${API}/dashboard/stats`),
-      axios.get(`${API}/compliance`)
+      axios.get(`${API}/compliance`),
+      axios.get(`${API}/policy-engine/conflicts`).catch(() => ({ data: { summary: { by_severity: {} } } })),
     ])
-      .then(([statsRes, complianceRes]) => {
+      .then(([statsRes, complianceRes, conflictsRes]) => {
         setStats(statsRes.data);
         setCompliance(complianceRes.data);
+        setConflictCount(conflictsRes.data?.summary?.by_severity?.critical || 0);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -133,6 +136,7 @@ export default function OverviewPage() {
     { label: t("total_policies"), value: stats.policies.total, sub: `${stats.policies.active} ${t("active_policies")}`, icon: FileText, color: "text-amber-400", bg: "bg-amber-500/10" },
     { label: t("audit_events"), value: stats.audit.total, sub: `${stats.audit.blocked} ${t("blocked_events")}`, icon: Activity, color: "text-emerald-400", bg: "bg-emerald-500/10" },
     { label: t("compliance_score"), value: `${stats.compliance_avg}%`, sub: `${compliance.length} standards`, icon: ShieldCheck, color: "text-violet-400", bg: "bg-violet-500/10" },
+    { label: t("pe_conflicts_kpi"), value: conflictCount, sub: "critical", icon: AlertTriangle, color: conflictCount > 0 ? "text-red-400" : "text-emerald-400", bg: conflictCount > 0 ? "bg-red-500/10" : "bg-emerald-500/10" },
   ];
 
   return (
@@ -143,7 +147,7 @@ export default function OverviewPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" data-testid="kpi-grid">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4" data-testid="kpi-grid">
         {kpis.map((kpi, i) => (
           <Card key={i} className="bg-slate-900/40 backdrop-blur-md border-slate-800 rounded-sm hover:border-slate-700 transition-colors duration-300" data-testid={`kpi-${i}`}>
             <CardContent className="p-5">

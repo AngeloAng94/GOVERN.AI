@@ -484,5 +484,68 @@ class TestSoxWizard:
         assert dlgs["requirements_met"] == 13
 
 
+class TestPolicyEngine:
+    """Policy Conflict Engine endpoint tests"""
+
+    _token = None
+    _headers = None
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.client = httpx.Client(timeout=30)
+        if TestPolicyEngine._token is None:
+            login_resp = self.client.post(f"{BASE}/auth/login", json={"username": "admin", "password": "AdminGovern2026!"})
+            TestPolicyEngine._token = login_resp.json()["token"]
+            TestPolicyEngine._headers = {"Authorization": f"Bearer {TestPolicyEngine._token}"}
+        self.headers = TestPolicyEngine._headers
+        yield
+        self.client.close()
+
+    def test_get_conflicts(self):
+        """Test conflict detection endpoint returns proper structure"""
+        resp = self.client.get(f"{BASE}/policy-engine/conflicts", headers=self.headers)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "conflicts" in data
+        assert "summary" in data
+        summary = data["summary"]
+        assert "total" in summary
+        assert "by_type" in summary
+        assert "by_severity" in summary
+        assert "agents_impacted" in summary
+        assert "policies_impacted" in summary
+
+    def test_conflicts_find_gaps(self):
+        """Test that conflict detection finds at least 1 gap (high/critical agent without policy)"""
+        resp = self.client.get(f"{BASE}/policy-engine/conflicts", headers=self.headers)
+        assert resp.status_code == 200
+        data = resp.json()
+        gaps = [c for c in data["conflicts"] if c["conflict_type"] == "gap"]
+        assert len(gaps) >= 1, f"Expected at least 1 gap conflict, found {len(gaps)}"
+
+    def test_resolve_conflict(self):
+        """Test resolving a detected conflict"""
+        resp = self.client.get(f"{BASE}/policy-engine/conflicts", headers=self.headers)
+        conflicts = resp.json()["conflicts"]
+        if not conflicts:
+            return  # no conflicts to resolve
+        conflict_id = conflicts[0]["id"]
+        resolve_resp = self.client.post(
+            f"{BASE}/policy-engine/conflicts/{conflict_id}/resolve",
+            headers=self.headers,
+            json={"resolved_by": "admin", "resolution_note": "Test resolution"}
+        )
+        assert resolve_resp.status_code == 200
+        assert resolve_resp.json()["status"] == "resolved"
+
+    def test_scan_history(self):
+        """Test scan history endpoint"""
+        resp = self.client.get(f"{BASE}/policy-engine/scan-history", headers=self.headers)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert isinstance(data, list)
+        assert len(data) >= 1  # at least one scan from previous tests
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "--tb=short"])

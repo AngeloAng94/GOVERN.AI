@@ -14,6 +14,7 @@ import PoliciesPage from "@/pages/PoliciesPage";
 import AuditPage from "@/pages/AuditPage";
 import CompliancePage from "@/pages/CompliancePage";
 import SoxWizardPage from "@/pages/SoxWizardPage";
+import PolicyEnginePage from "@/pages/PolicyEnginePage";
 import AssistantPage from "@/pages/AssistantPage";
 
 const pageTitles = {
@@ -21,7 +22,8 @@ const pageTitles = {
   "/login": "Login — GOVERN.AI",
   "/dashboard": "Dashboard — GOVERN.AI",
   "/dashboard/agents": "AI Agents — GOVERN.AI",
-  "/dashboard/policies": "Policy Engine — GOVERN.AI",
+  "/dashboard/policies": "Policy Registry — GOVERN.AI",
+  "/dashboard/policy-engine": "Policy Engine — GOVERN.AI",
   "/dashboard/audit": "Audit Trail — GOVERN.AI",
   "/dashboard/compliance": "Compliance — GOVERN.AI",
   "/dashboard/sox-wizard": "SOX 404 Wizard — GOVERN.AI",
@@ -61,6 +63,7 @@ function App() {
               <Route index element={<OverviewPage />} />
               <Route path="agents" element={<AgentsPage />} />
               <Route path="policies" element={<PoliciesPage />} />
+              <Route path="policy-engine" element={<PolicyEnginePage />} />
               <Route path="audit" element={<AuditPage />} />
               <Route path="compliance" element={<CompliancePage />} />
               <Route path="sox-wizard" element={<SoxWizardPage />} />
