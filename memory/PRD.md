@@ -40,7 +40,7 @@
 - **Compliance Officer**: Tracciamento standard regolatori (AI Act, ISO, DORA, NIS2)
 - **IT Administrator**: Ciclo di vita agenti e enforcement policy
 
-## Architecture (Current — MVP v2.3)
+## Architecture (Current — MVP v2.4)
 - **Frontend**: React 19 + Tailwind 3.4 + Shadcn/UI + Recharts (port 3000)
 - **Backend**: FastAPI 0.110 + Pydantic V2 + modular routes + reportlab (port 8001)
 - **Database**: MongoDB + Motor async (15 indici, 6 collections)
@@ -202,6 +202,20 @@
 - [x] ARIA prompt aggiornato con D.Lgs. 262/2005 e art. 154-bis
 - [x] 2 nuovi test pytest (readiness_score, eight_compliance_standards)
 - [x] 30/30 test backend passano
+- [x] Testing agent: 100% pass rate frontend + backend
+
+### Step E4 — Policy Conflict Engine (01 Apr 2026) — v2.4
+- [x] Backend: ConflictType, ConflictSeverity, PolicyConflict modelli in models.py
+- [x] Backend: routes/policy_engine.py — 3 endpoint (GET conflicts, POST resolve, GET scan-history)
+- [x] Backend: Algoritmo di detection con 4 regole (action_conflict, gap, overlap, redundancy)
+- [x] Backend: seed.py — policy assegnate ad agenti, conflitto intenzionale block vs auto su Fraud Detection
+- [x] Backend: ARIA prompt aggiornato con Policy Conflict Engine
+- [x] Frontend: PolicyEnginePage.js — pagina completa con summary cards, filtri, conflict cards, resolve dialog
+- [x] Frontend: OverviewPage.js — 5o KPI card "Policy Conflicts" con conteggio critical
+- [x] Frontend: DashboardLayout.js — "Policy Registry" (rinominato) + "Policy Engine" (Zap icon)
+- [x] Frontend: locales en.json + it.json — 14 chiavi pe_* aggiunte
+- [x] Backend: 4 nuovi test pytest (get_conflicts, find_gaps, resolve, scan_history)
+- [x] 34/34 test backend passano
 - [x] Testing agent: 100% pass rate frontend + backend
 
 ## Roadmap Tecnica (dal Business Plan)
