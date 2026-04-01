@@ -14,7 +14,7 @@
   "feat_audit": "Audit Trail",
   "feat_audit_desc": "Complete traceability of every AI action. Explainability logs, decision chains, and immutable records.",
   "feat_compliance": "Compliance Monitor",
-  "feat_compliance_desc": "AI Act, GDPR, ISO 27001, ISO 42001, DORA, NIS2 — track compliance status in real-time.",
+  "feat_compliance_desc": "AI Act, GDPR, ISO 27001, ISO 42001, DORA, NIS2, SOX — track compliance status in real-time.",
   "feat_integration": "Enterprise Integration",
   "feat_integration_desc": "Seamless connection with IAM, SIEM, ServiceNow, CMDB, and your existing security stack.",
   "feat_risk": "Risk Classification",
@@ -136,5 +136,5 @@
   "empty_audit_title": "No audit events",
   "empty_audit_subtitle": "Audit events will appear here when agents perform actions",
   "empty_assistant_title": "Ask ARIA",
-  "empty_assistant_subtitle": "I specialize in EU AI Act, GDPR, DORA and NIS2. How can I help you?"
+  "empty_assistant_subtitle": "I specialize in EU AI Act, GDPR, DORA, NIS2 and SOX. How can I help you?"
 }

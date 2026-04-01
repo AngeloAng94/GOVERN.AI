@@ -293,6 +293,29 @@ class TestCompliance:
         assert resp.status_code == 200
         assert isinstance(resp.json(), list)
 
+    def test_sox_standard_present(self):
+        """Test that SOX standard is present in compliance standards"""
+        resp = self.client.get(f"{BASE}/compliance", headers=self.headers)
+        assert resp.status_code == 200
+        standards = resp.json()
+        codes = [s["code"] for s in standards]
+        assert "SOX" in codes, f"SOX not found in compliance standards: {codes}"
+        sox = next(s for s in standards if s["code"] == "SOX")
+        assert sox["name"] == "SOX"
+        assert sox["category"] == "regulation"
+        assert sox["requirements_total"] == 44
+        assert sox["requirements_met"] == 25
+        assert sox["progress"] == 56
+
+    def test_seven_compliance_standards(self):
+        """Test that all 7 compliance standards are present"""
+        resp = self.client.get(f"{BASE}/compliance", headers=self.headers)
+        assert resp.status_code == 200
+        standards = resp.json()
+        expected_codes = {"GDPR", "EU-AI-ACT", "ISO-27001", "ISO-42001", "DORA", "NIS2", "SOX"}
+        actual_codes = {s["code"] for s in standards}
+        assert expected_codes == actual_codes, f"Expected {expected_codes}, got {actual_codes}"
+
 
 class TestDashboard:
     """Dashboard stats tests"""

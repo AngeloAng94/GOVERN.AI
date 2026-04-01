@@ -132,7 +132,7 @@ export default function OverviewPage() {
     { label: t("total_agents"), value: stats.agents.total, sub: `${stats.agents.active} ${t("active_agents")}`, icon: Bot, color: "text-blue-400", bg: "bg-blue-500/10" },
     { label: t("total_policies"), value: stats.policies.total, sub: `${stats.policies.active} ${t("active_policies")}`, icon: FileText, color: "text-amber-400", bg: "bg-amber-500/10" },
     { label: t("audit_events"), value: stats.audit.total, sub: `${stats.audit.blocked} ${t("blocked_events")}`, icon: Activity, color: "text-emerald-400", bg: "bg-emerald-500/10" },
-    { label: t("compliance_score"), value: `${stats.compliance_avg}%`, sub: "6 standards", icon: ShieldCheck, color: "text-violet-400", bg: "bg-violet-500/10" },
+    { label: t("compliance_score"), value: `${stats.compliance_avg}%`, sub: `${compliance.length} standards`, icon: ShieldCheck, color: "text-violet-400", bg: "bg-violet-500/10" },
   ];
 
   return (

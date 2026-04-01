@@ -367,8 +367,8 @@ class AuditPDFBuilder:
         )
         legal_text = (
             "This report is generated automatically by GOVERN.AI. "
-            "For compliance purposes, retain for 5 years per EU AI Act Art. 18 "
-            "and GDPR Art. 30 requirements."
+            "For compliance purposes, retain for 7 years per SOX Section 802, "
+            "EU AI Act Art. 18 and GDPR Art. 30 requirements."
         )
         elements.append(Paragraph(legal_text, legal_style))
         

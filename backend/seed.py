@@ -108,10 +108,22 @@ async def seed_compliance_standards():
                 last_assessment=(now - timedelta(days=20)).isoformat(),
                 next_review=(now + timedelta(days=40)).isoformat()
             ),
+            ComplianceStandard(
+                name="SOX",
+                code="SOX",
+                description="Sarbanes-Oxley Act - Internal controls over financial reporting and corporate accountability",
+                status="in_progress",
+                progress=56,
+                requirements_total=44,
+                requirements_met=25,
+                category="regulation",
+                last_assessment=(now - timedelta(days=12)).isoformat(),
+                next_review=(now + timedelta(days=58)).isoformat()
+            ),
         ]
         for s in standards:
             await db.compliance_standards.insert_one(s.model_dump())
-        logger.info("Seeded compliance standards (6 standards)")
+        logger.info("Seeded compliance standards (7 standards)")
 
 
 async def seed_sample_data():
@@ -250,6 +262,17 @@ async def seed_sample_data():
                 restricted_domains=["external_communication", "raw_data_export"],
                 data_classification=DataClassification.confidential,
                 owner="C-Suite Office"
+            ),
+            AgentCreate(
+                name="SOX Internal Control Auditor",
+                description="Automated verification of internal controls over financial reporting per SOX Section 404",
+                model_type="GPT-5.2",
+                risk_level=RiskLevel.high,
+                status=AgentStatus.active,
+                allowed_actions=["verify_controls", "test_effectiveness", "generate_sox_report", "flag_deficiency"],
+                restricted_domains=["financial_data_modification", "external_disclosure"],
+                data_classification=DataClassification.restricted,
+                owner="Internal Audit"
             ),
         ]
         
@@ -431,6 +454,40 @@ async def seed_sample_data():
                 enforcement=PolicyEnforcement.auto,
                 violations_count=2
             ),
+            # SOX Policies (3)
+            PolicyCreate(
+                name="Financial Reporting Integrity",
+                description="Ensure AI-generated financial data is accurate, complete and auditable per SOX Section 302/906",
+                rule_type=RuleType.approval,
+                conditions=["financial_report_generation", "earnings_data_access", "material_disclosure"],
+                actions=["require_cfo_sign_off", "log_data_lineage", "block_unvalidated_output"],
+                severity=PolicySeverity.critical,
+                regulation="SOX",
+                enforcement=PolicyEnforcement.block,
+                violations_count=3
+            ),
+            PolicyCreate(
+                name="Internal Control Testing",
+                description="Mandatory periodic testing of internal controls over financial reporting per SOX Section 404",
+                rule_type=RuleType.logging,
+                conditions=["control_test_due", "material_weakness_detected", "quarterly_review"],
+                actions=["schedule_control_test", "document_results", "escalate_deficiency"],
+                severity=PolicySeverity.high,
+                regulation="SOX",
+                enforcement=PolicyEnforcement.auto,
+                violations_count=1
+            ),
+            PolicyCreate(
+                name="CEO/CFO Certification Workflow",
+                description="Enforce executive certification of financial statements and internal control effectiveness",
+                rule_type=RuleType.approval,
+                conditions=["quarterly_filing", "annual_report", "material_change"],
+                actions=["require_executive_certification", "verify_control_assessment", "log_attestation"],
+                severity=PolicySeverity.critical,
+                regulation="SOX",
+                enforcement=PolicyEnforcement.block,
+                violations_count=0
+            ),
         ]
         
         for p in policies:
@@ -442,7 +499,8 @@ async def seed_sample_data():
             "Customer Due Diligence Bot", "AML Transaction Monitor", "Credit Risk Assessor",
             "Customer Service Assistant", "Regulatory Reporting Agent", "HR Policy Assistant",
             "Fraud Detection Engine", "Investment Advisory Bot", "Document Classifier",
-            "DORA Incident Responder", "KYC Verification Agent", "Executive Report Generator"
+            "DORA Incident Responder", "KYC Verification Agent", "Executive Report Generator",
+            "SOX Internal Control Auditor"
         ]
         
         # Define agent-specific behavior patterns
@@ -459,6 +517,7 @@ async def seed_sample_data():
             "Regulatory Reporting Agent": {"allowed": 0.85, "blocked": 0.10, "escalated": 0.05},
             "DORA Incident Responder": {"allowed": 0.75, "blocked": 0.15, "escalated": 0.10},
             "Executive Report Generator": {"allowed": 0.88, "blocked": 0.08, "escalated": 0.04},
+            "SOX Internal Control Auditor": {"allowed": 0.62, "blocked": 0.23, "escalated": 0.15},
         }
         
         actions_by_agent = {
@@ -474,6 +533,7 @@ async def seed_sample_data():
             "DORA Incident Responder": ["incident_detection", "stakeholder_notification", "report_generation", "severity_assessment"],
             "Investment Advisory Bot": ["portfolio_analysis", "recommendation_generation", "market_research", "risk_assessment"],
             "Executive Report Generator": ["kpi_aggregation", "dashboard_update", "report_formatting", "data_consolidation"],
+            "SOX Internal Control Auditor": ["control_verification", "effectiveness_testing", "sox_report_generation", "deficiency_flagging"],
         }
         
         resources_by_agent = {
@@ -489,6 +549,7 @@ async def seed_sample_data():
             "DORA Incident Responder": ["/incidents/log", "/ict/monitoring", "/notifications/queue", "/reports/dora"],
             "Investment Advisory Bot": ["/portfolios/clients", "/market/data", "/recommendations/queue", "/research/reports"],
             "Executive Report Generator": ["/kpis/realtime", "/dashboards/executive", "/reports/board", "/data/consolidated"],
+            "SOX Internal Control Auditor": ["/sox/controls", "/sox/testing", "/financial/reports", "/sox/deficiencies"],
         }
         
         users = [
@@ -561,6 +622,18 @@ async def seed_sample_data():
                     ("severity_assessment", "/incidents/log", AuditOutcome.escalated, RiskLevel.high, "Severity upgraded - affects critical services"),
                     ("stakeholder_notification", "/notifications/queue", AuditOutcome.allowed, RiskLevel.high, "CISO and CTO notified"),
                     ("report_generation", "/reports/dora", AuditOutcome.allowed, RiskLevel.high, "DORA incident report generated"),
+                ]
+            },
+            # Cluster 6: SOX internal control deficiency detected (Day -6)
+            {
+                "agent": "SOX Internal Control Auditor",
+                "day_offset": -6,
+                "events": [
+                    ("control_verification", "/sox/controls", AuditOutcome.allowed, RiskLevel.medium, "Quarterly SOX Section 404 control test initiated"),
+                    ("effectiveness_testing", "/sox/testing", AuditOutcome.allowed, RiskLevel.medium, "Revenue recognition controls tested - effective"),
+                    ("effectiveness_testing", "/financial/reports", AuditOutcome.escalated, RiskLevel.high, "Material weakness detected in expense approval workflow"),
+                    ("deficiency_flagging", "/sox/deficiencies", AuditOutcome.blocked, RiskLevel.critical, "Expense report >$10K approved without dual authorization - SOX violation"),
+                    ("sox_report_generation", "/sox/controls", AuditOutcome.allowed, RiskLevel.high, "SOX deficiency report generated and escalated to Audit Committee"),
                 ]
             },
         ]
@@ -641,7 +714,7 @@ async def seed_sample_data():
         for log in audit_logs:
             await db.audit_logs.insert_one(log.model_dump())
         
-        logger.info(f"Seeded enterprise data: 12 agents, 15 policies, {len(audit_logs)} audit logs")
+        logger.info(f"Seeded enterprise data: 13 agents, 18 policies, {len(audit_logs)} audit logs")
 
 
 async def seed_database():
