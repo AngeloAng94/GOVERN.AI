@@ -7,6 +7,7 @@ from passlib.context import CryptContext
 from database import db
 from models import (
     Agent, AgentCreate, Policy, PolicyCreate, AuditLog, ComplianceStandard,
+    SoxControl, ControlStatus,
     RiskLevel, AgentStatus, DataClassification, RuleType,
     PolicySeverity, PolicyEnforcement, AuditOutcome,
 )
@@ -717,7 +718,136 @@ async def seed_sample_data():
         logger.info(f"Seeded enterprise data: 13 agents, 18 policies, {len(audit_logs)} audit logs")
 
 
+async def seed_sox_controls():
+    count = await db.sox_controls.count_documents({})
+    if count == 0:
+        now = datetime.now(timezone.utc)
+        assignees = ["IT Security Team", "Compliance Office", "DevOps", "Finance IT", "Internal Audit"]
+
+        controls = [
+            # Access Control (AC) — 4
+            SoxControl(domain="Access Control", control_id="AC-01", title="Privileged Access Management",
+                       description="Verify that privileged access to financial systems is limited and monitored",
+                       section="404", status=ControlStatus.completed, risk_level="high",
+                       assignee="IT Security Team", evidence="PAM tool audit report Q1 2026 — 100% coverage",
+                       due_date=(now + timedelta(days=30)).isoformat(),
+                       completed_date=(now - timedelta(days=10)).isoformat()),
+            SoxControl(domain="Access Control", control_id="AC-02", title="User Access Reviews",
+                       description="Quarterly review of user access to SOX in-scope systems",
+                       section="404", status=ControlStatus.in_progress, risk_level="high",
+                       assignee="Compliance Office",
+                       due_date=(now + timedelta(days=15)).isoformat()),
+            SoxControl(domain="Access Control", control_id="AC-03", title="Separation of Duties",
+                       description="Verify segregation of duties in financial reporting processes",
+                       section="404", status=ControlStatus.in_progress, risk_level="critical",
+                       assignee="Internal Audit",
+                       due_date=(now + timedelta(days=45)).isoformat()),
+            SoxControl(domain="Access Control", control_id="AC-04", title="Authentication Controls",
+                       description="MFA mandatory for all users with access to financial data",
+                       section="404", status=ControlStatus.completed, risk_level="high",
+                       assignee="IT Security Team", evidence="MFA enrollment at 100% — Okta dashboard export",
+                       due_date=(now + timedelta(days=60)).isoformat(),
+                       completed_date=(now - timedelta(days=5)).isoformat()),
+
+            # Change Management (CM) — 4
+            SoxControl(domain="Change Management", control_id="CM-01", title="Change Authorization",
+                       description="Every change to SOX in-scope systems requires formal approval",
+                       section="404", status=ControlStatus.in_progress, risk_level="high",
+                       assignee="DevOps",
+                       due_date=(now + timedelta(days=20)).isoformat()),
+            SoxControl(domain="Change Management", control_id="CM-02", title="Emergency Change Procedures",
+                       description="Documented procedures for emergency changes with post-approval",
+                       section="404", status=ControlStatus.completed, risk_level="medium",
+                       assignee="DevOps", evidence="Emergency change policy v3.1 approved by CISO",
+                       due_date=(now + timedelta(days=90)).isoformat(),
+                       completed_date=(now - timedelta(days=20)).isoformat()),
+            SoxControl(domain="Change Management", control_id="CM-03", title="Release Management",
+                       description="Formal testing before deployment to production",
+                       section="404", status=ControlStatus.in_progress, risk_level="medium",
+                       assignee="DevOps",
+                       due_date=(now + timedelta(days=35)).isoformat()),
+            SoxControl(domain="Change Management", control_id="CM-04", title="Configuration Baseline",
+                       description="Documented configuration baseline of critical systems",
+                       section="404", status=ControlStatus.not_started, risk_level="medium",
+                       assignee="DevOps",
+                       due_date=(now + timedelta(days=60)).isoformat()),
+
+            # IT Operations (OP) — 4
+            SoxControl(domain="IT Operations", control_id="OP-01", title="Backup and Recovery",
+                       description="Daily backup of financial data with quarterly recovery testing",
+                       section="404", status=ControlStatus.completed, risk_level="high",
+                       assignee="DevOps", evidence="Recovery test completed 15/03/2026 — RPO met",
+                       due_date=(now + timedelta(days=75)).isoformat(),
+                       completed_date=(now - timedelta(days=15)).isoformat()),
+            SoxControl(domain="IT Operations", control_id="OP-02", title="Job Scheduling Monitoring",
+                       description="Automated monitoring of critical batch jobs",
+                       section="404", status=ControlStatus.in_progress, risk_level="medium",
+                       assignee="Finance IT",
+                       due_date=(now + timedelta(days=25)).isoformat()),
+            SoxControl(domain="IT Operations", control_id="OP-03", title="Incident Management",
+                       description="Documented incident management process with escalation within 4h",
+                       section="404", status=ControlStatus.failed, risk_level="high",
+                       assignee="IT Security Team", evidence="Gap: escalation SLA breached 3 times in Q1",
+                       due_date=(now + timedelta(days=10)).isoformat()),
+            SoxControl(domain="IT Operations", control_id="OP-04", title="Capacity Planning",
+                       description="Semi-annual capacity review of in-scope systems",
+                       section="404", status=ControlStatus.not_started, risk_level="low",
+                       assignee="DevOps",
+                       due_date=(now + timedelta(days=80)).isoformat()),
+
+            # Data Integrity (DI) — 4
+            SoxControl(domain="Data Integrity", control_id="DI-01", title="Data Validation Controls",
+                       description="Automated validation of financial data integrity before reporting",
+                       section="404", status=ControlStatus.in_progress, risk_level="critical",
+                       assignee="Finance IT",
+                       due_date=(now + timedelta(days=20)).isoformat()),
+            SoxControl(domain="Data Integrity", control_id="DI-02", title="Reconciliation Procedures",
+                       description="Monthly reconciliation between source systems and reporting",
+                       section="404", status=ControlStatus.in_progress, risk_level="high",
+                       assignee="Finance IT",
+                       due_date=(now + timedelta(days=30)).isoformat()),
+            SoxControl(domain="Data Integrity", control_id="DI-03", title="Data Retention Policy",
+                       description="Financial data retained for minimum 7 years per SOX Section 802",
+                       section="404", status=ControlStatus.completed, risk_level="medium",
+                       assignee="Compliance Office", evidence="Retention policy enforced via automated archival",
+                       due_date=(now + timedelta(days=90)).isoformat(),
+                       completed_date=(now - timedelta(days=30)).isoformat()),
+            SoxControl(domain="Data Integrity", control_id="DI-04", title="Audit Trail Completeness",
+                       description="Complete immutable audit trail for all financial transactions",
+                       section="404", status=ControlStatus.in_progress, risk_level="high",
+                       assignee="Internal Audit",
+                       due_date=(now + timedelta(days=40)).isoformat()),
+
+            # Security (SE) — 4
+            SoxControl(domain="Security", control_id="SE-01", title="Vulnerability Management",
+                       description="Monthly vulnerability scans on SOX in-scope systems",
+                       section="404", status=ControlStatus.in_progress, risk_level="high",
+                       assignee="IT Security Team",
+                       due_date=(now + timedelta(days=15)).isoformat()),
+            SoxControl(domain="Security", control_id="SE-02", title="Penetration Testing",
+                       description="Annual penetration test with documented remediation plan",
+                       section="404", status=ControlStatus.failed, risk_level="critical",
+                       assignee="IT Security Team", evidence="Pen test revealed 2 critical findings — remediation pending",
+                       due_date=(now + timedelta(days=7)).isoformat()),
+            SoxControl(domain="Security", control_id="SE-03", title="Security Monitoring",
+                       description="Active SIEM with alerts on anomalous access to financial systems",
+                       section="404", status=ControlStatus.not_started, risk_level="high",
+                       assignee="IT Security Team",
+                       due_date=(now + timedelta(days=50)).isoformat()),
+            SoxControl(domain="Security", control_id="SE-04", title="Encryption Standards",
+                       description="AES-256 encryption for financial data at rest and in transit",
+                       section="404", status=ControlStatus.not_started, risk_level="medium",
+                       assignee="DevOps",
+                       due_date=(now + timedelta(days=55)).isoformat()),
+        ]
+
+        for c in controls:
+            await db.sox_controls.insert_one(c.model_dump())
+        logger.info("Seeded SOX 404 controls (20 controls, 5 domains)")
+
+
 async def seed_database():
     await seed_admin()
     await seed_compliance_standards()
     await seed_sample_data()
+    await seed_sox_controls()

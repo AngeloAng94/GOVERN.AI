@@ -13,6 +13,7 @@ import AgentsPage from "@/pages/AgentsPage";
 import PoliciesPage from "@/pages/PoliciesPage";
 import AuditPage from "@/pages/AuditPage";
 import CompliancePage from "@/pages/CompliancePage";
+import SoxWizardPage from "@/pages/SoxWizardPage";
 import AssistantPage from "@/pages/AssistantPage";
 
 const pageTitles = {
@@ -23,6 +24,7 @@ const pageTitles = {
   "/dashboard/policies": "Policy Engine — GOVERN.AI",
   "/dashboard/audit": "Audit Trail — GOVERN.AI",
   "/dashboard/compliance": "Compliance — GOVERN.AI",
+  "/dashboard/sox-wizard": "SOX 404 Wizard — GOVERN.AI",
   "/dashboard/assistant": "ARIA Assistant — GOVERN.AI",
 };
 
@@ -61,6 +63,7 @@ function App() {
               <Route path="policies" element={<PoliciesPage />} />
               <Route path="audit" element={<AuditPage />} />
               <Route path="compliance" element={<CompliancePage />} />
+              <Route path="sox-wizard" element={<SoxWizardPage />} />
               <Route path="assistant" element={<AssistantPage />} />
             </Route>
           </Routes>

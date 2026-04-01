@@ -395,5 +395,66 @@ class TestRoleBasedAccess:
         assert resp.status_code == 401
 
 
+class TestSoxWizard:
+    """SOX Section 404 Wizard endpoint tests"""
+
+    _token = None
+    _headers = None
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.client = httpx.Client(timeout=30)
+        if TestSoxWizard._token is None:
+            login_resp = self.client.post(f"{BASE}/auth/login", json={"username": "admin", "password": "AdminGovern2026!"})
+            TestSoxWizard._token = login_resp.json()["token"]
+            TestSoxWizard._headers = {"Authorization": f"Bearer {TestSoxWizard._token}"}
+        self.headers = TestSoxWizard._headers
+        yield
+        self.client.close()
+
+    def test_get_sox_controls(self):
+        """Test listing SOX controls grouped by domain"""
+        resp = self.client.get(f"{BASE}/sox/controls", headers=self.headers)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["total"] == 20
+        assert len(data["domains"]) == 5
+        domain_names = {d["name"] for d in data["domains"]}
+        assert domain_names == {"Access Control", "Change Management", "IT Operations", "Data Integrity", "Security"}
+
+    def test_patch_sox_control(self):
+        """Test updating a SOX control status"""
+        resp = self.client.get(f"{BASE}/sox/controls", headers=self.headers)
+        controls = resp.json()
+        first_control = controls["domains"][0]["controls"][0]
+        control_id = first_control["id"]
+
+        patch_resp = self.client.patch(
+            f"{BASE}/sox/controls/{control_id}",
+            headers=self.headers,
+            json={"status": "in_progress", "evidence": "Test evidence note"}
+        )
+        assert patch_resp.status_code == 200
+        updated = patch_resp.json()
+        assert updated["status"] == "in_progress"
+        assert updated["evidence"] == "Test evidence note"
+
+    def test_sox_report_json(self):
+        """Test generating SOX report as JSON"""
+        resp = self.client.get(f"{BASE}/sox/report", headers=self.headers)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "overall_status" in data
+        assert "controls_summary" in data
+        assert data["controls_summary"]["total"] == 20
+        assert "fiscal_year" in data
+
+    def test_sox_report_pdf(self):
+        """Test generating SOX report as PDF"""
+        resp = self.client.get(f"{BASE}/sox/report/pdf", headers=self.headers)
+        assert resp.status_code == 200
+        assert "application/pdf" in resp.headers.get("content-type", "")
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "--tb=short"])

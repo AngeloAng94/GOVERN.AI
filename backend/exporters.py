@@ -584,3 +584,191 @@ def generate_compliance_pdf(standards: List[Dict]) -> bytes:
     """Generate PDF export of compliance status"""
     builder = CompliancePDFBuilder(standards)
     return builder.build()
+
+
+
+# ============================================================================
+# PDF EXPORT - SOX SECTION 404 REPORT
+# ============================================================================
+
+STATUS_COLORS = {
+    "completed": COLORS["green"],
+    "in_progress": COLORS["yellow"],
+    "not_started": COLORS["text_dim"],
+    "failed": COLORS["red"],
+    "not_applicable": COLORS["text_muted"],
+}
+
+
+class SoxReportPDFBuilder:
+    """Builder for SOX Section 404 assessment PDF reports"""
+
+    def __init__(self, controls: List[Dict]):
+        self.controls = controls
+        self.buffer = io.BytesIO()
+        self.page_width, self.page_height = A4
+        self.margin = 20
+
+    def build(self) -> bytes:
+        doc = SimpleDocTemplate(
+            self.buffer,
+            pagesize=A4,
+            leftMargin=self.margin,
+            rightMargin=self.margin,
+            topMargin=100,
+            bottomMargin=50,
+        )
+
+        elements = []
+        elements.extend(self._build_summary())
+        elements.append(Spacer(1, 20))
+
+        # Group by domain
+        domain_map = {}
+        for c in self.controls:
+            d = c.get("domain", "Unknown")
+            domain_map.setdefault(d, []).append(c)
+
+        for domain_name, ctrls in domain_map.items():
+            elements.append(self._build_domain_section(domain_name, ctrls))
+            elements.append(Spacer(1, 12))
+
+        elements.append(Spacer(1, 20))
+        elements.append(self._build_legal_note())
+
+        doc.build(elements, onFirstPage=self._draw_header_footer, onLaterPages=self._draw_header_footer)
+        self.buffer.seek(0)
+        return self.buffer.getvalue()
+
+    def _draw_header_footer(self, canvas_obj: canvas.Canvas, doc):
+        canvas_obj.saveState()
+        canvas_obj.setFillColor(COLORS["bg_dark"])
+        canvas_obj.rect(0, self.page_height - 80, self.page_width, 80, fill=1, stroke=0)
+
+        canvas_obj.setFillColor(COLORS["text_white"])
+        canvas_obj.setFont("Helvetica-Bold", 24)
+        canvas_obj.drawString(self.margin, self.page_height - 40, "GOVERN.AI")
+
+        canvas_obj.setFillColor(COLORS["text_muted"])
+        canvas_obj.setFont("Helvetica", 10)
+        canvas_obj.drawString(self.margin, self.page_height - 55, "SOX Section 404 — Internal Controls Assessment")
+
+        canvas_obj.setFillColor(COLORS["text_white"])
+        canvas_obj.setFont("Helvetica-Bold", 14)
+        canvas_obj.drawRightString(self.page_width - self.margin, self.page_height - 35, "SOX 404 REPORT")
+
+        canvas_obj.setFillColor(COLORS["text_muted"])
+        canvas_obj.setFont("Helvetica", 10)
+        canvas_obj.drawRightString(self.page_width - self.margin, self.page_height - 50, f"Generated: {datetime.now().strftime('%d/%m/%Y %H:%M')}")
+
+        canvas_obj.setFillColor(COLORS["red"])
+        canvas_obj.drawRightString(self.page_width - self.margin, self.page_height - 65, "Confidential")
+
+        # Footer
+        canvas_obj.setStrokeColor(COLORS["border"])
+        canvas_obj.line(self.margin, 35, self.page_width - self.margin, 35)
+        canvas_obj.setFillColor(COLORS["text_dim"])
+        canvas_obj.setFont("Helvetica", 7)
+        canvas_obj.drawString(self.margin, 22, "GOVERN.AI — SOX Section 404 — Confidential")
+        canvas_obj.drawCentredString(self.page_width / 2, 22, f"Page {doc.page}")
+        canvas_obj.drawRightString(self.page_width - self.margin, 22, f"FY {datetime.now().year}")
+        canvas_obj.restoreState()
+
+    def _build_summary(self) -> List:
+        elements = []
+        total = len(self.controls)
+        completed = sum(1 for c in self.controls if c.get("status") == "completed")
+        failed = sum(1 for c in self.controls if c.get("status") == "failed")
+        pct = round(completed / total * 100) if total else 0
+
+        if pct >= 80:
+            status = "READY FOR AUDIT"
+        elif pct >= 50:
+            status = "IN PROGRESS"
+        else:
+            status = "NOT READY"
+
+        title_style = ParagraphStyle("SoxTitle", fontName="Helvetica-Bold", fontSize=14, textColor=COLORS["text_white"])
+        elements.append(Paragraph("Assessment Summary", title_style))
+        elements.append(Spacer(1, 10))
+
+        score_color = get_progress_color(pct)
+        stats_data = [
+            ["Overall Completion", f"{pct}%"],
+            ["Status", status],
+            ["Fiscal Year", str(datetime.now().year)],
+            ["Total Controls", str(total)],
+            ["Completed", str(completed)],
+            ["Failed / Deficient", str(failed)],
+        ]
+        stats_table = Table(stats_data, colWidths=[180, 350])
+        stats_table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, -1), COLORS["bg_card"]),
+            ("TEXTCOLOR", (0, 0), (0, -1), COLORS["text_muted"]),
+            ("TEXTCOLOR", (1, 0), (1, -1), COLORS["text_white"]),
+            ("FONTNAME", (0, 0), (0, -1), "Helvetica"),
+            ("FONTNAME", (1, 0), (1, -1), "Helvetica-Bold"),
+            ("FONTSIZE", (0, 0), (-1, -1), 10),
+            ("PADDING", (0, 0), (-1, -1), 8),
+            ("BOX", (0, 0), (-1, -1), 1, COLORS["border"]),
+            ("LINEBELOW", (0, 0), (-1, -2), 0.5, COLORS["border"]),
+        ]))
+        elements.append(stats_table)
+        return elements
+
+    def _build_domain_section(self, domain_name: str, ctrls: List[Dict]) -> Table:
+        done = sum(1 for c in ctrls if c.get("status") == "completed")
+        pct = round(done / len(ctrls) * 100) if ctrls else 0
+
+        headers = ["ID", "Title", "Status", "Risk", "Assignee"]
+        data = [headers]
+        for c in ctrls:
+            data.append([
+                c.get("control_id", ""),
+                c.get("title", "")[:35],
+                c.get("status", "").upper().replace("_", " "),
+                c.get("risk_level", ""),
+                c.get("assignee", "")[:20],
+            ])
+
+        col_widths = [55, 200, 95, 60, 140]
+        table = Table(data, colWidths=col_widths, repeatRows=1)
+
+        style = [
+            ("BACKGROUND", (0, 0), (-1, 0), COLORS["header_bg"]),
+            ("TEXTCOLOR", (0, 0), (-1, 0), COLORS["text_white"]),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("FONTSIZE", (0, 0), (-1, 0), 8),
+            ("FONTNAME", (0, 1), (-1, -1), "Helvetica"),
+            ("FONTSIZE", (0, 1), (-1, -1), 8),
+            ("TEXTCOLOR", (0, 1), (-1, -1), COLORS["text_light"]),
+            ("GRID", (0, 0), (-1, -1), 0.5, COLORS["border"]),
+            ("TOPPADDING", (0, 0), (-1, -1), 4),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+            ("LEFTPADDING", (0, 0), (-1, -1), 6),
+        ]
+
+        for i, row in enumerate(data[1:], start=1):
+            bg = COLORS["bg_row_even"] if i % 2 == 0 else COLORS["bg_row_odd"]
+            style.append(("BACKGROUND", (0, i), (-1, i), bg))
+            status_lower = row[2].lower().replace(" ", "_")
+            style.append(("TEXTCOLOR", (2, i), (2, i), STATUS_COLORS.get(status_lower, COLORS["text_muted"])))
+
+        table.setStyle(TableStyle(style))
+        return table
+
+    def _build_legal_note(self) -> Paragraph:
+        style = ParagraphStyle("Legal", fontName="Helvetica", fontSize=8, textColor=COLORS["text_dim"], leading=10)
+        text = (
+            "This SOX Section 404 assessment report is generated automatically by GOVERN.AI. "
+            "It reflects the control assessment status as of the generation timestamp. "
+            "Retain for a minimum of 7 years per SOX Section 802. "
+            "For regulatory submissions, this report must be reviewed and signed by the CEO/CFO."
+        )
+        return Paragraph(text, style)
+
+
+def generate_sox_report_pdf(controls: List[Dict]) -> bytes:
+    """Generate PDF export of SOX Section 404 assessment"""
+    builder = SoxReportPDFBuilder(controls)
+    return builder.build()

@@ -172,6 +172,32 @@ class ComplianceStandard(BaseModel):
     next_review: str = ""
     category: str = "regulation"
 
+# ============ SOX WIZARD MODEL ============
+
+class ControlStatus(str, Enum):
+    not_started = "not_started"
+    in_progress = "in_progress"
+    completed = "completed"
+    failed = "failed"
+    not_applicable = "not_applicable"
+
+class SoxControl(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    domain: str
+    control_id: str
+    title: str
+    description: str
+    section: str = "404"
+    status: ControlStatus = ControlStatus.not_started
+    evidence: str = ""
+    assignee: str = ""
+    due_date: str = ""
+    completed_date: str = ""
+    risk_level: str = "medium"
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
 # ============ CHAT MODEL ============
 
 class ChatRequest(BaseModel):
