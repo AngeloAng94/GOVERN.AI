@@ -176,6 +176,21 @@
 - [x] 24/24 test backend passano
 - [x] Testing agent: 100% pass rate frontend + backend
 
+### Step E2 — SOX Section 404 Wizard (01 Apr 2026) — v2.2
+- [x] Backend: ControlStatus enum + SoxControl model in models.py
+- [x] Backend: routes/sox_wizard.py — 4 endpoint (GET /sox/controls, PATCH /sox/controls/{id}, GET /sox/report, GET /sox/report/pdf)
+- [x] Backend: seed.py — 20 controlli SOX realistici in 5 domini (5 completed, 9 in_progress, 4 not_started, 2 failed)
+- [x] Backend: exporters.py — SoxReportPDFBuilder per report PDF Section 404
+- [x] Backend: server.py — sox_router registrato
+- [x] Backend: ARIA prompt aggiornato con riferimento al SOX 404 Wizard
+- [x] Frontend: SoxWizardPage.js — pagina completa con progress bar, domain cards, accordion controlli, edit dialog, auditor summary
+- [x] Frontend: App.js — route /dashboard/sox-wizard
+- [x] Frontend: DashboardLayout.js — voce SOX 404 in sidebar con icona ClipboardCheck
+- [x] Frontend: locales en.json + it.json — 24 chiavi sox_* aggiunte
+- [x] Backend: 4 nuovi test pytest (get_sox_controls, patch_sox_control, sox_report_json, sox_report_pdf)
+- [x] 28/28 test backend passano
+- [x] Testing agent: 100% pass rate frontend + backend
+
 ## Roadmap Tecnica (dal Business Plan)
 
 ### Phase 1 — Foundation (Q2 2026, 3 mesi)
