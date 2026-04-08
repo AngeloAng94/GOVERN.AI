@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Bot, FileText, Activity, ShieldCheck, AlertTriangle, ArrowUpRight, PieChart as PieChartIcon, BarChart3 } from "lucide-react";
+import { Bot, FileText, Activity, ShieldCheck, AlertTriangle, ArrowUpRight, PieChart as PieChartIcon, BarChart3, Brain } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import axios from "axios";
@@ -68,6 +68,7 @@ export default function OverviewPage() {
   const [conflictCount, setConflictCount] = useState(0);
   const [conflictTotal, setConflictTotal] = useState(0);
   const [conflictResolved, setConflictResolved] = useState(0);
+  const [govScore, setGovScore] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -75,16 +76,15 @@ export default function OverviewPage() {
       axios.get(`${API}/dashboard/stats`),
       axios.get(`${API}/compliance`),
       axios.get(`${API}/policy-engine/conflicts`).catch(() => ({ data: { summary: { by_severity: {} }, conflicts: [] } })),
+      axios.get(`${API}/score/overview`).catch(() => ({ data: null })),
     ])
-      .then(([statsRes, complianceRes, conflictsRes]) => {
+      .then(([statsRes, complianceRes, conflictsRes, scoreRes]) => {
         setStats(statsRes.data);
         setCompliance(complianceRes.data);
         const conflictsData = conflictsRes.data;
         setConflictCount(conflictsData?.summary?.by_severity?.critical || 0);
         setConflictTotal(conflictsData?.summary?.total || 0);
-        // Count resolved from scan-history is not straightforward,
-        // so we count resolved from the resolved_conflicts that exist
-        // For now show total from summary
+        if (scoreRes.data) setGovScore(scoreRes.data);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -139,6 +139,7 @@ export default function OverviewPage() {
   if (!stats) return null;
 
   const kpis = [
+    { label: t("ic_kpi_governance"), value: govScore ? `${govScore.final_score}%` : "—", sub: govScore ? govScore.score_band.toUpperCase() : "", icon: Brain, color: govScore?.score_band === "critical" ? "text-red-400" : govScore?.score_band === "warning" ? "text-amber-400" : "text-emerald-400", bg: govScore?.score_band === "critical" ? "bg-red-500/10" : govScore?.score_band === "warning" ? "bg-amber-500/10" : "bg-emerald-500/10", link: "/dashboard/intelligence" },
     { label: t("total_agents"), value: stats.agents.total, sub: `${stats.agents.active} ${t("active_agents")}`, icon: Bot, color: "text-blue-400", bg: "bg-blue-500/10" },
     { label: t("total_policies"), value: stats.policies.total, sub: `${stats.policies.active} ${t("active_policies")}`, icon: FileText, color: "text-amber-400", bg: "bg-amber-500/10" },
     { label: t("audit_events"), value: stats.audit.total, sub: `${stats.audit.blocked} ${t("blocked_events")}`, icon: Activity, color: "text-emerald-400", bg: "bg-emerald-500/10" },
@@ -154,7 +155,7 @@ export default function OverviewPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4" data-testid="kpi-grid">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4" data-testid="kpi-grid">
         {kpis.map((kpi, i) => (
           <Card key={i} className="bg-slate-900/40 backdrop-blur-md border-slate-800 rounded-sm hover:border-slate-700 transition-colors duration-300" data-testid={`kpi-${i}`}>
             <CardContent className="p-5">

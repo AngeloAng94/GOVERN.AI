@@ -637,5 +637,151 @@ class TestPolicyEngine:
         assert len(data) >= 1  # at least one scan from previous tests
 
 
+# ─── COMPLIANCE INTELLIGENCE ENGINE TESTS ────────────────────────────────────
+
+class TestScoreEngine:
+    """Compliance Intelligence Engine endpoint tests"""
+
+    _token = None
+    _headers = None
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.client = httpx.Client(timeout=30)
+        if TestScoreEngine._token is None:
+            token = get_auth_token(self.client)
+            TestScoreEngine._token = token
+            TestScoreEngine._headers = {"Authorization": f"Bearer {token}"}
+        self.headers = TestScoreEngine._headers
+        yield
+        self.client.close()
+
+    def test_score_overview(self):
+        """Test overall governance score endpoint"""
+        resp = self.client.get(f"{BASE}/score/overview", headers=self.headers)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "final_score" in data
+        assert 0 <= data["final_score"] <= 100
+        assert data["score_band"] in ("excellent", "strong", "warning", "critical")
+        assert "explanation" in data
+        assert "top_risks" in data
+        assert "priority_remediations" in data
+        assert "last_calculated_at" in data
+
+    def test_score_overview_explainability(self):
+        """Test that overview includes full explainability payload"""
+        resp = self.client.get(f"{BASE}/score/overview", headers=self.headers)
+        data = resp.json()
+        explanation = data["explanation"]
+        assert "explanation_summary" in explanation
+        assert "why_this_score" in explanation
+        assert "strongest_positive_factor" in explanation
+        assert "strongest_negative_factor" in explanation
+        assert "methodology_note" in explanation
+        assert "score_factors" in explanation
+        assert len(explanation["explanation_summary"]) > 20
+
+    def test_score_agents(self):
+        """Test agent scores endpoint returns all agents with scores"""
+        resp = self.client.get(f"{BASE}/score/agents", headers=self.headers)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "agents" in data
+        assert data["count"] >= 10  # we have 14 agents in seed
+        for agent in data["agents"]:
+            assert "agent_id" in agent
+            assert "final_score" in agent
+            assert 0 <= agent["final_score"] <= 100
+            assert "score_band" in agent
+            assert "score_breakdown" in agent
+            assert "positive_drivers" in agent
+            assert "negative_drivers" in agent
+            assert "recommended_actions" in agent
+
+    def test_score_agent_single(self):
+        """Test single agent score endpoint"""
+        # First get an agent id
+        agents_resp = self.client.get(f"{BASE}/score/agents", headers=self.headers)
+        agents = agents_resp.json()["agents"]
+        assert len(agents) > 0
+        agent_id = agents[0]["agent_id"]
+        resp = self.client.get(f"{BASE}/score/agents/{agent_id}", headers=self.headers)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["agent_id"] == agent_id
+        assert "score_breakdown" in data
+
+    def test_score_agent_not_found(self):
+        """Test 404 for non-existent agent"""
+        resp = self.client.get(f"{BASE}/score/agents/nonexistent", headers=self.headers)
+        assert resp.status_code == 404
+
+    def test_score_standards(self):
+        """Test standard scores endpoint returns all 8 standards"""
+        resp = self.client.get(f"{BASE}/score/standards", headers=self.headers)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["count"] == 8
+        for std in data["standards"]:
+            assert "code" in std
+            assert "final_score" in std
+            assert 0 <= std["final_score"] <= 100
+            assert "score_breakdown" in std
+
+    def test_score_history(self):
+        """Test score history endpoint"""
+        resp = self.client.get(f"{BASE}/score/history", headers=self.headers)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "snapshots" in data
+        assert data["count"] >= 1  # at least one from overview call
+
+    def test_score_insights(self):
+        """Test insights endpoint returns structured insights"""
+        resp = self.client.get(f"{BASE}/score/insights", headers=self.headers)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "overall_score" in data
+        assert "overall_band" in data
+        assert "insights" in data
+        assert "top_remediations" in data
+        assert "top_risks" in data
+        assert "explanation" in data
+        for insight in data["insights"]:
+            assert "type" in insight
+            assert "title" in insight
+            assert "action" in insight
+
+    def test_score_conflict_integration(self):
+        """Test that policy conflicts impact agent scores"""
+        resp = self.client.get(f"{BASE}/score/agents", headers=self.headers)
+        agents = resp.json()["agents"]
+        # Find agents with conflict penalty
+        agents_with_penalty = [a for a in agents if a["score_breakdown"]["conflict_penalty"] < 0]
+        assert len(agents_with_penalty) >= 1, "Expected at least 1 agent with conflict penalty"
+
+    def test_score_bands_distribution(self):
+        """Test that scoring produces a realistic distribution"""
+        resp = self.client.get(f"{BASE}/score/agents", headers=self.headers)
+        agents = resp.json()["agents"]
+        bands = {}
+        for a in agents:
+            bands[a["score_band"]] = bands.get(a["score_band"], 0) + 1
+        # Should have at least 2 different bands for a realistic distribution
+        assert len(bands) >= 2, f"Expected diverse scores, got only: {bands}"
+
+    def test_score_remediations_have_impact(self):
+        """Test that remediations are ranked with impact"""
+        resp = self.client.get(f"{BASE}/score/overview", headers=self.headers)
+        data = resp.json()
+        remediations = data.get("priority_remediations", [])
+        assert len(remediations) >= 1, "Expected at least 1 remediation"
+        for r in remediations:
+            assert "action" in r
+            assert "impact" in r
+            assert r["impact"] > 0
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "--tb=short"])

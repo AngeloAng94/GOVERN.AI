@@ -175,5 +175,11 @@
   "pe_resolve_title": "Risolvi Conflitto",
   "pe_resolution_note": "Nota di Risoluzione",
   "pe_confirm_resolve": "Conferma Risoluzione",
-  "pe_conflicts_kpi": "Conflitti Policy"
+  "pe_conflicts_kpi": "Conflitti Policy",
+  "sidebar_intelligence": "Intelligence Center",
+  "ic_title": "Intelligence Center",
+  "ic_subtitle": "Compliance Intelligence Engine — Score, rischi e remediation in tempo reale",
+  "ic_score_label": "Governance Score",
+  "ic_kpi_governance": "Governance Score",
+  "ic_kpi_posture": "Risk Posture"
 }

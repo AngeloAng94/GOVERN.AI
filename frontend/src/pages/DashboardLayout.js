@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { LayoutDashboard, Bot, FileText, Activity, CheckCircle, MessageSquare, Globe, ArrowLeft, LogOut, User, Menu, X, ChevronLeft, ChevronRight, ClipboardCheck, Zap } from "lucide-react";
+import { LayoutDashboard, Bot, FileText, Activity, CheckCircle, MessageSquare, Globe, ArrowLeft, LogOut, User, Menu, X, ChevronLeft, ChevronRight, ClipboardCheck, Zap, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -17,6 +17,7 @@ const navItems = [
   { path: "/dashboard/audit", icon: Activity, labelKey: "sidebar_audit" },
   { path: "/dashboard/compliance", icon: CheckCircle, labelKey: "sidebar_compliance" },
   { path: "/dashboard/sox-wizard", icon: ClipboardCheck, labelKey: "sidebar_sox_wizard" },
+  { path: "/dashboard/intelligence", icon: Brain, labelKey: "sidebar_intelligence" },
   { path: "/dashboard/assistant", icon: MessageSquare, labelKey: "sidebar_assistant" },
 ];
 

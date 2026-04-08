@@ -16,6 +16,7 @@ import CompliancePage from "@/pages/CompliancePage";
 import SoxWizardPage from "@/pages/SoxWizardPage";
 import PolicyEnginePage from "@/pages/PolicyEnginePage";
 import AssistantPage from "@/pages/AssistantPage";
+import IntelligenceCenterPage from "@/pages/IntelligenceCenterPage";
 
 const pageTitles = {
   "/": "GOVERN.AI — Sovereign Control Plane",
@@ -28,6 +29,7 @@ const pageTitles = {
   "/dashboard/compliance": "Compliance — GOVERN.AI",
   "/dashboard/sox-wizard": "SOX 404 Wizard — GOVERN.AI",
   "/dashboard/assistant": "ARIA Assistant — GOVERN.AI",
+  "/dashboard/intelligence": "Intelligence Center — GOVERN.AI",
 };
 
 function PageTitleUpdater() {
@@ -67,6 +69,7 @@ function App() {
               <Route path="audit" element={<AuditPage />} />
               <Route path="compliance" element={<CompliancePage />} />
               <Route path="sox-wizard" element={<SoxWizardPage />} />
+              <Route path="intelligence" element={<IntelligenceCenterPage />} />
               <Route path="assistant" element={<AssistantPage />} />
             </Route>
           </Routes>
