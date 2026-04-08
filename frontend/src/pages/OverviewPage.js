@@ -66,18 +66,25 @@ export default function OverviewPage() {
   const [stats, setStats] = useState(null);
   const [compliance, setCompliance] = useState([]);
   const [conflictCount, setConflictCount] = useState(0);
+  const [conflictTotal, setConflictTotal] = useState(0);
+  const [conflictResolved, setConflictResolved] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
       axios.get(`${API}/dashboard/stats`),
       axios.get(`${API}/compliance`),
-      axios.get(`${API}/policy-engine/conflicts`).catch(() => ({ data: { summary: { by_severity: {} } } })),
+      axios.get(`${API}/policy-engine/conflicts`).catch(() => ({ data: { summary: { by_severity: {} }, conflicts: [] } })),
     ])
       .then(([statsRes, complianceRes, conflictsRes]) => {
         setStats(statsRes.data);
         setCompliance(complianceRes.data);
-        setConflictCount(conflictsRes.data?.summary?.by_severity?.critical || 0);
+        const conflictsData = conflictsRes.data;
+        setConflictCount(conflictsData?.summary?.by_severity?.critical || 0);
+        setConflictTotal(conflictsData?.summary?.total || 0);
+        // Count resolved from scan-history is not straightforward,
+        // so we count resolved from the resolved_conflicts that exist
+        // For now show total from summary
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -136,7 +143,7 @@ export default function OverviewPage() {
     { label: t("total_policies"), value: stats.policies.total, sub: `${stats.policies.active} ${t("active_policies")}`, icon: FileText, color: "text-amber-400", bg: "bg-amber-500/10" },
     { label: t("audit_events"), value: stats.audit.total, sub: `${stats.audit.blocked} ${t("blocked_events")}`, icon: Activity, color: "text-emerald-400", bg: "bg-emerald-500/10" },
     { label: t("compliance_score"), value: `${stats.compliance_avg}%`, sub: `${compliance.length} standards`, icon: ShieldCheck, color: "text-violet-400", bg: "bg-violet-500/10" },
-    { label: t("pe_conflicts_kpi"), value: conflictCount, sub: "critical", icon: AlertTriangle, color: conflictCount > 0 ? "text-red-400" : "text-emerald-400", bg: conflictCount > 0 ? "bg-red-500/10" : "bg-emerald-500/10" },
+    { label: t("pe_conflicts_kpi"), value: conflictCount, sub: `${conflictTotal} ${conflictTotal === 1 ? "total" : "totali"}`, icon: AlertTriangle, color: conflictCount > 0 ? "text-red-400" : "text-emerald-400", bg: conflictCount > 0 ? "bg-red-500/10" : "bg-emerald-500/10" },
   ];
 
   return (

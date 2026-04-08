@@ -494,9 +494,9 @@ class TestPolicyEngine:
     def setup(self):
         self.client = httpx.Client(timeout=30)
         if TestPolicyEngine._token is None:
-            login_resp = self.client.post(f"{BASE}/auth/login", json={"username": "admin", "password": "AdminGovern2026!"})
-            TestPolicyEngine._token = login_resp.json()["token"]
-            TestPolicyEngine._headers = {"Authorization": f"Bearer {TestPolicyEngine._token}"}
+            token = get_auth_token(self.client)
+            TestPolicyEngine._token = token
+            TestPolicyEngine._headers = {"Authorization": f"Bearer {token}"}
         self.headers = TestPolicyEngine._headers
         yield
         self.client.close()
@@ -515,6 +515,18 @@ class TestPolicyEngine:
         assert "agents_impacted" in summary
         assert "policies_impacted" in summary
 
+    def test_conflict_has_guidance(self):
+        """Test that conflicts have guidance and impact_description fields"""
+        resp = self.client.get(f"{BASE}/policy-engine/conflicts", headers=self.headers)
+        assert resp.status_code == 200
+        conflicts = resp.json()["conflicts"]
+        assert len(conflicts) >= 1, "No conflicts detected to test guidance"
+        for c in conflicts:
+            assert c.get("guidance") is not None, f"Conflict {c['id']} missing guidance"
+            assert c.get("impact_description") is not None, f"Conflict {c['id']} missing impact_description"
+            assert len(c["guidance"]) > 10, f"Guidance too short for {c['id']}"
+            assert len(c["impact_description"]) > 10, f"Impact too short for {c['id']}"
+
     def test_conflicts_find_gaps(self):
         """Test that conflict detection finds at least 1 gap (high/critical agent without policy)"""
         resp = self.client.get(f"{BASE}/policy-engine/conflicts", headers=self.headers)
@@ -523,17 +535,95 @@ class TestPolicyEngine:
         gaps = [c for c in data["conflicts"] if c["conflict_type"] == "gap"]
         assert len(gaps) >= 1, f"Expected at least 1 gap conflict, found {len(gaps)}"
 
-    def test_resolve_conflict(self):
-        """Test resolving a detected conflict"""
+    def test_resolve_conflict_with_notes(self):
+        """Test resolving a conflict with valid resolution_notes"""
         resp = self.client.get(f"{BASE}/policy-engine/conflicts", headers=self.headers)
         conflicts = resp.json()["conflicts"]
-        if not conflicts:
-            return  # no conflicts to resolve
+        assert len(conflicts) >= 1, "No conflicts to resolve"
         conflict_id = conflicts[0]["id"]
         resolve_resp = self.client.post(
             f"{BASE}/policy-engine/conflicts/{conflict_id}/resolve",
             headers=self.headers,
-            json={"resolved_by": "admin", "resolution_note": "Test resolution"}
+            json={
+                "resolved_by": "admin",
+                "resolution_notes": "Reviewed both policies and decided to keep the blocking policy as primary enforcement. The auto-approve policy has been scoped down to non-flagged transactions only."
+            }
+        )
+        assert resolve_resp.status_code == 200
+        data = resolve_resp.json()
+        assert data["status"] == "resolved"
+        assert data["conflict_id"] == conflict_id
+
+    def test_resolve_conflict_notes_too_short(self):
+        """Test that resolution with notes < 10 chars returns 422"""
+        resp = self.client.get(f"{BASE}/policy-engine/conflicts", headers=self.headers)
+        conflicts = resp.json()["conflicts"]
+        assert len(conflicts) >= 1, "No conflicts to test"
+        conflict_id = conflicts[0]["id"]
+        resolve_resp = self.client.post(
+            f"{BASE}/policy-engine/conflicts/{conflict_id}/resolve",
+            headers=self.headers,
+            json={
+                "resolved_by": "admin",
+                "resolution_notes": "short"
+            }
+        )
+        assert resolve_resp.status_code == 422, f"Expected 422 but got {resolve_resp.status_code}"
+
+    def test_guidance_endpoint(self):
+        """Test GET /api/policy-engine/conflicts/{id}/guidance returns full guidance"""
+        resp = self.client.get(f"{BASE}/policy-engine/conflicts", headers=self.headers)
+        conflicts = resp.json()["conflicts"]
+        assert len(conflicts) >= 1, "No conflicts to get guidance for"
+        conflict_id = conflicts[0]["id"]
+        guidance_resp = self.client.get(
+            f"{BASE}/policy-engine/conflicts/{conflict_id}/guidance",
+            headers=self.headers,
+        )
+        assert guidance_resp.status_code == 200
+        data = guidance_resp.json()
+        assert data["id"] == conflict_id
+        assert "guidance" in data
+        assert "impact_description" in data
+        assert "conflict_type" in data
+        assert "severity" in data
+        assert "policy_names" in data
+
+    def test_resolve_creates_audit_log(self):
+        """Test that resolving a conflict creates an audit log entry"""
+        # Get a conflict
+        resp = self.client.get(f"{BASE}/policy-engine/conflicts", headers=self.headers)
+        conflicts = resp.json()["conflicts"]
+        assert len(conflicts) >= 1
+        conflict_id = conflicts[-1]["id"]  # Use last conflict to avoid overlap with previous resolve tests
+        notes = "Audit log test: consolidated overlapping policies into single comprehensive policy per compliance review."
+        
+        # Resolve it
+        self.client.post(
+            f"{BASE}/policy-engine/conflicts/{conflict_id}/resolve",
+            headers=self.headers,
+            json={"resolved_by": "admin", "resolution_notes": notes}
+        )
+        
+        # Check audit log
+        audit_resp = self.client.get(f"{BASE}/audit", headers=self.headers)
+        assert audit_resp.status_code == 200
+        audit_data = audit_resp.json()
+        logs = audit_data.get("logs", [])
+        resolved_logs = [l for l in logs if l.get("action") == "POLICY_CONFLICT_RESOLVED"]
+        assert len(resolved_logs) >= 1, "No POLICY_CONFLICT_RESOLVED audit log found"
+
+    def test_resolve_conflict(self):
+        """Test resolving a detected conflict (legacy compat)"""
+        resp = self.client.get(f"{BASE}/policy-engine/conflicts", headers=self.headers)
+        conflicts = resp.json()["conflicts"]
+        if not conflicts:
+            return
+        conflict_id = conflicts[0]["id"]
+        resolve_resp = self.client.post(
+            f"{BASE}/policy-engine/conflicts/{conflict_id}/resolve",
+            headers=self.headers,
+            json={"resolved_by": "admin", "resolution_notes": "Test resolution for legacy compatibility check"}
         )
         assert resolve_resp.status_code == 200
         assert resolve_resp.json()["status"] == "resolved"

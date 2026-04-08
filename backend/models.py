@@ -231,7 +231,15 @@ class PolicyConflict(BaseModel):
     agent_names: List[str] = []
     regulation: List[str] = []
     recommendation: str = ""
+    guidance: Optional[str] = None
+    impact_description: Optional[str] = None
+    resolution_notes: Optional[str] = None
     detected_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     resolved: bool = False
     resolved_at: str = ""
     resolved_by: str = ""
+
+
+class ConflictResolution(BaseModel):
+    resolution_notes: str = Field(..., min_length=10)
+    resolved_by: str
