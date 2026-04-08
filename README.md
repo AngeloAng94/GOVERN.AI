@@ -1,8 +1,8 @@
 # GOVERN.AI
 
 ![CI](https://github.com/AngeloAng94/GOVERN.AI/actions/workflows/ci.yml/badge.svg)
-![Version](https://img.shields.io/badge/version-MVP%20v2.4-blue)
-![Tests](https://img.shields.io/badge/tests-34%2F34%20passed-brightgreen)
+![Version](https://img.shields.io/badge/version-MVP%20v2.5-blue)
+![Tests](https://img.shields.io/badge/tests-39%2F39%20passed-brightgreen)
 ![Standards](https://img.shields.io/badge/compliance-8%20standards-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
@@ -23,6 +23,7 @@ Designed for **DPO**, **CISO**, **Compliance Managers** and **AI Engineers** who
 - **Agent Registry**: register and classify AI agents by risk level (14 enterprise agents demo)
 - **Policy Engine**: define and enforce governance policies per normativa with **automated conflict detection**
 - **Policy Conflict Detection**: identifies action conflicts, gaps, overlaps, and redundancies across policies
+- **Policy Guidance Engine**: operational guidance with impact analysis, recommendations, and documented resolution tracking
 - **SOX Section 404 Wizard**: guided workflow for internal control assessment with **Audit Readiness Score**
 - **Audit Trail**: complete log of all agent actions, exportable PDF/CSV
 - **Compliance Dashboard**: monitor **8 regulatory standards** in real-time
@@ -234,7 +235,7 @@ cd backend
 pytest tests/test_api.py -v
 ```
 
-Expected: **34/34 tests passed**
+Expected: **39/39 tests passed**
 
 Test coverage includes:
 - Authentication (login, register, token validation)
@@ -243,6 +244,7 @@ Test coverage includes:
 - Compliance standards (8 standards validation)
 - SOX 404 Wizard (controls, report, readiness score)
 - Policy Conflict Engine (detection, resolution, scan history)
+- Policy Guidance Engine (guidance endpoint, mandatory notes, audit log)
 - Dashboard statistics
 - Chat API (ARIA assistant)
 
@@ -254,7 +256,7 @@ Every push to `main` or `develop` triggers the GitHub Actions pipeline:
 
 | Job | What it verifies |
 |-----|------------------|
-| `backend-tests` | 34 pytest against live API + MongoDB |
+| `backend-tests` | 39 pytest against live API + MongoDB |
 | `frontend-build` | `yarn build` completes without errors |
 | `security-scan` | bandit + safety on Python dependencies |
 | `docker-build` | `docker build` for backend + frontend images |
@@ -317,7 +319,7 @@ The platform ships with realistic enterprise banking demo data:
 
 ## Roadmap
 
-### Completed (MVP v2.4)
+### Completed (MVP v2.5)
 
 - Core platform (agents, policies, audit, compliance)
 - JWT authentication + RBAC (4 roles)
@@ -336,6 +338,7 @@ The platform ships with realistic enterprise banking demo data:
 - Audit Readiness Score (risk-weighted scoring algorithm)
 - D.Lgs. 262/2005 (Italian financial reporting controls standard)
 - Policy Conflict Detection Engine (action conflicts, gaps, overlaps, redundancies)
+- Policy Guidance Engine (operational guidance, impact analysis, documented resolution)
 - Landing page with real use cases (Banking, Healthcare, Legal)
 - Empty states + skeleton loaders
 - Dynamic page titles

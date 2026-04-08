@@ -1,6 +1,6 @@
 # AUDIT TECNICO — GOVERN.AI
-**Data**: 01 Aprile 2026 (aggiornato post MVP v2.4)  
-**Versione codebase**: MVP v2.4  
+**Data**: 08 Aprile 2026 (aggiornato post MVP v2.5)  
+**Versione codebase**: MVP v2.5  
 **Autore**: Audit automatico  
 
 ---
@@ -159,7 +159,7 @@
 | File | Righe | Responsabilita | Note |
 |---|---|---|---|
 | `backend/server.py` | ~100 | App FastAPI, middleware sicurezza, include 9 router | Orchestratore pulito |
-| `backend/models.py` | ~240 | 14 modelli Pydantic + 10 Enum | Separato e riutilizzabile |
+| `backend/models.py` | ~250 | 15 modelli Pydantic + 10 Enum | Separato e riutilizzabile |
 | `backend/seed.py` | ~986 | Dati seed enterprise banking | 14 agenti, 20+ policy, 150+ log, 20 SOX controls |
 | `backend/exporters.py` | ~300+ | PDF/CSV generation (ReportLab) | Audit + Compliance + SOX report |
 | `backend/routes/*.py` | ~50-150 | Endpoint specifici per dominio | 9 file modulari |
@@ -206,7 +206,7 @@
 
 **Stato**: Tutti gli indici necessari sono stati creati. Nessun COLLSCAN sulle query principali.
 
-### 3.3 Modelli Pydantic (14 totali)
+### 3.3 Modelli Pydantic (15 totali)
 
 | Modello | Scopo |
 |---|---|
@@ -217,6 +217,7 @@
 | `ComplianceStandard` | Standard normativi |
 | `SoxControl`, `ControlStatus` | SOX Section 404 controls |
 | `PolicyConflict`, `ConflictType`, `ConflictSeverity` | Policy Conflict Engine |
+| `ConflictResolution` | Risoluzione documentata conflitti (E5) |
 | `ChatRequest` | Messaggi chat |
 
 ### 3.4 Enum Pydantic (10 totali)
@@ -296,10 +297,10 @@
 
 | File | Tipo | Copertura | Risultato |
 |---|---|---|---|
-| `backend/tests/test_api.py` | Test API end-to-end (pytest) | 34 endpoint/scenario testati | **34/34 passati** |
-| `test_reports/iteration_1-7.json` | Report test automatizzati (testing agent) | Backend + Frontend | 7 iterazioni, tutte passate |
+| `backend/tests/test_api.py` | Test API end-to-end (pytest) | 39 endpoint/scenario testati | **39/39 passati** |
+| `test_reports/iteration_1-7.json` | Report test automatizzati (testing agent) | Backend + Frontend | 8 iterazioni, tutte passate |
 
-### 6.2 Copertura test backend (34/34)
+### 6.2 Copertura test backend (39/39)
 
 | Area | Test | Stato |
 |---|---|---|
@@ -313,6 +314,7 @@
 | SOX Wizard | controls, patch, report JSON, report PDF | 4/4 |
 | Readiness Score | score calculation | 1/1 |
 | Policy Engine | conflicts, resolution, gaps, scan history | 4/4 |
+| Policy Guidance | guidance endpoint, mandatory notes, short notes 422, audit log | 5/5 |
 | Standards validation | 7 standards, 8 standards | 2/2 |
 | Misc | root, RBAC | 3/3 |
 
@@ -389,6 +391,19 @@
 - 5o KPI card in OverviewPage con conteggio conflitti critici
 - Demo data: policy con conflitto intenzionale (block vs auto) su Fraud Detection Engine
 
+### 8.5 Policy Guidance Engine (Step E5 — v2.5)
+- Campi `guidance` e `impact_description` aggiunti a ogni conflitto rilevato
+- Guidance operativa specifica per tipo di conflitto (action_conflict, gap, overlap, redundancy)
+- Nuovo modello `ConflictResolution` con `resolution_notes` obbligatorio (min 10 caratteri)
+- Endpoint resolve aggiornato: richiede note documentate e crea audit log `POLICY_CONFLICT_RESOLVED`
+- Nuovo endpoint `GET /api/policy-engine/conflicts/{id}/guidance` per dettaglio singolo conflitto
+- IDs conflitto ora deterministici (hash SHA-256)
+- Frontend: sezioni collassabili "Impatto" e "Raccomandazione" su ogni conflict card
+- Frontend: pannello laterale "Dettaglio" con Sheet Shadcn per visualizzazione completa
+- Frontend: dialog risoluzione con textarea obbligatoria, validazione 10 char, utente read-only
+- Frontend: box verde "Risoluzione documentata" per conflitti gia risolti
+- 5 nuovi test backend (34 → 39)
+
 ---
 
 ## 9. RIEPILOGO STATO PROGETTO
@@ -410,6 +425,7 @@
 - **[Step E2 — v2.2]** SOX Section 404 Wizard (20 controlli, 5 domini, report PDF)
 - **[Step E3 — v2.3]** D.Lgs. 262/2005 (8o standard) + Audit Readiness Score
 - **[Step E4 — v2.4]** Policy Conflict Detection Engine (4 regole, 3 endpoint, UI completa)
+- **[Step E5 — v2.5]** Policy Guidance Engine (guidance operativa, impatto, risoluzione documentata)
 
 ### Da completare
 
@@ -417,9 +433,8 @@
 - **Connettori enterprise** (IAM, SIEM, ServiceNow) — non implementati (P2)
 - **Multi-tenancy** — non implementato (P2)
 - **D.Lgs. 262 Wizard** — workflow dedicato simile al SOX Wizard (P2)
-- **Auto-Fix Engine** — risoluzione automatica conflitti policy (P2)
 - **WebSocket real-time monitoring** — aggiornamenti dashboard live (P2)
 
 ---
 
-*Fine audit tecnico. Documento generato analizzando il codice sorgente. Ultimo aggiornamento: 01 Aprile 2026 (MVP v2.4).*
+*Fine audit tecnico. Documento generato analizzando il codice sorgente. Ultimo aggiornamento: 08 Aprile 2026 (MVP v2.5).*
