@@ -1,8 +1,8 @@
 # GOVERN.AI
 
 ![CI](https://github.com/AngeloAng94/GOVERN.AI/actions/workflows/ci.yml/badge.svg)
-![Version](https://img.shields.io/badge/version-MVP%20v2.5-blue)
-![Tests](https://img.shields.io/badge/tests-39%2F39%20passed-brightgreen)
+![Version](https://img.shields.io/badge/version-MVP%20v3.0-blue)
+![Tests](https://img.shields.io/badge/tests-50%2F50%20passed-brightgreen)
 ![Standards](https://img.shields.io/badge/compliance-8%20standards-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
@@ -23,7 +23,9 @@ Designed for **DPO**, **CISO**, **Compliance Managers** and **AI Engineers** who
 - **Agent Registry**: register and classify AI agents by risk level (14 enterprise agents demo)
 - **Policy Engine**: define and enforce governance policies per normativa with **automated conflict detection**
 - **Policy Conflict Detection**: identifies action conflicts, gaps, overlaps, and redundancies across policies
-- **Policy Guidance Engine**: operational guidance with impact analysis, recommendations, and documented resolution tracking
+- **Compliance Intelligence Engine**: deterministic, explainable scoring of agents, standards, and overall governance posture
+- **Explainability Layer**: structured explanations with score breakdown, positive/negative drivers, methodology notes
+- **Intelligence Center**: premium dashboard with score ring, agent ranking, standard scores, insights, risks, and remediations
 - **SOX Section 404 Wizard**: guided workflow for internal control assessment with **Audit Readiness Score**
 - **Audit Trail**: complete log of all agent actions, exportable PDF/CSV
 - **Compliance Dashboard**: monitor **8 regulatory standards** in real-time
@@ -165,6 +167,12 @@ When backend is running:
 | SOX | `/api/sox/report` | GET | SOX report JSON |
 | SOX | `/api/sox/report/pdf` | GET | SOX report PDF |
 | SOX | `/api/sox/readiness-score` | GET | Audit Readiness Score |
+| Score | `/api/score/overview` | GET | Governance score + explainability |
+| Score | `/api/score/agents` | GET | All agent scores |
+| Score | `/api/score/agents/{id}` | GET | Single agent score |
+| Score | `/api/score/standards` | GET | Standard scores |
+| Score | `/api/score/history` | GET | Score snapshots |
+| Score | `/api/score/insights` | GET | Structured insights |
 | Policy Engine | `/api/policy-engine/conflicts` | GET | Detect policy conflicts |
 | Policy Engine | `/api/policy-engine/conflicts/{id}/resolve` | POST | Resolve conflict |
 | Policy Engine | `/api/policy-engine/scan-history` | GET | Scan history |
@@ -182,7 +190,9 @@ GOVERN.AI/
 │   ├── seed.py            # Enterprise demo data (banking scenario)
 │   ├── exporters.py       # PDF/CSV generation (ReportLab)
 │   ├── rate_limiter.py    # SlowAPI shared instance
-│   └── routes/            # 9 modular route files
+│   ├── services/          # Business logic
+│   │   └── compliance_engine.py  # Compliance Intelligence Engine (scoring)
+│   └── routes/            # 10 modular route files
 │       ├── auth.py        # JWT login/register/RBAC
 │       ├── agents.py      # AI Agent CRUD
 │       ├── policies.py    # Policy Engine CRUD
@@ -191,7 +201,8 @@ GOVERN.AI/
 │       ├── dashboard.py   # Stats + KPIs
 │       ├── chat.py        # ARIA AI Assistant (SSE streaming)
 │       ├── sox_wizard.py  # SOX Section 404 Wizard + Readiness Score
-│       └── policy_engine.py # Policy Conflict Detection Engine
+│       ├── policy_engine.py # Policy Conflict Detection Engine
+│       └── score.py       # Compliance Intelligence Engine API
 ├── frontend/
 │   └── src/
 │       ├── contexts/      # Auth + Language (IT/EN)
@@ -206,7 +217,8 @@ GOVERN.AI/
 │       │   ├── CompliancePage.js
 │       │   ├── AssistantPage.js     # ARIA with SSE streaming
 │       │   ├── SoxWizardPage.js     # SOX 404 controls + Readiness Score
-│       │   └── PolicyEnginePage.js  # Conflict detection UI
+│       │   ├── PolicyEnginePage.js  # Conflict detection UI
+│       │   └── IntelligenceCenterPage.js # Intelligence Center (scoring)
 │       ├── components/    # CrudPage, Logo, EmptyState, SkeletonLoader, Shadcn UI
 │       └── locales/       # en.json, it.json (~130+ keys each)
 ├── docker-compose.yml
@@ -235,7 +247,7 @@ cd backend
 pytest tests/test_api.py -v
 ```
 
-Expected: **39/39 tests passed**
+Expected: **50/50 tests passed**
 
 Test coverage includes:
 - Authentication (login, register, token validation)
@@ -245,6 +257,7 @@ Test coverage includes:
 - SOX 404 Wizard (controls, report, readiness score)
 - Policy Conflict Engine (detection, resolution, scan history)
 - Policy Guidance Engine (guidance endpoint, mandatory notes, audit log)
+- Compliance Intelligence Engine (overview, agents, standards, history, insights, conflicts integration)
 - Dashboard statistics
 - Chat API (ARIA assistant)
 
@@ -256,7 +269,7 @@ Every push to `main` or `develop` triggers the GitHub Actions pipeline:
 
 | Job | What it verifies |
 |-----|------------------|
-| `backend-tests` | 39 pytest against live API + MongoDB |
+| `backend-tests` | 50 pytest against live API + MongoDB |
 | `frontend-build` | `yarn build` completes without errors |
 | `security-scan` | bandit + safety on Python dependencies |
 | `docker-build` | `docker build` for backend + frontend images |
@@ -319,7 +332,7 @@ The platform ships with realistic enterprise banking demo data:
 
 ## Roadmap
 
-### Completed (MVP v2.5)
+### Completed (MVP v3.0)
 
 - Core platform (agents, policies, audit, compliance)
 - JWT authentication + RBAC (4 roles)
@@ -339,6 +352,10 @@ The platform ships with realistic enterprise banking demo data:
 - D.Lgs. 262/2005 (Italian financial reporting controls standard)
 - Policy Conflict Detection Engine (action conflicts, gaps, overlaps, redundancies)
 - Policy Guidance Engine (operational guidance, impact analysis, documented resolution)
+- **Compliance Intelligence Engine** (deterministic scoring for agents, standards, overview)
+- **Explainability Layer** (structured score explanations, methodology notes)
+- **Intelligence Center** (premium dashboard with score ring, rankings, insights)
+- **Score History & Momentum** (snapshot tracking, delta/trend per entity)
 - Landing page with real use cases (Banking, Healthcare, Legal)
 - Empty states + skeleton loaders
 - Dynamic page titles

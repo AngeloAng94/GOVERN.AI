@@ -1,69 +1,78 @@
 # GOVERN.AI - PRD (Product Requirements Document)
 
-## Versione: MVP v2.5
+## Versione: MVP v3.0
 ## Data ultimo aggiornamento: 08 Aprile 2026
 
 ---
 
 ## 1. Problema Originale
 
-Piattaforma SaaS per la governance di agenti AI enterprise. Copre il ciclo di vita completo della governance: registrazione agenti, definizione policy, rilevamento conflitti con guidance operativa, audit trail, compliance monitoring, SOX 404 Wizard, e assistente AI.
+Piattaforma SaaS per la governance di agenti AI enterprise con motore di compliance intelligence proprietario.
 
 ## 2. Target Users
 
-- **DPO / Compliance Manager**: Visibilita e controllo sugli agenti AI
-- **CISO**: Classificazione rischio e policy enforcement
-- **CTO / Engineering**: API REST, architettura modulare, Docker ready
-- **CEO / Board**: Dashboard executive, riduzione rischio sanzioni
+- DPO / Compliance Manager, CISO, CTO / Engineering, CEO / Board
 
 ## 3. Core Requirements — IMPLEMENTATI
 
-### 3.1 Agent Registry
-- CRUD completo per agenti AI, risk classification, status management
-- 14 agenti demo enterprise banking
+### 3.1 Compliance Intelligence Engine (v3.0)
+- Motore deterministico di scoring: agent scores, standard scores, overall governance score
+- Score breakdown con positive/negative drivers
+- Explainability layer con spiegazioni strutturate e methodology notes
+- Integration con Policy Conflict Engine: conflitti impattano lo score
+- Score History & Momentum: snapshot, delta, trend direction
+- Priority remediations con impact scoring
+- Top risks, missing controls, insights strutturati
+- 6 API endpoints: /api/score/overview, /agents, /agents/{id}, /standards, /history, /insights
 
-### 3.2 Policy Engine + Conflict Detection + Guidance (v2.4-2.5)
-- CRUD policy con 8 normative, 5 rule types, 4 enforcement levels
-- Policy Conflict Detection Engine con 4 tipi: action_conflict, gap, overlap, redundancy
-- **Policy Guidance Engine** (v2.5): guidance operativa, impact analysis, risoluzione documentata con audit trail
-- IDs conflitto deterministici (SHA-256)
-- ConflictResolution model con notes obbligatorie (min 10 char)
-- Endpoint guidance dedicato per singolo conflitto
+### 3.2 Intelligence Center (frontend v3.0)
+- Score ring (RadialBarChart) con badge banda
+- Score Composition con mini KPI cards
+- Agent Distribution pie chart
+- Agent Ranking (dal piu basso) con progress bar
+- Standard Scores con cards per ogni normativa
+- Active Insights con severity badges
+- Priority Remediations con impact bar
+- Top Risks grid
+- Missing Controls list
+- Delta/Trend indicators
 
-### 3.3 SOX Section 404 Wizard
-- 20 controlli in 5 domini, Audit Readiness Score pesato per rischio
+### 3.3 Previous Features (v1.0-v2.5)
+- Agent Registry (14 agenti), Policy Engine (20+ policy), Audit Trail (150+ log)
+- 8 compliance standards, SOX 404 Wizard + Readiness Score
+- Policy Conflict Engine + Guidance Engine
+- D.Lgs. 262/2005, ARIA AI Assistant (SSE streaming)
+- JWT + RBAC (4 ruoli), Export PDF/CSV, i18n IT/EN
+- Docker + CI/CD, 50/50 test backend
 
-### 3.4 Audit Trail
-- 150+ log demo, filtri multipli, export PDF/CSV
+## 4. Scoring Formula
 
-### 3.5 Compliance Dashboard
-- 8 standard: EU AI Act, GDPR, ISO 27001, ISO 42001, DORA, NIS2, SOX, D.Lgs. 262/2005
+**Agent Score (0-100):**
+- Base: risk_level (critical=25, high=45, medium=65, low=82)
+- Policy coverage: +15 max (con policy) / -20 (senza policy)
+- Audit outcome: +/-15 (ratio allowed/total)
+- Conflict penalty: critical=-18, high=-10, medium=-5, low=-2
+- Status: active=0, suspended=-10, inactive=-20
 
-### 3.6 ARIA AI Assistant
-- SSE streaming, memoria conversazionale, system prompt verticale
+**Standard Score (0-100):**
+- Base: progress %
+- Requirements bonus: delta req_ratio vs progress
+- Policy coverage: +12 max / -8
+- Conflict penalty per regulation
 
-### 3.7 Auth + RBAC
-- JWT HS256, 4 ruoli: admin > dpo > auditor > viewer
+**Overall: standards 55% + agents 45% - global critical penalty**
 
-### 3.8 DevOps
-- Docker + Docker Compose, CI/CD GitHub Actions (4 job), 39/39 test backend
+## 5. Backlog
 
-## 4. Backlog — NON IMPLEMENTATO
+- P2: Multi-tenancy, Connettori Enterprise, WebSocket monitoring
+- P2: D.Lgs. 262 Wizard, Test unitari frontend
 
-### P2 Features
-1. Multi-tenancy
-2. Connettori Enterprise (ServiceNow, SIEM, IAM)
-3. Real-time Monitoring via WebSocket
-4. D.Lgs. 262 Wizard dedicato
-5. Test unitari frontend (Jest + Testing Library)
+## 6. Credenziali Test
+- Username: `admin` / Password: `AdminGovern2026!`
 
-## 5. Credenziali Test
-- Username: `admin`
-- Password: `AdminGovern2026!`
-
-## 6. Changelog Recente
-- **v2.5 (08/04/2026)**: Policy Guidance Engine — guidance, impact, risoluzione documentata, 5 nuovi test (39/39)
-- **v2.4 (01/04/2026)**: Policy Conflict Detection Engine
+## 7. Changelog
+- **v3.0 (08/04/2026)**: Compliance Intelligence Engine, Explainability, Intelligence Center, ARIA upgrade, Overview KPI, 11 nuovi test (50/50)
+- **v2.5**: Policy Guidance Engine
+- **v2.4**: Policy Conflict Detection Engine
 - **v2.3**: D.Lgs. 262/2005 + Audit Readiness Score
 - **v2.2**: SOX Section 404 Wizard
-- **v2.1**: SOX Foundation
