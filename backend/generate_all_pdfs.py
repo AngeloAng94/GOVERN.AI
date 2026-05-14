@@ -1,5 +1,6 @@
 """
-Generate all updated PDF documents for GOVERN.AI MVP v2.4
+Generate all updated PDF documents for GOVERN.AI MVP v3.0
+Updated: 14 May 2026
 """
 import io
 import os
@@ -56,10 +57,10 @@ def draw_page(canvas_obj, doc):
     canvas_obj.drawString(MARGIN, PAGE_H - 18 * mm, "Sovereign Control Plane for Enterprise AI")
     canvas_obj.setFillColor(C["white"])
     canvas_obj.setFont("Helvetica-Bold", 10)
-    canvas_obj.drawRightString(PAGE_W - MARGIN, PAGE_H - 12 * mm, "MVP v2.4")
+    canvas_obj.drawRightString(PAGE_W - MARGIN, PAGE_H - 12 * mm, "MVP v3.0")
     canvas_obj.setFillColor(C["muted"])
     canvas_obj.setFont("Helvetica", 7)
-    canvas_obj.drawRightString(PAGE_W - MARGIN, PAGE_H - 16 * mm, datetime.now().strftime('%B %Y'))
+    canvas_obj.drawRightString(PAGE_W - MARGIN, PAGE_H - 16 * mm, "14 May 2026")
     canvas_obj.setStrokeColor(C["border"])
     canvas_obj.setLineWidth(0.4)
     canvas_obj.line(MARGIN, 12 * mm, PAGE_W - MARGIN, 12 * mm)
@@ -89,8 +90,8 @@ def draw_cover(canvas_obj, doc, title_text, subtitle_text):
     meta_y = PAGE_H - 120 * mm
     canvas_obj.setFillColor(C["light"])
     canvas_obj.setFont("Helvetica", 10)
-    canvas_obj.drawString(MARGIN, meta_y, "Versione: MVP 2.4")
-    canvas_obj.drawString(MARGIN, meta_y - 16, f"Data: {datetime.now().strftime('%B %Y')}")
+    canvas_obj.drawString(MARGIN, meta_y, "Versione: MVP 3.0")
+    canvas_obj.drawString(MARGIN, meta_y - 16, "Data: 14 Maggio 2026")
     canvas_obj.drawString(MARGIN, meta_y - 32, "Autore: ANTHERA Systems")
     canvas_obj.setFillColor(C["dim"])
     canvas_obj.setFont("Helvetica", 8)
@@ -139,14 +140,17 @@ def build_investor_pdf(lang="en"):
             "It provides a centralized governance layer for AI agents, workflows, and models.",
             S["body"]))
         
-        elements.append(Paragraph("What We Do (MVP v2.4)", S["h1"]))
+        elements.append(Paragraph("What We Do (MVP v3.0)", S["h1"]))
         capabilities = [
+            "<b>Compliance Intelligence Engine:</b> Deterministic scoring (0-100) for agents, standards and overall governance with native explainability",
+            "<b>Intelligence Center:</b> Investor-ready dashboard - score ring, ranking, KPI breakdown, insights, remediations",
             "<b>Policy Engine + Conflict Detection:</b> Automated detection of action conflicts, gaps, overlaps, redundancies",
+            "<b>Policy Guidance Engine:</b> Contextual operational guidance per conflict + documented resolution with audit log",
             "<b>SOX Section 404 Wizard:</b> Guided internal control assessment with Audit Readiness Score",
             "<b>Audit Trail:</b> Complete traceability with PDF/CSV export",
             "<b>Compliance Monitor:</b> Real-time tracking against 8 standards (EU AI Act, GDPR, ISO 27001/42001, DORA, NIS2, SOX, D.Lgs. 262)",
             "<b>Risk Classification:</b> Aligned with EU AI Act categories",
-            "<b>AI Assistant (ARIA):</b> LLM-powered advisor with SSE streaming",
+            "<b>AI Assistant (ARIA):</b> LLM-powered advisor with SSE streaming, contextualized on score and conflicts",
         ]
         for c in capabilities:
             elements.append(Paragraph(f"<bullet>&bull;</bullet> {c}", S["bullet"]))
@@ -160,7 +164,9 @@ def build_investor_pdf(lang="en"):
                 ["Policy Conflict Types", "4 (action conflict, gap, overlap, redundancy)"],
                 ["Audit Logs (demo)", "150+ with 7 realistic incident clusters"],
                 ["RBAC Roles", "4 (Admin, DPO, Auditor, Viewer)"],
-                ["Backend Tests", "34/34 passing"],
+                ["Backend Tests", "50/50 passing"],
+                ["REST + SSE Endpoints", "45+"],
+                ["UI Pages", "12 (including Intelligence Center)"],
                 ["Languages", "2 (Italian, English)"],
             ],
             col_widths=[120, PAGE_W - 2 * MARGIN - 120]
@@ -219,14 +225,17 @@ def build_investor_pdf(lang="en"):
             "Fornisce un layer di governance centralizzato per agenti AI, workflow e modelli.",
             S["body"]))
         
-        elements.append(Paragraph("Cosa Facciamo (MVP v2.4)", S["h1"]))
+        elements.append(Paragraph("Cosa Facciamo (MVP v3.0)", S["h1"]))
         capabilities = [
+            "<b>Compliance Intelligence Engine:</b> Scoring deterministico (0-100) per agenti, standard e governance complessiva con explainability nativa",
+            "<b>Intelligence Center:</b> Dashboard investor-ready - score ring, ranking, KPI breakdown, insights, remediation",
             "<b>Motore di Policy + Rilevamento Conflitti:</b> Detection automatica di action conflict, gap, overlap, ridondanza",
+            "<b>Policy Guidance Engine:</b> Guidance operativa contestuale per ogni conflitto + risoluzione documentata con audit log",
             "<b>SOX Section 404 Wizard:</b> Valutazione guidata controlli interni con Audit Readiness Score",
             "<b>Traccia di Audit:</b> Tracciabilita completa con export PDF/CSV",
             "<b>Monitor Compliance:</b> Monitoraggio real-time su 8 standard (EU AI Act, GDPR, ISO 27001/42001, DORA, NIS2, SOX, D.Lgs. 262)",
             "<b>Classificazione Rischio:</b> Allineata alle categorie EU AI Act",
-            "<b>Assistente AI (ARIA):</b> Consulente LLM con streaming SSE",
+            "<b>Assistente AI (ARIA):</b> Consulente LLM con streaming SSE, contestualizzato su score e conflitti",
         ]
         for c in capabilities:
             elements.append(Paragraph(f"<bullet>&bull;</bullet> {c}", S["bullet"]))
@@ -240,7 +249,9 @@ def build_investor_pdf(lang="en"):
                 ["Tipi Conflitto Policy", "4 (action conflict, gap, overlap, ridondanza)"],
                 ["Audit Log (demo)", "150+ con 7 cluster incidenti"],
                 ["Ruoli RBAC", "4 (Admin, DPO, Auditor, Viewer)"],
-                ["Test Backend", "34/34 passanti"],
+                ["Test Backend", "50/50 passanti"],
+                ["Endpoint REST + SSE", "45+"],
+                ["Pagine UI", "12 (incluso Intelligence Center)"],
                 ["Lingue", "2 (Italiano, Inglese)"],
             ],
             col_widths=[120, PAGE_W - 2 * MARGIN - 120]
@@ -330,7 +341,7 @@ def build_audit_pdf():
     elements.append(PageBreak())
 
     elements.append(Paragraph("AUDIT TECNICO — GOVERN.AI", S["h1"]))
-    elements.append(Paragraph("Versione MVP v2.4 — Aprile 2026", S["small"]))
+    elements.append(Paragraph("Versione MVP v3.0 — 14 Maggio 2026", S["small"]))
     elements.append(Spacer(1, 10))
 
     elements.append(Paragraph("1. Stack Tecnologico", S["h2"]))
@@ -351,8 +362,9 @@ def build_audit_pdf():
 
     elements.append(Paragraph("2. Architettura", S["h2"]))
     arch_points = [
-        "Backend modulare: server.py + 9 file route + models.py + database.py + seed.py + exporters.py",
-        "Frontend SPA: 11 pagine, componente CRUD generico, 130+ chiavi i18n EN/IT",
+        "Backend modulare: server.py + 10 file route + models.py + database.py + seed.py + exporters.py",
+        "Service layer disaccoppiato: services/compliance_engine.py (Compliance Intelligence Engine)",
+        "Frontend SPA: 12 pagine, componente CRUD generico, 140+ chiavi i18n EN/IT",
         "Database: 7 collections, 15+ indici ottimizzati",
         "Autenticazione JWT con RBAC (4 ruoli: admin > dpo > auditor > viewer)",
         "Rate limiting su tutti gli endpoint (SlowAPI)",
@@ -391,16 +403,19 @@ def build_audit_pdf():
     elements.append(make_table(["Meccanismo", "Stato"], sec_items, col_widths=[200, PAGE_W - 2*MARGIN - 200]))
 
     elements.append(Paragraph("5. Test & Qualita", S["h2"]))
-    elements.append(Paragraph("<b>34/34 test backend passanti</b> (pytest) — Copertura: Auth, CRUD, Audit, Compliance, SOX Wizard, Policy Engine, Dashboard, Chat", S["body"]))
+    elements.append(Paragraph("<b>50/50 test backend passanti</b> (pytest) — Copertura: Auth, CRUD, Audit, Compliance, SOX Wizard, Policy Engine, Policy Guidance, Compliance Intelligence Engine, Dashboard, Chat", S["body"]))
     elements.append(Paragraph("CI/CD: GitHub Actions con 4 job paralleli (backend-tests, frontend-build, security-scan, docker-build)", S["body"]))
-    elements.append(Paragraph("7 iterazioni testing agent, tutte passate con 100% success rate", S["body"]))
+    elements.append(Paragraph("9 iterazioni testing agent, tutte passate con 100% success rate", S["body"]))
 
-    elements.append(Paragraph("6. Feature v2.4", S["h2"]))
+    elements.append(Paragraph("6. Feature v3.0", S["h2"]))
     features = [
         "<b>SOX Foundation (v2.1):</b> Standard SOX, agente SOX Auditor, 3 policy SOX, cluster audit",
         "<b>SOX 404 Wizard (v2.2):</b> 20 controlli in 5 domini, progress tracking, export PDF, edit dialog",
         "<b>D.Lgs. 262 + Readiness Score (v2.3):</b> 8o standard, 2 policy, Dirigente Preposto, score pesato",
         "<b>Policy Conflict Engine (v2.4):</b> 4 regole detection, 3 endpoint, UI completa, resolve dialog",
+        "<b>Policy Guidance Engine (v2.5 / Step E5):</b> Guidance contestuale, impact analysis, note di risoluzione obbligatorie, audit log integrato",
+        "<b>Compliance Intelligence Engine (v3.0 / Step E6):</b> Scoring deterministico (0-100), explainability layer, score history, drivers positivi/negativi",
+        "<b>Intelligence Center (v3.0):</b> Dashboard premium investor-ready con score ring, ranking agenti, score standard, insights e remediation",
     ]
     for f in features:
         elements.append(Paragraph(f"<bullet>&bull;</bullet> {f}", S["bullet"]))
@@ -418,7 +433,7 @@ def build_audit_pdf():
     ))
 
     elements.append(Spacer(1, 20))
-    elements.append(Paragraph(f"Documento generato: {datetime.now().strftime('%B %Y')} — MVP v2.4", S["small"]))
+    elements.append(Paragraph("Documento generato: 14 Maggio 2026 — MVP v3.0", S["small"]))
 
     def cover_handler(canvas_obj, doc):
         draw_cover(canvas_obj, doc, "AUDIT TECNICO", "")

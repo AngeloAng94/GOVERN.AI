@@ -73,7 +73,7 @@ def draw_page(canvas_obj, doc):
     canvas_obj.drawRightString(PAGE_W - MARGIN, PAGE_H - 12 * mm, "TECHNICAL OVERVIEW")
     canvas_obj.setFillColor(C["muted"])
     canvas_obj.setFont("Helvetica", 7)
-    canvas_obj.drawRightString(PAGE_W - MARGIN, PAGE_H - 16 * mm, f"v2.4 — {datetime.now().strftime('%B %Y')}")
+    canvas_obj.drawRightString(PAGE_W - MARGIN, PAGE_H - 16 * mm, "v3.0 — 14 May 2026")
     canvas_obj.setFillColor(C["red"])
     canvas_obj.setFont("Helvetica", 7)
     canvas_obj.drawRightString(PAGE_W - MARGIN, PAGE_H - 20 * mm, "Confidential")
@@ -117,8 +117,8 @@ def draw_first_page(canvas_obj, doc):
     meta_y = PAGE_H - 120 * mm
     canvas_obj.setFillColor(C["light"])
     canvas_obj.setFont("Helvetica", 10)
-    canvas_obj.drawString(MARGIN, meta_y, f"Versione: MVP 2.4")
-    canvas_obj.drawString(MARGIN, meta_y - 16, f"Data: {datetime.now().strftime('%B %Y')}")
+    canvas_obj.drawString(MARGIN, meta_y, f"Versione: MVP 3.0")
+    canvas_obj.drawString(MARGIN, meta_y - 16, f"Data: 14 Maggio 2026")
     canvas_obj.drawString(MARGIN, meta_y - 32, "Autore: ANTHERA Systems")
     canvas_obj.drawString(MARGIN, meta_y - 48, "Classificazione: Confidential")
     # Bottom info
@@ -575,17 +575,21 @@ def build_pdf() -> bytes:
     # ─── 9. ROADMAP ───
     elements.append(Paragraph("9. Roadmap Prodotto", S["h1"]))
 
-    elements.append(Paragraph("Completato (MVP v2.4)", S["h2"]))
+    elements.append(Paragraph("Completato (MVP v3.0)", S["h2"]))
     completed = [
         "Core platform completa (Agent Registry, Policy Engine, Audit Trail, Compliance Monitor)",
         "Autenticazione JWT con RBAC a 4 livelli",
-        "ARIA AI Assistant con SSE streaming",
+        "ARIA AI Assistant con SSE streaming, contestualizzato su score e conflitti",
         "Export report in PDF e CSV (Audit, Compliance, SOX)",
-        "Dashboard con 3 grafici interattivi (Recharts)",
+        "Dashboard con grafici interattivi (Recharts)",
         "8 standard normativi (EU AI Act, GDPR, ISO 27001/42001, DORA, NIS2, SOX, D.Lgs. 262)",
         "SOX Section 404 Wizard con 20 controlli e Audit Readiness Score",
         "Policy Conflict Detection Engine (4 tipi di conflitto)",
-        "CI/CD GitHub Actions (4 job)",
+        "<b>Step E5 — Policy Guidance Engine:</b> guidance contestuale + impact analysis + note di risoluzione obbligatorie + audit log",
+        "<b>Step E6 — Compliance Intelligence Engine:</b> scoring deterministico (0-100) di agenti, standard e governance complessiva",
+        "<b>Intelligence Center:</b> dashboard premium investor-ready con score ring, ranking, insights, remediation",
+        "Service layer disaccoppiato (services/compliance_engine.py)",
+        "CI/CD GitHub Actions (4 job) + 50/50 test backend passanti",
         "Docker deployment (Compose) + Interfaccia mobile responsive",
     ]
     for item in completed:

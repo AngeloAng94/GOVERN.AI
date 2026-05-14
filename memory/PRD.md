@@ -1,7 +1,7 @@
 # GOVERN.AI - PRD (Product Requirements Document)
 
 ## Versione: MVP v3.0
-## Data ultimo aggiornamento: 08 Aprile 2026
+## Data ultimo aggiornamento: 14 Maggio 2026
 
 ---
 
@@ -71,8 +71,22 @@ Piattaforma SaaS per la governance di agenti AI enterprise con motore di complia
 - Username: `admin` / Password: `AdminGovern2026!`
 
 ## 7. Changelog
+- **v3.0 (14/05/2026)**: Documentazione completa aggiornata - Investor Intro IT/EN, Audit Tecnico, Technical Overview, INVESTOR_INTRO + **nuovo Manuale Operativo Completo IT/EN** (Guida Utente + Implementazione + Deploy). Tutti i 6 PDF rigenerati con metadata v3.0 / 14 Maggio 2026.
 - **v3.0 (08/04/2026)**: Compliance Intelligence Engine, Explainability, Intelligence Center, ARIA upgrade, Overview KPI, 11 nuovi test (50/50)
 - **v2.5**: Policy Guidance Engine
 - **v2.4**: Policy Conflict Detection Engine
 - **v2.3**: D.Lgs. 262/2005 + Audit Readiness Score
 - **v2.2**: SOX Section 404 Wizard
+
+## 8. Documentazione Disponibile
+
+| Documento | Markdown | PDF | Lingua |
+|-----------|----------|-----|--------|
+| Investor Intro | GOVERN_AI_Investor_Intro_IT.md | GOVERN_AI_Investor_Intro_IT.pdf | IT |
+| Investor Intro | GOVERN_AI_Investor_Intro_EN.md | GOVERN_AI_Investor_Intro_EN.pdf | EN |
+| Investor Intro (one-pager) | INVESTOR_INTRO.md | - | EN |
+| Audit Tecnico | AUDIT_TECNICO_GOVERN.md | AUDIT_TECNICO_GOVERN.pdf | IT |
+| Technical Overview | GOVERN_AI_TECHNICAL_OVERVIEW.md | GOVERN_AI_Technical_Overview.pdf | IT |
+| **Manuale Operativo (NEW v3.0)** | GOVERN_AI_USER_MANUAL_IT.md | GOVERN_AI_USER_MANUAL_IT.pdf | IT |
+| **Manuale Operativo (NEW v3.0)** | GOVERN_AI_USER_MANUAL_EN.md | GOVERN_AI_USER_MANUAL_EN.pdf | EN |
+| README | README.md | - | EN |
