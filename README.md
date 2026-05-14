@@ -185,7 +185,7 @@ When backend is running:
 GOVERN.AI/
 ├── backend/
 │   ├── server.py          # FastAPI app, middleware, routers
-│   ├── models.py          # Pydantic models + Enums (14 models)
+│   ├── models.py          # Pydantic models + Enums (15 models)
 │   ├── database.py        # MongoDB connection + indexes
 │   ├── seed.py            # Enterprise demo data (banking scenario)
 │   ├── exporters.py       # PDF/CSV generation (ReportLab)
@@ -206,7 +206,7 @@ GOVERN.AI/
 ├── frontend/
 │   └── src/
 │       ├── contexts/      # Auth + Language (IT/EN)
-│       ├── pages/         # 11 pages (Landing to PolicyEngine)
+│       ├── pages/         # 12 pages (Landing to IntelligenceCenter)
 │       │   ├── LandingPage.js
 │       │   ├── LoginPage.js
 │       │   ├── DashboardLayout.js

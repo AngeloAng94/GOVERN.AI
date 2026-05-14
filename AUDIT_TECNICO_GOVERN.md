@@ -1,6 +1,6 @@
 # AUDIT TECNICO — GOVERN.AI
-**Data**: 08 Aprile 2026 (aggiornato post MVP v2.5)  
-**Versione codebase**: MVP v2.5  
+**Data**: 14 Maggio 2026  
+**Versione codebase**: MVP v3.0  
 **Autore**: Audit automatico  
 
 ---
@@ -28,7 +28,7 @@
                                   ┌────────────────┐
                                   │   MongoDB       │
                                   │   :27017        │
-                                  │   7 collections │
+                                  │   8 collections │
                                   └────────────────┘
                                   
                                   ┌────────────────┐
@@ -49,10 +49,7 @@
 | Component library | Shadcn/UI (Radix primitives) | New York style |
 | CSS framework | Tailwind CSS | 3.4.17 |
 | Database | MongoDB (Motor async driver) | pymongo 4.5.0 / motor 3.3.1 |
-| LLM integration | litellm (OpenAI GPT-4o default, configurabile via `LLM_MODEL`) | 1.80.0 |
-| HTTP client (FE) | Axios | 1.8.4 |
-| Routing (FE) | React Router DOM | 7.5.1 |
-| Process manager | Supervisord | (sistema) |
+| LLM integration | litellm (configurabile via `LLM_MODEL`) | 1.80.0 |
 | Validazione dati | Pydantic V2 | 2.12.5 |
 | Charts | Recharts | 3.6.0 |
 | PDF Export | ReportLab | 4.1.0 |
@@ -61,12 +58,11 @@
 ### 1.3 Tipo di architettura
 
 **Architettura modulare a due tier** con separazione frontend/backend:
-- Backend: `server.py` (orchestratore) + 9 file di route modulari in `routes/` + `models.py` + `database.py` + `seed.py` + `exporters.py`
-- Frontend: SPA con routing lato client, 11 pagine, componente CRUD generico `CrudPage.js`
-- Database: singola istanza MongoDB, 7 collections, 15+ indici
+- Backend: `server.py` (orchestratore) + 10 file di route modulari in `routes/` + `services/compliance_engine.py` + `models.py` + `database.py` + `seed.py` + `exporters.py`
+- Frontend: SPA con routing lato client, 12 pagine, componente CRUD generico `CrudPage.js`
+- Database: singola istanza MongoDB, 8 collections, 15+ indici
 - Autenticazione: JWT con RBAC (4 ruoli)
 - LLM: litellm (provider-agnostico)
-- Nessun message broker, nessuna cache
 
 ---
 
@@ -77,17 +73,15 @@
 ```
 /app/
 ├── backend/
-│   ├── .env                          # Variabili ambiente
-│   ├── requirements.txt              # Dipendenze Python
-│   ├── server.py                     # FastAPI app + middleware + router include (~100 righe)
-│   ├── models.py                     # 14 modelli Pydantic + 10 Enum (~240 righe)
-│   ├── database.py                   # Connessione MongoDB + indici (~40 righe)
+│   ├── server.py                     # FastAPI app + middleware + 10 router (~100 righe)
+│   ├── models.py                     # 15 modelli Pydantic + 10 Enum (~250 righe)
+│   ├── database.py                   # Connessione MongoDB + indici
 │   ├── seed.py                       # Dati seed enterprise (~986 righe)
 │   ├── exporters.py                  # PDF/CSV generation con ReportLab
-│   ├── rate_limiter.py               # Istanza condivisa slowapi
-│   ├── generate_overview_pdf.py      # Generazione PDF technical overview
+│   ├── rate_limiter.py               # Istanza condivisa SlowAPI
+│   ├── services/
+│   │   └── compliance_engine.py      # Compliance Intelligence Engine (scoring)
 │   ├── routes/
-│   │   ├── __init__.py
 │   │   ├── auth.py                   # Login, register, JWT, RBAC
 │   │   ├── agents.py                 # CRUD agenti AI
 │   │   ├── policies.py               # CRUD policy
@@ -96,117 +90,70 @@
 │   │   ├── dashboard.py              # Stats dashboard + KPI
 │   │   ├── chat.py                   # ARIA AI assistant (SSE streaming)
 │   │   ├── sox_wizard.py             # SOX Section 404 Wizard + Readiness Score
-│   │   └── policy_engine.py          # Policy Conflict Detection Engine
+│   │   ├── policy_engine.py          # Policy Conflict Detection + Guidance Engine
+│   │   └── score.py                  # Compliance Intelligence Engine API (6 endpoint)
 │   └── tests/
-│       ├── __init__.py
-│       └── test_api.py               # Suite test API (34 test completi)
+│       └── test_api.py               # Suite test API (50 test completi)
 ├── frontend/
-│   ├── .env                          # REACT_APP_BACKEND_URL
-│   ├── package.json                  # Dependencies
-│   ├── tailwind.config.js            # Config Tailwind + shadcn theme
 │   └── src/
-│       ├── index.js                  # Entry point React
-│       ├── index.css                 # CSS globale + animazioni
-│       ├── App.js                    # Router principale + PageTitleUpdater
 │       ├── contexts/
-│       │   ├── AuthContext.js        # Gestione auth + token JWT
-│       │   └── LanguageContext.js    # i18n con file JSON esterni
-│       ├── pages/
-│       │   ├── LandingPage.js        # Landing page con use case e social proof
-│       │   ├── LoginPage.js          # Login form
-│       │   ├── DashboardLayout.js    # Shell con sidebar responsive
-│       │   ├── OverviewPage.js       # KPI dashboard + 3 grafici Recharts
-│       │   ├── AgentsPage.js         # CRUD agenti (usa CrudPage)
-│       │   ├── PoliciesPage.js       # CRUD policy (usa CrudPage)
-│       │   ├── AuditPage.js          # Tabella audit + export
-│       │   ├── CompliancePage.js     # Monitor compliance + export
-│       │   ├── AssistantPage.js      # Chat AI ARIA (SSE streaming, react-markdown)
-│       │   ├── SoxWizardPage.js      # SOX 404 Wizard con Readiness Score
-│       │   └── PolicyEnginePage.js   # Policy Conflict Detection Engine
+│       │   ├── AuthContext.js
+│       │   └── LanguageContext.js
+│       ├── pages/ (12 pagine)
+│       │   ├── LandingPage.js
+│       │   ├── LoginPage.js
+│       │   ├── DashboardLayout.js
+│       │   ├── OverviewPage.js
+│       │   ├── AgentsPage.js
+│       │   ├── PoliciesPage.js
+│       │   ├── AuditPage.js
+│       │   ├── CompliancePage.js
+│       │   ├── AssistantPage.js
+│       │   ├── SoxWizardPage.js
+│       │   ├── PolicyEnginePage.js
+│       │   └── IntelligenceCenterPage.js   # Intelligence Center (v3.0)
 │       ├── components/
-│       │   ├── CrudPage.js           # Componente CRUD generico
-│       │   ├── Logo.js               # Logo ufficiale GOVERN.AI
-│       │   ├── EmptyState.js         # Empty state generico
-│       │   ├── SkeletonLoader.js     # Skeleton loading generico
-│       │   └── ui/                   # ~39 componenti Shadcn
-│       ├── locales/
-│       │   ├── en.json               # Traduzioni inglese (~130+ chiavi)
-│       │   └── it.json               # Traduzioni italiano (~130+ chiavi)
-│       ├── hooks/
-│       │   └── use-toast.js          # Hook toast
-│       └── lib/
-│           └── utils.js              # cn() utility
-├── .github/
-│   └── workflows/
-│       └── ci.yml                    # GitHub Actions CI (4 job)
-├── test_reports/
-│   └── iteration_*.json              # Report test automatici (7 iterazioni)
-├── memory/
-│   └── PRD.md                        # Product Requirements Document
-├── docker-compose.yml                # Orchestrazione 3 container
-├── .env.example                      # Template variabili ambiente
-├── .dockerignore                     # Docker ignore
-├── README.md                         # Documentazione principale
-├── AUDIT_TECNICO_GOVERN.md           # Questo documento
-├── GOVERN_AI_TECHNICAL_OVERVIEW.md   # Overview tecnica dettagliata
-├── GOVERN_AI_Investor_Intro_EN.md    # Deck investitori (EN)
-├── GOVERN_AI_Investor_Intro_IT.md    # Deck investitori (IT)
-└── GOVERN_AI_Investor_Intro_EN.pdf   # PDF investitori (EN)
+│       │   ├── CrudPage.js, Logo.js, EmptyState.js, SkeletonLoader.js
+│       │   └── ui/ (~39 componenti Shadcn)
+│       └── locales/
+│           ├── en.json (~185 chiavi)
+│           └── it.json (~185 chiavi)
+├── docker-compose.yml
+├── .github/workflows/ci.yml
+└── README.md
 ```
 
 ### 2.2 Analisi file principali
 
-| File | Righe | Responsabilita | Note |
-|---|---|---|---|
-| `backend/server.py` | ~100 | App FastAPI, middleware sicurezza, include 9 router | Orchestratore pulito |
-| `backend/models.py` | ~250 | 15 modelli Pydantic + 10 Enum | Separato e riutilizzabile |
-| `backend/seed.py` | ~986 | Dati seed enterprise banking | 14 agenti, 20+ policy, 150+ log, 20 SOX controls |
-| `backend/exporters.py` | ~300+ | PDF/CSV generation (ReportLab) | Audit + Compliance + SOX report |
-| `backend/routes/*.py` | ~50-150 | Endpoint specifici per dominio | 9 file modulari |
-| `frontend/src/components/CrudPage.js` | ~200 | Componente CRUD generico | Riusato da Agents/Policies |
-| `frontend/src/pages/SoxWizardPage.js` | ~400+ | SOX 404 controls + Readiness Score | Accordion + domain cards |
-| `frontend/src/pages/PolicyEnginePage.js` | ~350+ | Conflict detection UI | Summary + filtri + resolve dialog |
-
-### 2.3 Problemi strutturali — TUTTI RISOLTI
-
-| ID | Problema Originale | Stato | Soluzione Applicata |
-|---|---|---|---|
-| S1 | Backend monolite 491 righe | RISOLTO | Split in `models.py`, `database.py`, `seed.py`, `exporters.py`, 9 file route |
-| S2 | Duplicazione CRUD AgentsPage/PoliciesPage | RISOLTO | Componente generico `CrudPage.js` |
-| S3 | Traduzioni inline (227 righe) | RISOLTO | File JSON esterni `en.json`, `it.json` |
-| S4 | `App.css` vuoto | RISOLTO | File ignorato |
+| File | Righe | Responsabilita |
+|---|---|---|
+| `server.py` | ~100 | App FastAPI, middleware sicurezza, include 10 router |
+| `models.py` | ~250 | 15 modelli Pydantic + 10 Enum |
+| `seed.py` | ~986 | Dati seed enterprise banking |
+| `services/compliance_engine.py` | ~350 | Motore di scoring deterministico |
+| `routes/score.py` | ~130 | 6 endpoint API per il motore di scoring |
+| `routes/policy_engine.py` | ~350 | Conflict detection + guidance + resolve |
+| `IntelligenceCenterPage.js` | ~300 | Intelligence Center premium page |
+| `PolicyEnginePage.js` | ~300 | Policy Engine con guidance e resolve |
 
 ---
 
 ## 3. DATABASE & MODELLO DATI
 
-### 3.1 Elenco collections
+### 3.1 Elenco collections (8)
 
-| Collection | Documenti (attuale) | Campi principali |
+| Collection | Documenti | Campi principali |
 |---|---|---|
-| `agents` | 14 | `id`, `name`, `description`, `model_type`, `risk_level`, `status`, `allowed_actions[]`, `restricted_domains[]`, `data_classification`, `owner`, `created_at`, `updated_at` |
-| `policies` | 20+ | `id`, `name`, `description`, `agent_id`, `rule_type`, `conditions[]`, `actions[]`, `severity`, `regulation`, `enforcement`, `status`, `violations_count` |
-| `audit_logs` | 150+ | `id`, `timestamp`, `agent_name`, `action`, `resource`, `outcome`, `risk_level`, `details`, `policy_name`, `user`, `ip_address` |
-| `compliance_standards` | 8 | `id`, `name`, `code`, `description`, `status`, `progress`, `requirements_total`, `requirements_met`, `category`, `last_assessment`, `next_review` |
-| `chat_messages` | variabile | `id`, `session_id`, `role`, `content`, `timestamp` |
-| `users` | 1+ | `id`, `username`, `email`, `password_hash`, `role`, `full_name`, `created_at` |
-| `sox_controls` | 20 | `id`, `domain`, `control_id`, `title`, `description`, `section`, `status`, `evidence`, `assignee`, `due_date`, `completed_date`, `risk_level` |
+| `users` | 1+ | id, username, email, password_hash, role |
+| `agents` | 14 | id, name, model_type, risk_level, status, allowed_actions, owner |
+| `policies` | 20+ | id, name, agent_id, rule_type, conditions, actions, severity, regulation, enforcement |
+| `audit_logs` | 150+ | id, timestamp, agent_name, action, resource, outcome, risk_level, user |
+| `compliance_standards` | 8 | id, name, code, progress, requirements_total/met |
+| `chat_messages` | variabile | session_id, role, content, timestamp |
+| `sox_controls` | 20 | id, domain, control_id, title, status, evidence, risk_level |
+| `score_history` | variabile | timestamp, overall_score, agent_snapshots, standard_snapshots |
 
-### 3.2 Indici
-
-| Collection | Indici presenti |
-|---|---|
-| `agents` | `id` (unique), `status`, `risk_level` |
-| `policies` | `id` (unique), `regulation`, `severity` |
-| `audit_logs` | `id` (unique), `timestamp` (desc), `outcome`, `risk_level`, `agent_name` |
-| `compliance_standards` | `id` (unique), `code` (unique) |
-| `chat_messages` | `session_id` + `timestamp` (compound) |
-| `users` | `id` (unique), `username` (unique) |
-| `sox_controls` | `id` (unique), `domain`, `status` |
-
-**Stato**: Tutti gli indici necessari sono stati creati. Nessun COLLSCAN sulle query principali.
-
-### 3.3 Modelli Pydantic (15 totali)
+### 3.2 Modelli Pydantic (15 totali)
 
 | Modello | Scopo |
 |---|---|
@@ -215,12 +162,12 @@
 | `PolicyCreate`, `Policy` | Motore policy |
 | `AuditLog` | Traccia audit |
 | `ComplianceStandard` | Standard normativi |
-| `SoxControl`, `ControlStatus` | SOX Section 404 controls |
+| `SoxControl`, `ControlStatus` | SOX Section 404 |
 | `PolicyConflict`, `ConflictType`, `ConflictSeverity` | Policy Conflict Engine |
-| `ConflictResolution` | Risoluzione documentata conflitti (E5) |
+| `ConflictResolution` | Risoluzione documentata conflitti |
 | `ChatRequest` | Messaggi chat |
 
-### 3.4 Enum Pydantic (10 totali)
+### 3.3 Enum (10)
 
 `RiskLevel`, `AgentStatus`, `PolicySeverity`, `PolicyEnforcement`, `RuleType`, `AuditOutcome`, `DataClassification`, `UserRole`, `ControlStatus`, `ConflictType`, `ConflictSeverity`
 
@@ -228,79 +175,23 @@
 
 ## 4. SICUREZZA
 
-### 4.1 Meccanismi implementati
-
 | Meccanismo | Stato |
 |---|---|
-| Autenticazione JWT (HS256, 8h) | IMPLEMENTATO |
-| Autorizzazione RBAC (4 ruoli) | IMPLEMENTATO |
-| Rate limiting (SlowAPI) | IMPLEMENTATO |
-| CORS restrittivo (da env) | IMPLEMENTATO |
-| Security headers (5 header) | IMPLEMENTATO |
-| Sanitizzazione regex | IMPLEMENTATO |
-| Password hashing (bcrypt) | IMPLEMENTATO |
-| Enum validation (Pydantic V2) | IMPLEMENTATO |
-| LLM error masking | IMPLEMENTATO |
-
-### 4.2 Rate Limiting
-
-| Endpoint | Limite | Motivazione |
-|----------|--------|-------------|
-| `/api/auth/login` | 5/min | Previene brute force |
-| `/api/chat`, `/api/chat/stream` | 10/min | Controlla costi LLM |
-| `/api/*/export/pdf` | 5/min | Generazione pesante |
-| `/api/*/export/csv` | 10/min | File piu leggeri |
-| `/api/sox/report/pdf` | 5/min | Report SOX pesante |
-| Altri endpoint | 30-60/min | Uso normale |
-
-### 4.3 Vulnerabilita precedenti — STATO
-
-| ID | Severita | Stato | Dettaglio |
-|---|---|---|---|
-| V1 | ALTA | RISOLTO | Autenticazione JWT implementata (Step 2A) |
-| V2 | ALTA | RISOLTO | CORS restrittivo da env (Step 1) |
-| V3 | ALTA | MITIGATO | Chiave LLM in `.env` — standard per SaaS |
-| V4 | ALTA | RISOLTO | Regex injection sanitizzata con re.escape (Step 1) |
-| V5 | MEDIA | RISOLTO | Rate limiting su tutti gli endpoint (Step 2A) |
-| V6 | MEDIA | RISOLTO | Errori LLM mascherati (Step 1) |
-| V7 | MEDIA | RISOLTO | Enum Pydantic per tutti i campi tipizzati (Step 1) |
-| V9 | BASSA | RISOLTO | Security headers implementati (Step 2B) |
+| JWT Auth (HS256, 8h) | Implementato |
+| RBAC 4 ruoli (admin > dpo > auditor > viewer) | Implementato |
+| Rate Limiting (SlowAPI) | Implementato |
+| CORS restrittivo (da env) | Implementato |
+| Security Headers (5) | Implementato |
+| Sanitizzazione regex | Implementato |
+| Enum Pydantic (10) | Implementato |
+| LLM error masking | Implementato |
+| bcrypt password hashing | Implementato |
 
 ---
 
-## 5. PERFORMANCE & SCALABILITA
+## 5. TESTING & QUALITA
 
-### 5.1 Punti di forza
-
-| Aspetto | Dettaglio |
-|---|---|
-| Backend completamente async | Motor + FastAPI: tutte le operazioni DB sono non-bloccanti |
-| Indici MongoDB completi | 15+ indici su tutte le collection (no COLLSCAN) |
-| Pydantic V2 | Usa `model_dump()` — performance migliori |
-| SSE Streaming | Chat ARIA con risposta streaming (chunked) |
-| Proiezione `_id: 0` | Correttamente escluso `_id` da tutte le query |
-| Debounce search | 300ms debounce sulla ricerca audit trail |
-
-### 5.2 Colli di bottiglia residui
-
-| ID | Area | Problema | Impatto |
-|---|---|---|---|
-| P2 | Dashboard | Query multiple per stats (non aggregate) | Latenza con volumi alti |
-| P5 | Audit | Nessuna paginazione reale nel frontend | Con 10K+ log: performance degradata |
-| P8 | Bundle | 39 componenti Shadcn, ~12 usati | Bundle leggermente sovradimensionato |
-
----
-
-## 6. TESTING & QUALITA
-
-### 6.1 Test automatici
-
-| File | Tipo | Copertura | Risultato |
-|---|---|---|---|
-| `backend/tests/test_api.py` | Test API end-to-end (pytest) | 39 endpoint/scenario testati | **39/39 passati** |
-| `test_reports/iteration_1-7.json` | Report test automatizzati (testing agent) | Backend + Frontend | 8 iterazioni, tutte passate |
-
-### 6.2 Copertura test backend (39/39)
+### 5.1 Test automatici: 50/50 passati
 
 | Area | Test | Stato |
 |---|---|---|
@@ -311,130 +202,120 @@
 | Compliance | list, export PDF, 8 standards | 3/3 |
 | Dashboard | stats | 1/1 |
 | Chat | ARIA query | 1/1 |
-| SOX Wizard | controls, patch, report JSON, report PDF | 4/4 |
+| SOX Wizard | controls, patch, report JSON/PDF | 4/4 |
 | Readiness Score | score calculation | 1/1 |
 | Policy Engine | conflicts, resolution, gaps, scan history | 4/4 |
 | Policy Guidance | guidance endpoint, mandatory notes, short notes 422, audit log | 5/5 |
-| Standards validation | 7 standards, 8 standards | 2/2 |
+| Compliance Intelligence Engine | overview, explainability, agents, single, 404, standards, history, insights, conflict integration, bands, remediations | 11/11 |
+| Standards validation | 7+8 standards | 2/2 |
 | Misc | root, RBAC | 3/3 |
 
-### 6.3 Cosa NON e coperto
+### 5.2 CI/CD: GitHub Actions (4 job)
 
-| Area | Dettaglio | Rischio |
-|---|---|---|
-| Unit test frontend | Zero test React (jest/testing-library) | MEDIO |
-| Test di performance | Nessun load test | BASSO (MVP) |
-| Test a11y | Nessun test WCAG | BASSO |
+`backend-tests` (50 pytest), `frontend-build`, `security-scan`, `docker-build`
 
-### 6.4 CI/CD
-
-| Elemento | Stato |
-|---|---|
-| Dockerfile | PRESENTE — backend (Python 3.11-slim) + frontend (multi-stage node+nginx) |
-| docker-compose | PRESENTE — 3 container (MongoDB, Backend, Frontend) |
-| GitHub Actions | PRESENTE — `.github/workflows/ci.yml` con 4 job |
-| Jobs CI | backend-tests (34 pytest), frontend-build, security-scan, docker-build |
-
-### 6.5 Qualita generale del codice
-
-| Aspetto | Valutazione | Dettaglio |
-|---|---|---|
-| **Modularita** | Eccellente | 9 route file, modelli separati, seed separato |
-| **Type safety** | Buono | 14 modelli Pydantic + 10 Enum tipizzati |
-| **data-testid** | Eccellente | Presente su tutti gli elementi interattivi |
-| **Naming** | Buono | snake_case backend, camelCase frontend, kebab-case testid |
-| **Responsive** | Buono | Sidebar collapsabile + drawer mobile |
-| **i18n** | Completo | 130+ chiavi EN/IT in file JSON separati |
-| **Error handling** | Buono | try/except con masking errori LLM, toast frontend |
-| **Logging** | Adeguato | logger su seed, chat, startup/shutdown |
+### 5.3 Testing agent: 9 iterazioni, tutte passate 100%
 
 ---
 
-## 7. DEBITO TECNICO RESIDUO
+## 6. COMPLIANCE INTELLIGENCE ENGINE (v3.0) — Cuore Proprietario
+
+### 6.1 Architettura
+
+```
+services/compliance_engine.py
+├── score_agent()         → Score 0-100 per agente
+├── score_standard()      → Score 0-100 per standard normativo
+├── calculate_overview()  → Score complessivo + explainability
+├── compute_full_scores() → Orchestratore (fetch data → score → aggregate)
+└── compute_and_snapshot()→ Calcola + salva snapshot per history
+```
+
+### 6.2 Formula di Scoring
+
+**Agent Score (0-100):**
+- Base da risk_level: critical=25, high=45, medium=65, low=82
+- Policy coverage: +15 max (con policy) / -20 (senza policy = gap)
+- Audit outcome: +/-15 (ratio allowed/total actions)
+- Conflict penalty: critical=-18, high=-10, medium=-5, low=-2
+- Status: active=0, suspended=-10, inactive=-20
+
+**Standard Score (0-100):**
+- Base: progress %
+- Requirements bonus: delta req_ratio vs progress
+- Policy coverage: +12 max / -8 (senza policy)
+- Conflict penalty per regulation
+
+**Overall: standards 55% + agents 45% - penalita conflitti critici (max -15)**
+
+### 6.3 Explainability Layer
+
+Ogni score include:
+- `explanation_summary` — riassunto leggibile
+- `why_this_score` — formula applicata
+- `strongest_positive_factor` / `strongest_negative_factor`
+- `methodology_note` — "Scores are deterministic, no LLM involved"
+- `score_factors` — conteggi (excellent, warning, critical, conflicts)
+- `score_breakdown` — decomposizione numerica del punteggio
+
+### 6.4 Score History & Momentum
+
+- Snapshot salvati in collection `score_history`
+- Campi: `previous_score`, `delta_score`, `trend_direction` (up/down/stable)
+- Disponibile per agenti e standard
+
+### 6.5 Integrazione Conflitti
+
+- Conflitti critici non risolti → penalita score agente (-18 pts)
+- Gap (agenti senza policy) → missing controls
+- Overlap/redundancy → remediation suggestions
+- Il Policy Conflict Engine alimenta direttamente il motore di scoring
+
+---
+
+## 7. FUNZIONALITA IMPLEMENTATE — STORICO COMPLETO
+
+| Step | Versione | Funzionalita |
+|---|---|---|
+| MVP v1.0 | v1.0 | Landing, Dashboard, CRUD, Audit Trail, 6 standard, ARIA, i18n |
+| Step 1 | v1.1 | 15 indici MongoDB, regex sanitization, CORS, Enum, debounce |
+| Step 2A | v1.2 | JWT + RBAC (4 ruoli), ARIA verticale, rate limiting |
+| Step 2B | v1.3 | Backend modulare (9 route), security headers, CrudPage |
+| Step C1 | v1.4 | Dashboard Recharts (3 grafici), enterprise seed data |
+| Step C2 | v1.5 | Export PDF/CSV (Audit + Compliance) |
+| Step C3A | v1.6 | Logo ufficiale, mobile sidebar responsive |
+| Step C3B | v1.7 | Docker + docker-compose, README professionale |
+| Step CICD | v1.8 | GitHub Actions CI (4 job paralleli) |
+| Step FINAL | v1.9 | Landing use cases, SSE streaming ARIA, empty states, titoli |
+| Fix | v2.0 | Audit chart, delete dialog, portabilita LLM (litellm) |
+| Step E1 | v2.1 | SOX Foundation (standard + agente + 3 policy + audit cluster) |
+| Step E2 | v2.2 | SOX 404 Wizard (20 controlli, 5 domini, report PDF) |
+| Step E3 | v2.3 | D.Lgs. 262/2005 (8o standard) + Audit Readiness Score |
+| Step E4 | v2.4 | Policy Conflict Detection Engine (4 regole, 3 endpoint, UI) |
+| Step E5 | v2.5 | Policy Guidance Engine (guidance, impact, risoluzione documentata) |
+| Step E6 | v3.0 | Compliance Intelligence Engine + Explainability + Intelligence Center + Score History + ARIA upgrade |
+
+---
+
+## 8. DEBITO TECNICO RESIDUO
 
 | ID | Area | Problema | Priorita |
 |---|---|---|---|
-| TD19 | Database | Date come stringhe ISO anziche `datetime` nativo | P2 |
-| TD20 | Database | DB name `test_database` in dev | P3 |
 | TD-FE1 | Frontend | Nessun test unitario frontend (Jest) | P2 |
-| TD-FE2 | Frontend | Bundle size ottimizzabile (tree-shaking) | P3 |
 | TD-BE1 | Backend | Query dashboard non aggregate in pipeline | P2 |
-| TD-BE2 | Backend | Paginazione audit solo backend (frontend non usa skip) | P2 |
+| TD-BE2 | Backend | Paginazione audit solo backend | P2 |
+| TD19 | Database | Date come stringhe ISO | P3 |
 
 ---
 
-## 8. FUNZIONALITA IMPLEMENTATE — DETTAGLIO v2.4
+## 9. DA COMPLETARE
 
-### 8.1 SOX Foundation (Step E1 — v2.1)
-- Standard SOX aggiunto come 7o framework di compliance
-- Agente "SOX Internal Control Auditor" (high risk, 4 azioni)
-- 3 policy SOX: Financial Reporting Integrity, Internal Control Testing, CEO/CFO Certification Workflow
-- Cluster audit log SOX con 5 eventi realistici
-
-### 8.2 SOX Section 404 Wizard (Step E2 — v2.2)
-- 20 controlli SOX in 5 domini: Access Control, Change Management, IT Operations, Data Integrity, Security
-- Pagina UI dedicata con domain cards, accordion controlli, edit dialog
-- Export report PDF con ReportLab (SoxReportPDFBuilder)
-- 4 endpoint: GET controls, PATCH control, GET report JSON, GET report PDF
-
-### 8.3 D.Lgs. 262/2005 + Audit Readiness Score (Step E3 — v2.3)
-- 8o standard: D.Lgs. 262/2005 (Italian financial reporting controls)
-- 2 policy DLgs262: Attestazione Dirigente Preposto, Procedure Amministrativo-Contabili
-- Agente "Dirigente Preposto Assistant" (CFO Office)
-- **Audit Readiness Score**: score pesato per rischio con top 5 priority controls e domain scores
-- Endpoint: GET `/api/sox/readiness-score`
-
-### 8.4 Policy Conflict Engine (Step E4 — v2.4)
-- Algoritmo di detection con 4 regole: action_conflict, gap, overlap, redundancy
-- 3 endpoint: GET conflicts, POST resolve, GET scan-history
-- Pagina UI con summary cards, filtri per tipo/severita, conflict cards, resolve dialog
-- 5o KPI card in OverviewPage con conteggio conflitti critici
-- Demo data: policy con conflitto intenzionale (block vs auto) su Fraud Detection Engine
-
-### 8.5 Policy Guidance Engine (Step E5 — v2.5)
-- Campi `guidance` e `impact_description` aggiunti a ogni conflitto rilevato
-- Guidance operativa specifica per tipo di conflitto (action_conflict, gap, overlap, redundancy)
-- Nuovo modello `ConflictResolution` con `resolution_notes` obbligatorio (min 10 caratteri)
-- Endpoint resolve aggiornato: richiede note documentate e crea audit log `POLICY_CONFLICT_RESOLVED`
-- Nuovo endpoint `GET /api/policy-engine/conflicts/{id}/guidance` per dettaglio singolo conflitto
-- IDs conflitto ora deterministici (hash SHA-256)
-- Frontend: sezioni collassabili "Impatto" e "Raccomandazione" su ogni conflict card
-- Frontend: pannello laterale "Dettaglio" con Sheet Shadcn per visualizzazione completa
-- Frontend: dialog risoluzione con textarea obbligatoria, validazione 10 char, utente read-only
-- Frontend: box verde "Risoluzione documentata" per conflitti gia risolti
-- 5 nuovi test backend (34 → 39)
+- **Test unitari frontend** (Jest + Testing Library) — P2
+- **Connettori enterprise** (IAM, SIEM, ServiceNow) — P2
+- **Multi-tenancy** — P2
+- **D.Lgs. 262 Wizard** (workflow dedicato) — P2
+- **WebSocket real-time monitoring** — P2
 
 ---
 
-## 9. RIEPILOGO STATO PROGETTO
-
-### Completato
-
-- **[MVP v1.0]** Landing page, Dashboard 6 sezioni, CRUD Agents/Policies, Audit Trail, Compliance 6 standard, AI Assistant, i18n EN/IT
-- **[Step 1 — v1.1]** 15 indici MongoDB, sanitizzazione regex, CORS restrittivo, chat history, Enum Pydantic, debounce, lifespan, LLM error masking
-- **[Step 2A — v1.2]** JWT + RBAC (4 ruoli), ARIA verticale, rate limiting
-- **[Step 2B — v1.3]** Backend modulare (9 route), security headers, CrudPage generico, traduzioni JSON, react-markdown
-- **[Step C1 — v1.4]** Dashboard Recharts (3 grafici), enterprise seed data (banking)
-- **[Step C2 — v1.5]** Export PDF/CSV (Audit Trail + Compliance Report)
-- **[Step C3A — v1.6]** Logo ufficiale, mobile sidebar responsive
-- **[Step C3B — v1.7]** Docker + docker-compose, README professionale
-- **[Step CICD — v1.8]** GitHub Actions CI (4 job paralleli)
-- **[Step FINAL — v1.9]** Landing use cases, social proof, SSE streaming ARIA, titoli dinamici, empty states, skeleton loaders
-- **[Fix v2.0]** Bar chart audit corretto, delete confirmation dialog, portabilita LLM (litellm)
-- **[Step E1 — v2.1]** SOX Foundation (standard + agente + 3 policy + audit cluster)
-- **[Step E2 — v2.2]** SOX Section 404 Wizard (20 controlli, 5 domini, report PDF)
-- **[Step E3 — v2.3]** D.Lgs. 262/2005 (8o standard) + Audit Readiness Score
-- **[Step E4 — v2.4]** Policy Conflict Detection Engine (4 regole, 3 endpoint, UI completa)
-- **[Step E5 — v2.5]** Policy Guidance Engine (guidance operativa, impatto, risoluzione documentata)
-
-### Da completare
-
-- **Test unitari frontend** — assenti (P2)
-- **Connettori enterprise** (IAM, SIEM, ServiceNow) — non implementati (P2)
-- **Multi-tenancy** — non implementato (P2)
-- **D.Lgs. 262 Wizard** — workflow dedicato simile al SOX Wizard (P2)
-- **WebSocket real-time monitoring** — aggiornamenti dashboard live (P2)
-
----
-
-*Fine audit tecnico. Documento generato analizzando il codice sorgente. Ultimo aggiornamento: 08 Aprile 2026 (MVP v2.5).*
+*Fine audit tecnico. Ultimo aggiornamento: 14 Maggio 2026 (MVP v3.0).*
