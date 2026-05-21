@@ -1,6 +1,6 @@
 # AUDIT TECNICO — GOVERN.AI
-**Data**: 14 Maggio 2026  
-**Versione codebase**: MVP v3.0  
+**Data**: 21 Maggio 2026 (aggiornato post Sovereign Mode v3.1)  
+**Versione codebase**: v3.1 — Sovereign Mode  
 **Autore**: Audit automatico  
 
 ---
@@ -318,4 +318,45 @@ Ogni score include:
 
 ---
 
-*Fine audit tecnico. Ultimo aggiornamento: 14 Maggio 2026 (MVP v3.0).*
+## SOVEREIGN MODE — APERTUS INTEGRATION (v3.1)
+
+### Panoramica
+GOVERN.AI v3.1 introduce supporto nativo per Apertus (Swiss AI Initiative —
+ETH Zurich + EPFL + CSCS) come provider LLM sovrano via litellm.
+
+### File modificati/aggiunti
+| File | Tipo |
+|------|------|
+| backend/settings.py | NUOVO — singleton config LLM |
+| backend/routes/chat.py | MODIFICATO — sovereign routing + fallback GPT-4o |
+| backend/routes/ai_settings.py | NUOVO — endpoint REST admin-only |
+| backend/server.py | MODIFICATO — registrazione router |
+| frontend/src/pages/SettingsPage.js | NUOVO — UI toggle |
+| frontend/src/components/AIModeBadge.js | NUOVO — badge sidebar |
+| .env.example | MODIFICATO — +4 variabili Apertus |
+
+### Architettura dual-provider
+litellm routing:
+- LLM_SOVEREIGN_ENABLED=true + PUBLICAI_API_KEY valorizzata → Apertus-70B
+- Altrimenti → GPT-4o (default)
+- Errore Apertus → fallback automatico GPT-4o (try/except chat.py)
+
+### Nuove variabili ambiente
+| Variabile | Default |
+|-----------|---------|
+| LLM_SOVEREIGN_ENABLED | false |
+| LLM_SOVEREIGN_MODEL | publicai/swiss-ai/apertus-70b-instruct |
+| LLM_SOVEREIGN_BASE_URL | https://platform.publicai.co/v1 |
+| PUBLICAI_API_KEY | your_key_here |
+
+### Endpoint REST
+GET  /api/settings/ai-mode  → stato corrente (viewer+)
+POST /api/settings/ai-mode  → toggle (admin only)
+
+### Validazione
+50/50 pytest PASSED — zero regressioni
+Fallback automatico GPT-4o confermato nei log
+
+---
+
+*Fine audit tecnico. Ultimo aggiornamento: 21 Maggio 2026 (v3.1 — Sovereign Mode).*
