@@ -2,12 +2,13 @@ import React, { useState, useEffect } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { LayoutDashboard, Bot, FileText, Activity, CheckCircle, MessageSquare, Globe, ArrowLeft, LogOut, User, Menu, X, ChevronLeft, ChevronRight, ClipboardCheck, Zap, Brain } from "lucide-react";
+import { LayoutDashboard, Bot, FileText, Activity, CheckCircle, MessageSquare, Globe, ArrowLeft, LogOut, User, Menu, X, ChevronLeft, ChevronRight, ClipboardCheck, Zap, Brain, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import Logo from "@/components/Logo";
+import AIModeBadge from "@/components/AIModeBadge";
 
 const navItems = [
   { path: "/dashboard", icon: LayoutDashboard, labelKey: "sidebar_overview", end: true },
@@ -19,6 +20,7 @@ const navItems = [
   { path: "/dashboard/sox-wizard", icon: ClipboardCheck, labelKey: "sidebar_sox_wizard" },
   { path: "/dashboard/intelligence", icon: Brain, labelKey: "sidebar_intelligence" },
   { path: "/dashboard/assistant", icon: MessageSquare, labelKey: "sidebar_assistant" },
+  { path: "/dashboard/settings", icon: Settings, labelKey: "sidebar_settings" },
 ];
 
 const roleBadge = {
@@ -152,17 +154,21 @@ export default function DashboardLayout() {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-medium text-slate-300 truncate" data-testid="sidebar-username">{user.username}</p>
-                <Badge className={`${roleBadge[user.role] || roleBadge.viewer} border text-[9px] px-1.5 py-0`} data-testid="sidebar-user-role">{user.role.toUpperCase()}</Badge>
+                <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                  <Badge className={`${roleBadge[user.role] || roleBadge.viewer} border text-[9px] px-1.5 py-0`} data-testid="sidebar-user-role">{user.role.toUpperCase()}</Badge>
+                  <AIModeBadge />
+                </div>
               </div>
             </div>
           )}
           
           {/* Collapsed user icon */}
           {user && sidebarCollapsed && (
-            <div className="flex justify-center py-2" title={`${user.username} (${user.role})`}>
+            <div className="flex flex-col items-center gap-2 py-2" title={`${user.username} (${user.role})`}>
               <div className="w-8 h-8 rounded-sm bg-slate-800 flex items-center justify-center">
                 <User className="w-4 h-4 text-slate-400" />
               </div>
+              <AIModeBadge collapsed />
             </div>
           )}
           

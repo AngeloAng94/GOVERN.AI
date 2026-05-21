@@ -17,6 +17,7 @@ import SoxWizardPage from "@/pages/SoxWizardPage";
 import PolicyEnginePage from "@/pages/PolicyEnginePage";
 import AssistantPage from "@/pages/AssistantPage";
 import IntelligenceCenterPage from "@/pages/IntelligenceCenterPage";
+import SettingsPage from "@/pages/SettingsPage";
 
 const pageTitles = {
   "/": "GOVERN.AI — Sovereign Control Plane",
@@ -71,6 +72,7 @@ function App() {
               <Route path="sox-wizard" element={<SoxWizardPage />} />
               <Route path="intelligence" element={<IntelligenceCenterPage />} />
               <Route path="assistant" element={<AssistantPage />} />
+              <Route path="settings" element={<SettingsPage />} />
             </Route>
           </Routes>
         </BrowserRouter>
