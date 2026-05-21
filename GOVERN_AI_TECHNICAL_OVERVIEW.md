@@ -85,6 +85,16 @@ GOVERN.AI fornisce:
 | Export | ReportLab 4.1 | Report PDF |
 | DevOps | Docker Compose + GitHub Actions CI | Deployment |
 
+### AI Provider — Dual Mode (v3.1)
+
+- **Primary (Sovereign):** Apertus-70B-Instruct (Swiss AI Initiative)
+  via Public AI Swiss (`platform.publicai.co`).
+  Licenza Apache 2.0 — EU/CH sovereign — EU AI Act compliant.
+- **Fallback (Performance):** GPT-4o (OpenAI).
+  Attivo automaticamente se Apertus non configurato o in errore.
+- **Abstraction layer:** litellm (zero code change per switch provider).
+- **Toggle:** UI Settings (admin) o variabili ambiente (ops).
+
 ---
 
 # 3. COMPLIANCE INTELLIGENCE ENGINE
