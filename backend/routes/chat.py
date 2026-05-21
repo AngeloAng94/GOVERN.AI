@@ -12,6 +12,7 @@ from database import db
 from models import ChatRequest, AuditLog, AuditOutcome
 from routes.auth import require_role, get_current_user_from_token
 from rate_limiter import limiter
+from settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -62,31 +63,54 @@ async def _get_chat_history(session_id: str) -> list:
     ).sort("timestamp", 1).to_list(20)
 
 
-async def _get_aria_response(message: str, history: list) -> str:
-    """Call LLM and return ARIA's response."""
-    api_key = os.environ.get("OPENAI_API_KEY") or os.environ.get("EMERGENT_LLM_KEY", "")
-    model = os.environ.get("LLM_MODEL", "openai/gpt-4o")
+async def _call_llm(messages: list, llm_cfg: dict) -> str:
+    """Single LLM invocation using the kwargs produced by settings."""
+    kwargs = dict(
+        model=llm_cfg["model"],
+        messages=messages,
+        api_key=llm_cfg["api_key"],
+        temperature=0.4,
+        max_tokens=2048,
+    )
+    if llm_cfg.get("api_base"):
+        kwargs["api_base"] = llm_cfg["api_base"]
+    # Route GPT calls through Emergent proxy when only EMERGENT_LLM_KEY is set
+    elif (
+        llm_cfg["provider"] == "performance"
+        and os.environ.get("EMERGENT_LLM_KEY")
+        and not os.environ.get("OPENAI_API_KEY")
+    ):
+        kwargs["api_base"] = "https://integrations.emergentagent.com/llm"
 
+    response = await litellm.acompletion(**kwargs)
+    return response.choices[0].message.content
+
+
+async def _get_aria_response(message: str, history: list) -> str:
+    """Call LLM and return ARIA's response.
+
+    Provider selection is delegated to ``settings.get_llm_model()``. When
+    Sovereign mode (Apertus) is active and the call fails, we automatically
+    fall back to GPT-4o so ARIA stays available for the user.
+    """
     messages = [{"role": "system", "content": ARIA_SYSTEM_PROMPT}]
     for msg in history:
         if msg["role"] in ("user", "assistant"):
             messages.append({"role": msg["role"], "content": msg["content"]})
     messages.append({"role": "user", "content": message})
 
-    kwargs = dict(
-        model=model,
-        messages=messages,
-        api_key=api_key,
-        temperature=0.4,
-        max_tokens=2048,
-    )
-
-    # Route through Emergent proxy when using their key
-    if os.environ.get("EMERGENT_LLM_KEY") and not os.environ.get("OPENAI_API_KEY"):
-        kwargs["api_base"] = "https://integrations.emergentagent.com/llm"
-
-    response = await litellm.acompletion(**kwargs)
-    return response.choices[0].message.content
+    primary = settings.get_llm_model()
+    try:
+        return await _call_llm(messages, primary)
+    except Exception as primary_err:
+        if primary["provider"] != "sovereign":
+            raise
+        logger.warning(
+            "Sovereign LLM call failed (model=%s): %s — falling back to %s",
+            primary["model"], primary_err, settings.default_model,
+        )
+        fallback = settings.get_fallback_model()
+        return await _call_llm(messages, fallback)
 
 
 async def _save_chat_messages(session_id: str, user_msg: str, ai_msg: str):
