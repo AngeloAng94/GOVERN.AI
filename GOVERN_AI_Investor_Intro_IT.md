@@ -32,6 +32,12 @@ GOVERN.AI permette alle imprese di:
 | **Classificazione Rischio** | Valutazione automatica allineata alle categorie EU AI Act |
 | **Assistente AI (ARIA)** | Consulente LLM con SSE streaming, contestualizzato su score e conflitti aperti |
 
+- **Sovereign AI Engine**: GOVERN.AI v3.1 integra **Apertus**
+  (ETH Zurich + EPFL + CSCS) come provider AI sovrano europeo.
+  Dati europei processati da AI europea — Apache 2.0, EU AI Act compliant,
+  zero dipendenza da US Cloud Act. Fallback automatico su GPT-4o garantisce
+  continuità operativa.
+
 ---
 
 ## Le Novita di v3.0
