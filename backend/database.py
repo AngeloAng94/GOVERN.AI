@@ -9,8 +9,10 @@ load_dotenv(ROOT_DIR / '.env')
 
 logger = logging.getLogger(__name__)
 
-mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
+MONGO_URL = os.environ.get('MONGO_URL')
+if not MONGO_URL:
+    raise RuntimeError("MONGO_URL environment variable is required")
+client = AsyncIOMotorClient(MONGO_URL)
 db = client[os.environ['DB_NAME']]
 
 
