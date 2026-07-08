@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 import io
 
 from database import db
-from models import AuditLog, AuditOutcome, RiskLevel
+from models import AuditLog, AuditOutcome, RiskLevel, SoxControlUpdate
 from routes.auth import require_role
 from rate_limiter import limiter
 from exporters import generate_sox_report_pdf
@@ -50,7 +50,7 @@ async def list_sox_controls(user: dict = Depends(require_role("viewer"))):
 @router.patch("/controls/{control_id}")
 async def update_sox_control(
     control_id: str,
-    data: dict,
+    data: SoxControlUpdate,
     user: dict = Depends(require_role("auditor")),
 ):
     """Update a single SOX control and create an audit log."""
@@ -58,8 +58,7 @@ async def update_sox_control(
     if not existing:
         raise HTTPException(status_code=404, detail="Control not found")
 
-    allowed = {"status", "evidence", "assignee", "due_date"}
-    update = {k: v for k, v in data.items() if k in allowed}
+    update = data.model_dump(exclude_none=True)
     update["updated_at"] = datetime.now(timezone.utc).isoformat()
 
     if update.get("status") == "completed" and existing.get("status") != "completed":

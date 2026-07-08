@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from pathlib import Path
 import os
 import logging
+import pymongo
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -33,6 +34,13 @@ async def create_indexes():
     await db.chat_messages.create_index([("session_id", 1), ("timestamp", 1)], background=True)
     await db.users.create_index("username", unique=True, background=True)
     await db.users.create_index("email", unique=True, background=True)
+    await db.sox_controls.create_index("id", unique=True, background=True)
+    await db.sox_controls.create_index("domain", background=True)
+    await db.conflict_scans.create_index([("timestamp", pymongo.DESCENDING)], background=True)
+    await db.resolved_conflicts.create_index("conflict_id", background=True)
+    await db.resolved_conflicts.create_index([("resolved_at", pymongo.DESCENDING)], background=True)
+    await db.score_history.create_index([("timestamp", pymongo.DESCENDING)], background=True)
+    await db.score_history.create_index("entity_type", background=True)
     logger.info("All indexes created")
 
 

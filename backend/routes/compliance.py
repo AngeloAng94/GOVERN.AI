@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 import io
 
 from database import db
+from models import ComplianceUpdate
 from routes.auth import require_role
 from rate_limiter import limiter
 from exporters import generate_compliance_pdf
@@ -36,11 +37,10 @@ async def export_compliance_pdf(
 
 
 @router.put("/{standard_id}")
-async def update_compliance(standard_id: str, data: dict, user: dict = Depends(require_role("dpo"))):
+async def update_compliance(standard_id: str, data: ComplianceUpdate, user: dict = Depends(require_role("dpo"))):
     existing = await db.compliance_standards.find_one({"id": standard_id}, {"_id": 0})
     if not existing: raise HTTPException(status_code=404, detail="Standard not found")
-    allowed_fields = {"status", "progress", "requirements_met", "next_review"}
-    update = {k: v for k, v in data.items() if k in allowed_fields}
+    update = data.model_dump(exclude_none=True)
     update["last_assessment"] = datetime.now(timezone.utc).isoformat()
     await db.compliance_standards.update_one({"id": standard_id}, {"$set": update})
     return await db.compliance_standards.find_one({"id": standard_id}, {"_id": 0})

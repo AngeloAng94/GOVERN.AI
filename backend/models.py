@@ -172,6 +172,11 @@ class ComplianceStandard(BaseModel):
     next_review: str = ""
     category: str = "regulation"
 
+class ComplianceUpdate(BaseModel):
+    progress: Optional[int] = Field(None, ge=0, le=100)
+    status: Optional[str] = Field(None, pattern="^(compliant|in_progress|non_compliant)$")
+    notes: Optional[str] = Field(None, max_length=1000)
+
 # ============ SOX WIZARD MODEL ============
 
 class ControlStatus(str, Enum):
@@ -197,6 +202,12 @@ class SoxControl(BaseModel):
     risk_level: str = "medium"
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+class SoxControlUpdate(BaseModel):
+    status: Optional[str] = Field(None, pattern="^(not_started|in_progress|completed|failed|not_applicable)$")
+    evidence: Optional[str] = Field(None, max_length=2000)
+    assignee: Optional[str] = Field(None, max_length=200)
+    due_date: Optional[str] = Field(None, pattern="^\\d{4}-\\d{2}-\\d{2}$")
 
 # ============ CHAT MODEL ============
 
