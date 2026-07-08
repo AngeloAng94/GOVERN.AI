@@ -90,3 +90,32 @@ Piattaforma SaaS per la governance di agenti AI enterprise con motore di complia
 | **Manuale Operativo (NEW v3.0)** | GOVERN_AI_USER_MANUAL_IT.md | GOVERN_AI_USER_MANUAL_IT.pdf | IT |
 | **Manuale Operativo (NEW v3.0)** | GOVERN_AI_USER_MANUAL_EN.md | GOVERN_AI_USER_MANUAL_EN.pdf | EN |
 | README | README.md | - | EN |
+
+---
+
+## Hardening Sprint (2026-07-08) — Prompt 1.1 / 1.2 / 1.3
+
+**1.1 Docker/Mongo hardening**
+- backend/Dockerfile: utente non-root (appuser), USER prima del CMD, HEALTHCHECK (/health), curl installato
+- backend/.dockerignore creato
+- frontend/Dockerfile: HEALTHCHECK nginx (wget)
+- docker-compose.yml: auth MongoDB, connection string autenticata, no source volume mount, resource limits, rimossa chiave version
+- backend/database.py: MONGO_URL via os.environ.get + RuntimeError
+
+**1.2 Pydantic + indici**
+- models.py: ComplianceUpdate, SoxControlUpdate (pattern SOX allineato all'enum reale: not_started|in_progress|completed|failed|not_applicable)
+- routes/compliance.py, routes/sox_wizard.py: data: <Model> + model_dump(exclude_none=True)
+- database.py: 7 indici aggiunti (sox_controls, conflict_scans, resolved_conflicts, score_history)
+
+**Trasparenza test LLM**
+- pytest.ini (-ra --strict-markers, marker llm/sovereign), conftest.py (banner LLM COVERAGE WARNING su skip)
+- test_api.py: TestChat marcato llm; nuova TestSovereignMode (skip visibile se manca PUBLICAI_API_KEY); TestSoxWizard reso robusto (token cache)
+
+**1.3 Igiene repo**
+- Rimossa password admin hardcoded da README, manuali IT/EN, STEP2A_REPORT, generate_overview_pdf.py, backend_test.py
+- seed_admin: ADMIN_PASSWORD da env, altrimenti password random (secrets) stampata una sola volta al primo boot
+- backend/.env: aggiunti ADMIN_PASSWORD, APP_VERSION
+- Endpoint GET /api/health e /health (status DB, llm_provider, version — nessun dato sensibile)
+- Frontend: banner persistente "DEMO DATA" in DashboardLayout (i18n it/en), data-testid demo-data-banner
+
+Test: 50 passed, 1 skipped (Sovereign, no key), 0 failed.

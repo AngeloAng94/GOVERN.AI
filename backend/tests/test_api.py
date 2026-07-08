@@ -443,17 +443,11 @@ class TestRoleBasedAccess:
 class TestSoxWizard:
     """SOX Section 404 Wizard endpoint tests"""
 
-    _token = None
-    _headers = None
-
     @pytest.fixture(autouse=True)
     def setup(self):
         self.client = httpx.Client(timeout=30)
-        if TestSoxWizard._token is None:
-            login_resp = self.client.post(f"{BASE}/auth/login", json={"username": "admin", "password": "AdminGovern2026!"})
-            TestSoxWizard._token = login_resp.json()["token"]
-            TestSoxWizard._headers = {"Authorization": f"Bearer {TestSoxWizard._token}"}
-        self.headers = TestSoxWizard._headers
+        self.token = get_auth_token(self.client)
+        self.headers = {"Authorization": f"Bearer {self.token}"}
         yield
         self.client.close()
 

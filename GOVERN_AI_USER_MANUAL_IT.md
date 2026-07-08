@@ -86,7 +86,7 @@ Permette di:
 ### Credenziali demo
 
 - **Username**: `admin`
-- **Password**: `AdminGovern2026!`
+- **Password**: `<set via ADMIN_PASSWORD>`
 
 > In produzione cambia immediatamente queste credenziali. Vedi sezione 21 — Sicurezza.
 
@@ -743,7 +743,7 @@ cp .env.example frontend/.env
 docker-compose up --build
 ```
 
-Apri `http://localhost:3000`. Credenziali: `admin / AdminGovern2026!`.
+Apri `http://localhost:3000`. Credenziali: `admin / <ADMIN_PASSWORD>`.
 
 ### Servizi avviati
 
@@ -923,7 +923,7 @@ tail -n 100 /var/log/supervisor/backend.*.log
 
 | Ruolo | Username | Password |
 |-------|----------|----------|
-| Admin | `admin` | `AdminGovern2026!` |
+| Admin | `admin` | `<set via ADMIN_PASSWORD>` |
 
 > Cambiare immediatamente in produzione.
 

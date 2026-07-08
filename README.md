@@ -110,7 +110,9 @@ http://localhost:3000
 
 **Default credentials** (CHANGE IN PRODUCTION):
 - Username: `admin`
-- Password: `AdminGovern2026!`
+- Password: set via the `ADMIN_PASSWORD` environment variable. If it is not set, a
+  secure random password is generated at first boot and printed **once** to the
+  backend console/logs. Copy it from there on the first run.
 
 ---
 

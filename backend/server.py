@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from contextlib import asynccontextmanager
@@ -16,8 +16,9 @@ load_dotenv(ROOT_DIR / '.env')
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-from database import create_indexes, close_connection
+from database import create_indexes, close_connection, client
 from seed import seed_database
+from settings import settings
 from routes.auth import router as auth_router
 from routes.agents import router as agents_router
 from routes.policies import router as policies_router
@@ -81,6 +82,36 @@ app.include_router(ai_settings_router)
 @app.get("/api/")
 async def root():
     return {"message": "GOVERN.AI API - Sovereign AI Control Plane"}
+
+
+APP_VERSION = os.environ.get("APP_VERSION", "3.1.0")
+
+
+async def _health_payload():
+    db_ok = True
+    try:
+        await client.admin.command("ping")
+    except Exception:
+        db_ok = False
+    body = {
+        "status": "ok" if db_ok else "degraded",
+        "database": "connected" if db_ok else "disconnected",
+        "llm_provider": settings.get_llm_model()["provider"],
+        "version": APP_VERSION,
+    }
+    return JSONResponse(status_code=200 if db_ok else 503, content=body)
+
+
+# Exposed both as /health (Docker/container healthcheck, no ingress rewrite)
+# and /api/health (reachable through the k8s ingress). No sensitive data returned.
+@app.get("/health")
+async def health():
+    return await _health_payload()
+
+
+@app.get("/api/health")
+async def api_health():
+    return await _health_payload()
 
 
 @app.get("/api/docs/technical-overview-pdf")

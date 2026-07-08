@@ -8,7 +8,7 @@
 
 | # | Fix | Esito | File modificati | Note |
 |---|---|---|---|---|
-| A1 | JWT Authentication + RBAC | ✅ | `server.py`, `.env`, `AuthContext.js`, `LoginPage.js`, `App.js`, `DashboardLayout.js` | 4 ruoli (admin>dpo>auditor>viewer), bcrypt hash, HS256, 8h expiry. Admin seed: admin/AdminGovern2026!. Interceptor 401→/login. Sidebar mostra username+ruolo. |
+| A1 | JWT Authentication + RBAC | ✅ | `server.py`, `.env`, `AuthContext.js`, `LoginPage.js`, `App.js`, `DashboardLayout.js` | 4 ruoli (admin>dpo>auditor>viewer), bcrypt hash, HS256, 8h expiry. Admin seed: admin / password from ADMIN_PASSWORD env (random if unset, printed at first boot). Interceptor 401→/login. Sidebar mostra username+ruolo. |
 | A2 | ARIA AI Assistant verticale | ✅ | `server.py`, `AssistantPage.js`, `LanguageContext.js` | System prompt rigido con 6 regole. Rifiuta domande off-topic. Validazione 5-2000 chars con HTTP 400. Counter caratteri in UI. Badge "AI Regulatory Intelligence Assistant". Log interno per query out-of-scope. |
 | A3 | Rate Limiting (slowapi) | ✅ | `server.py` | chat 10/min, login 5/min, register 3/min, CRUD 30/min, delete 10/min, audit 60/min, dashboard 30/min. HTTP 429 su eccedenza. |
 

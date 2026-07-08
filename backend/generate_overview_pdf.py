@@ -566,7 +566,7 @@ def build_pdf() -> bytes:
         "cp .env.example backend/.env   # Configurare JWT_SECRET_KEY e LLM key",
         "docker-compose up --build      # Avvia tutti i servizi",
         "# Accessibile su http://localhost:3000",
-        "# Credenziali demo: admin / AdminGovern2026!",
+        "# Credenziali demo: admin / <impostare ADMIN_PASSWORD, stampata al primo avvio>",
     ]
     for cmd in setup_cmds:
         elements.append(Paragraph(cmd, S["code"]))

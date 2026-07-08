@@ -4,6 +4,7 @@ GOVERN.AI Step 2A Backend API Testing Suite
 Tests JWT Authentication, RBAC, Rate Limiting, and ARIA Assistant
 """
 import requests
+import os
 import sys
 import json
 import time
@@ -87,7 +88,7 @@ class GovernAITester:
             "POST",
             "auth/login",
             200,
-            data={"username": "admin", "password": "AdminGovern2026!"}
+            data={"username": os.environ.get("ADMIN_USERNAME", "admin"), "password": os.environ.get("ADMIN_PASSWORD", "")}
         )
         
         if success and 'token' in response and 'user' in response:

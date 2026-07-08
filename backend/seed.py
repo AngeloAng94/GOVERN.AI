@@ -1,5 +1,7 @@
 import random
 import uuid
+import os
+import secrets
 import logging
 from datetime import datetime, timezone, timedelta
 from passlib.context import CryptContext
@@ -18,18 +20,40 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 async def seed_admin():
     existing = await db.users.find_one({"username": "admin"})
-    if not existing:
-        admin = {
-            "id": str(uuid.uuid4()),
-            "username": "admin",
-            "email": "admin@govern.ai",
-            "password_hash": pwd_context.hash("AdminGovern2026!"),
-            "role": "admin",
-            "full_name": "System Administrator",
-            "created_at": datetime.now(timezone.utc).isoformat()
-        }
-        await db.users.insert_one(admin)
-        logger.info("Seeded default admin user")
+    if existing:
+        return
+
+    # Secure demo credentials: use ADMIN_PASSWORD if provided, otherwise
+    # generate a cryptographically strong random password at first boot.
+    # The plaintext is printed once to the console and never stored in the repo.
+    password = os.environ.get("ADMIN_PASSWORD")
+    generated = False
+    if not password:
+        password = secrets.token_urlsafe(16)
+        generated = True
+
+    admin = {
+        "id": str(uuid.uuid4()),
+        "username": "admin",
+        "email": "admin@govern.ai",
+        "password_hash": pwd_context.hash(password),
+        "role": "admin",
+        "full_name": "System Administrator",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.users.insert_one(admin)
+
+    source = "generated (random)" if generated else "ADMIN_PASSWORD env var"
+    banner = (
+        "\n" + "=" * 70 + "\n"
+        "  GOVERN.AI \u2014 DEMO ADMIN CREDENTIALS (printed once, first boot only)\n"
+        "  username: admin\n"
+        f"  password: {password}\n"
+        f"  source:   {source}\n"
+        "  Store this securely \u2014 it is NOT saved in plaintext in the repository.\n"
+        + "=" * 70
+    )
+    logger.warning(banner)
 
 
 async def seed_compliance_standards():

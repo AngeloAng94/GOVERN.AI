@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { LayoutDashboard, Bot, FileText, Activity, CheckCircle, MessageSquare, Globe, ArrowLeft, LogOut, User, Menu, X, ChevronLeft, ChevronRight, ClipboardCheck, Zap, Brain, Settings } from "lucide-react";
+import { LayoutDashboard, Bot, FileText, Activity, CheckCircle, MessageSquare, Globe, ArrowLeft, LogOut, User, Menu, X, ChevronLeft, ChevronRight, ClipboardCheck, Zap, Brain, Settings, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -223,6 +223,14 @@ export default function DashboardLayout() {
       >
         {/* Mobile top padding to account for hamburger */}
         <div className="md:hidden h-12" />
+        {/* Persistent DEMO DATA disclaimer — visible but non-invasive */}
+        <div
+          data-testid="demo-data-banner"
+          className="mb-5 flex items-center gap-2 rounded-sm border border-amber-900/40 bg-amber-950/20 px-3 py-2 text-amber-400/90"
+        >
+          <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+          <span className="text-xs font-medium tracking-wide">{t("demo_data_banner")}</span>
+        </div>
         <Outlet />
       </main>
     </div>
