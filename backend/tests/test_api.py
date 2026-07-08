@@ -349,12 +349,57 @@ class TestChat:
         yield
         self.client.close()
     
+    @pytest.mark.llm
     def test_chat_message(self):
-        """Test sending a chat message to ARIA"""
+        """Test sending a chat message to ARIA (Performance / GPT-4o path).
+
+        Richiede una LLM key valida (OPENAI_API_KEY oppure EMERGENT_LLM_KEY).
+        Se nessuna e' presente, lo skip e' VISIBILE nel report finale.
+        """
+        if not (os.environ.get("OPENAI_API_KEY") or os.environ.get("EMERGENT_LLM_KEY")):
+            pytest.skip("No LLM key set (OPENAI_API_KEY / EMERGENT_LLM_KEY): Performance/GPT-4o path NOT exercised")
         resp = self.client.post(f"{BASE}/chat", json={"message": "Hello ARIA", "session_id": "test-session"}, headers=self.headers)
         assert resp.status_code == 200
         data = resp.json()
         assert "response" in data
+        assert len(data["response"]) > 0
+
+
+class TestSovereignMode:
+    """Sovereign Mode (Apertus) tests — esercitano il provider svizzero reale."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.client = httpx.Client(timeout=60)
+        self.token = get_auth_token(self.client)
+        self.headers = {"Authorization": f"Bearer {self.token}"}
+        yield
+        # Ripristina sempre Performance Mode per non alterare lo stato runtime
+        try:
+            self.client.post(f"{BASE}/settings/ai-mode", json={"sovereign_mode": False}, headers=self.headers)
+        except Exception:
+            pass
+        self.client.close()
+
+    @pytest.mark.sovereign
+    def test_sovereign_apertus_chat(self):
+        """ARIA risponde realmente con Apertus quando la Sovereign Mode e' attiva.
+
+        SKIPPED in modo visibile se PUBLICAI_API_KEY e' assente: in tal caso il
+        path Apertus NON e' testato e il gap resta esplicito nel report.
+        """
+        if not os.environ.get("PUBLICAI_API_KEY"):
+            pytest.skip("PUBLICAI_API_KEY absent: Sovereign Mode (Apertus) path NOT exercised")
+
+        toggle = self.client.post(f"{BASE}/settings/ai-mode", json={"sovereign_mode": True}, headers=self.headers)
+        assert toggle.status_code == 200
+        state = toggle.json()
+        assert state["sovereign_configured"] is True
+        assert state["current_provider"] == "sovereign"
+
+        resp = self.client.post(f"{BASE}/chat", json={"message": "Cos'e' l'EU AI Act?", "session_id": "sovereign-test"}, headers=self.headers)
+        assert resp.status_code == 200
+        data = resp.json()
         assert len(data["response"]) > 0
 
 
